@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Chess.Lib
@@ -52,14 +53,30 @@ namespace Chess.Lib
         #region Methods
 
         /// <summary>
-        /// Compute whether the draw is valid or not.
+        /// Compute whether the draw is valid or not. If it is invalid, an exception with an according message is thrown.
         /// </summary>
         /// <param name="board">the chess board where the draw should be applied to</param>
+        /// <param name="predecedingEnemyDraw">The last draw that the oponent made</param>
         /// <returns>boolean whether the draw is valid</returns>
-        public bool IsValid(ChessBoard board)
+        public bool Validate(ChessBoard board, ChessDraw predecedingEnemyDraw)
         {
-            // TODO: implement logic
-            return true;
+            // get the piece to be drawn
+            var piece = board.Fields[OldPosition.Row, OldPosition.Column].Piece;
+
+            // make sure that there is a chess piece of the correct color that can be drawn
+            if (piece == null) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }
+            if (piece.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
+
+            // compute the possible chess draws for the given chess piece
+            var possibleDraws = piece.GetPossibleDraws(predecedingEnemyDraw);
+
+            // make sure there is at least one possible draw for the given chess piece
+            if (possibleDraws?.Count <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
+
+            // check if there is a possible draw with the same new position and is rochade flag (this implies that the given draw is valid)
+            bool ret = possibleDraws.Any(x => x.IsRochade == IsRochade && x.NewPosition.Equals(NewPosition));
+
+            return ret;
         }
 
         /// <summary>
@@ -72,7 +89,7 @@ namespace Chess.Lib
 
             return 
                 IsRochade 
-                    ? $"{ color } { (OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White || OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black ? "left" : "right") }-side rochade"
+                    ? $"{ color } { ((OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White) || (OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black) ? "left" : "right") }-side rochade"
                     : $"{ color } { DrawingPieceType.ToString().ToLower() } { OldPosition.FieldName }-{ NewPosition.FieldName }";
         }
 

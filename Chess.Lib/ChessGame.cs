@@ -68,15 +68,12 @@ namespace Chess.Lib
         /// <param name="draw">The chess draw to be made</param>
         public void ApplyDraw(ChessDraw draw)
         {
-            // get the chess piece to be drawn
-            var piece = Board.Fields[draw.OldPosition.Row, draw.OldPosition.Column].Piece;
-
-            // make sure that there is a piece of the correct color that can be drawn
-            if (piece == null) { throw new ArgumentException($"There is no chess piece on { draw.OldPosition.FieldName }."); }
-            if (piece.Color != SideToDraw) { throw new ArgumentException("The given chess piece is owned by the opponent."); }
-
-            if (draw.IsValid(Board))
+            // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
+            if (draw.Validate(Board, _drawHistory.Peek()))
             {
+                // get the chess piece to be drawn
+                var piece = Board.Fields[draw.OldPosition.Row, draw.OldPosition.Column].Piece;
+
                 // draw the chess piece
                 piece.Draw(draw.NewPosition);
 
@@ -85,10 +82,6 @@ namespace Chess.Lib
 
                 // change the side that has to draw
                 SideToDraw = SideToDraw == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
-            }
-            else
-            {
-                throw new ArgumentException($"The given chess piece can not draw { draw.OldPosition.FieldName }-{ draw.NewPosition.FieldName }.");
             }
         }
 

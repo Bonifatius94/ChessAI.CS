@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Chess.Lib
@@ -67,6 +68,7 @@ namespace Chess.Lib
         /// Indicates whether the chess piece was already drawn.
         /// </summary>
         public bool WasAlreadyDrawn { get; set; }
+        // TODO: fix revert feature (this property is currently not revertible)
 
         #endregion Members
 
@@ -79,8 +81,44 @@ namespace Chess.Lib
         /// <returns>a list of all possible draws</returns>
         public List<ChessDraw> GetPossibleDraws(ChessDraw precedingEnemyDraw)
         {
-            throw new NotImplementedException("Please implement the GetPossibleDraws() function!");
+            switch (Type)
+            {
+                case ChessPieceType.King:
+                case ChessPieceType.Queen:
+                case ChessPieceType.Rock:
+                case ChessPieceType.Bishop:
+                case ChessPieceType.Knight:
+                case ChessPieceType.Peasant:
+                default:
+                    throw new InvalidOperationException("");
+            }
+
+
+            //throw new NotImplementedException("Please implement the GetPossibleDraws() function!");
         }
+
+        #region PossibleDrawsHelpers
+
+        private List<ChessDraw> getPossibleKingDraws(ChessDraw precedingEnemyDraw)
+        {
+            // get the possible draw positions
+            var positions = GetPossibleKingDrawPositions();
+
+            // only retrieve positions that are not captured by an allied chess piece
+            positions = positions.Where(x => Board.Fields[x.Row, x.Column].Piece?.Color != Color).ToList();
+
+            // only retrieve positions that cannot be captured by the enemy king (-> check)
+            var enemyKing = Color == ChessPieceColor.White ? Board.BlackKing : Board.WhiteKing;
+            var enemyKingDrawPositons = enemyKing.GetPossibleKingDrawPositions();
+            positions = positions.Except(enemyKingDrawPositons).ToList();
+
+            // only retrieve positions that cannot be captured by other enemy chess pieces (-> check)
+            Board.Pieces.Where(x => x.Color != Color && x != enemyKing)
+                .SelectMany(x => x.GetPossibleDraws(precedingEnemyDraw))
+                .;
+        }
+        
+        #endregion PossibleDrawsHelpers
 
         /// <summary>
         /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken.

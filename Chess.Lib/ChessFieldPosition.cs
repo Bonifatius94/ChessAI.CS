@@ -61,6 +61,26 @@ namespace Chess.Lib
             Column = fieldName[0] - 'A';
         }
 
+        /// <summary>
+        /// Overrides Equals() method by evaluating the overloaded object type and comparing the row and column propoerty.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            var position = obj as ChessFieldPosition;
+            return (position != null) && (position.Row == Row && position.Column == Column);
+        }
+
+        /// <summary>
+        /// Override of GetHashCode() is required for Equals() method. Therefore always 0 is returned, so the Equals() function needs to be called when hash codes are the same.
+        /// </summary>
+        /// <returns>a hash code (always 0 in this case)</returns>
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+
         #endregion Methods
     }
 }
