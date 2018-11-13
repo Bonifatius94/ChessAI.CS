@@ -13,7 +13,7 @@ namespace ChessAI.Lib
         public ChessBoard()
         {
             // init fields
-            _fields = getChessFieldsInStartPosition();
+            Fields = getChessFieldsInStartPosition();
         }
 
         #endregion Constructor
@@ -25,11 +25,10 @@ namespace ChessAI.Lib
         /// </summary>
         public const int CHESS_BOARD_DIMENSION = 8;
 
-        private ChessField[,] _fields;
         /// <summary>
         /// A 2D array (8 x 8) of chess fields.
         /// </summary>
-        public ChessField[,] Fields { get { return _fields; } }
+        public ChessField[,] Fields { get; }
 
         #region ChessFieldsPreparation
 
@@ -123,8 +122,8 @@ namespace ChessAI.Lib
 
                 for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
                 {
-                    char chessPieceColor = _fields[row, column].Piece != null ? (char)_fields[row, column].Piece.Color : ' ';
-                    char chessPieceType = _fields[row, column].Piece != null ? (char)_fields[row, column].Piece.Type : ' ';
+                    char chessPieceColor = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Color : ' ';
+                    char chessPieceType = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Type : ' ';
                     builder.Append($" { chessPieceColor }{ chessPieceType } |");
                 }
                 

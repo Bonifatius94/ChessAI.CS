@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.28010.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chess.Lib", "Chess.Lib\Chess.Lib.csproj", "{E9CF1C53-37A2-4544-A9EC-8DC698B3EE42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chess.AI", "Chess.AI\Chess.AI.csproj", "{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.AI", "Chess.AI\Chess.AI.csproj", "{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chess.WebApi", "Chess.WebApi\Chess.WebApi.csproj", "{BD17F114-7C24-4C5F-8C78-284B1E8DF522}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD17F114-7C24-4C5F-8C78-284B1E8DF522}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD17F114-7C24-4C5F-8C78-284B1E8DF522}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD17F114-7C24-4C5F-8C78-284B1E8DF522}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD17F114-7C24-4C5F-8C78-284B1E8DF522}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
