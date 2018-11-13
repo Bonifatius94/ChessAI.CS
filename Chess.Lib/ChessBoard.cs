@@ -81,16 +81,10 @@ namespace Chess.Lib
             for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
             {
                 // init white peasant of column
-                fields[1, column] = new ChessField() {
-                    Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant, Board = this },
-                    Position = new ChessFieldPosition() { Row = 1, Column = column }
-                };
+                fields[1, column].Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant, Board = this };
 
                 // init black peasant of column
-                fields[6, column] = new ChessField() {
-                    Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant, Board = this },
-                    Position = new ChessFieldPosition() { Row = 6, Column = column }
-                };
+                fields[6, column].Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant, Board = this };
             }
         }
 
@@ -102,14 +96,14 @@ namespace Chess.Lib
                 // determine color of the chess pieces
                 var color = (row == 0) ? ChessPieceColor.White : ChessPieceColor.Black;
 
-                fields[row, 0] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 0 } };
-                fields[row, 1] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 1 } };
-                fields[row, 2] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 2 } };
-                fields[row, 3] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen,  Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 3 } };
-                fields[row, 4] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King,   Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 4 } };
-                fields[row, 5] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 5 } };
-                fields[row, 6] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 6 } };
-                fields[row, 7] = new ChessField() { Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this }, Position = new ChessFieldPosition() { Row = row, Column = 7 } };
+                fields[row, 0].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
+                fields[row, 1].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
+                fields[row, 2].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
+                fields[row, 3].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen,  Board = this };
+                fields[row, 4].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King,   Board = this };
+                fields[row, 5].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
+                fields[row, 6].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
+                fields[row, 7].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
             }
         }
 

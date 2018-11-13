@@ -11,7 +11,32 @@ namespace Chess.Test
         {
             // create a new chess game instance and print it to the console
             var game = new ChessGame();
+            Console.WriteLine("initial chess game situation:");
+            Console.WriteLine();
             Console.WriteLine(game.Board);
+            Console.WriteLine();
+
+            // draw white peasant E2-E4
+            var draw = new ChessDraw() {
+                DrawingSide = ChessPieceColor.White,
+                DrawingPieceType = ChessPieceType.Peasant,
+                OldPosition = new ChessFieldPosition("E2"),
+                NewPosition = new ChessFieldPosition("E4"),
+                IsRochade = false,
+                TakenEnemyPiece = null,
+                Timestamp = DateTime.UtcNow
+            };
+
+            game.ApplyDraw(draw);
+
+            // print board again and check if the draw was applied correctly
+            Console.WriteLine($"chess game situation after drawing { draw.ToString() }:");
+            Console.WriteLine();
+            Console.WriteLine(game.Board);
+            Console.WriteLine();
+
+            // wait for exit
+            Console.Write("Program finished. Exit with ENTER.");
             Console.ReadLine();
         }
 

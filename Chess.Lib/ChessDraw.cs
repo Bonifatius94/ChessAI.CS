@@ -13,12 +13,15 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// The chess piece to be moved.
-        /// When it's a rochade draw, always specify the rock (king is unambiguous).
+        /// The side that is drawing.
         /// </summary>
-        [JsonIgnore]
-        public ChessPiece Piece { get; set; }
+        public ChessPieceColor DrawingSide { get; set; }
 
+        /// <summary>
+        /// The piece type that is drawing.
+        /// </summary>
+        public ChessPieceType DrawingPieceType { get; set; }
+        
         /// <summary>
         /// The old position of the chess piece to be moved.
         /// </summary>
@@ -55,7 +58,8 @@ namespace Chess.Lib
         /// <returns>boolean whether the draw is valid</returns>
         public bool IsValid(ChessBoard board)
         {
-            throw new NotImplementedException("Please implement draw validation logic!");
+            // TODO: implement logic
+            return true;
         }
 
         /// <summary>
@@ -64,12 +68,12 @@ namespace Chess.Lib
         /// <returns></returns>
         public override string ToString()
         {
-            string color = Piece.Color.ToString().ToLower();
+            string color = DrawingSide.ToString().ToLower();
 
             return 
                 IsRochade 
-                    ? $"{ color } { (OldPosition.Column == 0 && Piece.Color == ChessPieceColor.White || OldPosition.Column == 7 && Piece.Color == ChessPieceColor.Black ? "left" : "right") }-side rochade"
-                    : $"{ color } { Piece.Type.ToString().ToLower() } { OldPosition.FieldName }-{ NewPosition.FieldName }";
+                    ? $"{ color } { (OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White || OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black ? "left" : "right") }-side rochade"
+                    : $"{ color } { DrawingPieceType.ToString().ToLower() } { OldPosition.FieldName }-{ NewPosition.FieldName }";
         }
 
         #endregion Methods

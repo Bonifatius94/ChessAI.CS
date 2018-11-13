@@ -89,6 +89,7 @@ namespace Chess.Lib
         public void Draw(ChessFieldPosition newPosition)
         {
             // get the destination chess field instance of the chess board
+            var originalField = Board.Fields[Position.Row, Position.Column];
             var destinationField = Board.Fields[newPosition.Row, newPosition.Column];
 
             // take enemy piece (if there is one)
@@ -97,7 +98,8 @@ namespace Chess.Lib
                 Board.Pieces.Remove(destinationField.Piece);
             }
 
-            // move piece to the destination
+            // move piece from original field to the destination
+            originalField.Piece = null;
             destinationField.Piece = this;
 
             // setter of ChessField.Piece already updates the Position property of this instance
