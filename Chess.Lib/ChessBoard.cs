@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
-namespace ChessAI.Lib
+namespace Chess.Lib
 {
+    /// <summary>
+    /// This class represents a chess board and all fields / pieces on it.
+    /// </summary>
     public class ChessBoard
     {
         #region Constructor
@@ -12,8 +17,9 @@ namespace ChessAI.Lib
         /// </summary>
         public ChessBoard()
         {
-            // init fields
+            // init fields and pieces
             Fields = getChessFieldsInStartPosition();
+            Pieces = Fields.GetFields1D().Where(field => field.IsCapturedByPiece).Select(field => field.Piece).ToList();
         }
 
         #endregion Constructor
@@ -30,11 +36,38 @@ namespace ChessAI.Lib
         /// </summary>
         public ChessField[,] Fields { get; }
 
+        /// <summary>
+        /// A list of all chess pieces that are currently on the chess board.
+        /// </summary>
+        public List<ChessPiece> Pieces { get; }
+
+        /// <summary>
+        /// Selects the white king from the chess pieces list. (computed operation)
+        /// </summary>
+        public ChessPiece WhiteKing { get { return Pieces.Where(x => x.Color == ChessPieceColor.White && x.Type == ChessPieceType.King).First(); } }
+
+        /// <summary>
+        /// Selects the white king from the chess pieces list. (computed operation)
+        /// </summary>
+        public ChessPiece BlackKing { get { return Pieces.Where(x => x.Color == ChessPieceColor.Black && x.Type == ChessPieceType.King).First(); } }
+        
+        #endregion Members
+
+        #region Methods
+
         #region ChessFieldsPreparation
 
         private ChessField[,] getChessFieldsInStartPosition()
         {
             var fields = new ChessField[CHESS_BOARD_DIMENSION, CHESS_BOARD_DIMENSION];
+
+            for (int row = 0; row < CHESS_BOARD_DIMENSION; row++)
+            {
+                for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
+                {
+                    fields[row, column] = new ChessField() { Position = new ChessFieldPosition() { Row = row, Column = column }, Piece = null };
+                }
+            }
 
             // init pieces (black + white)
             initPeasants(ref fields);
@@ -81,11 +114,7 @@ namespace ChessAI.Lib
         }
 
         #endregion ChessFieldsPreparation
-
-        #endregion Members
-
-        #region Methods
-
+        
         /// <summary>
         /// Transform the current game situation of the chess board into a text format.
         /// 
@@ -113,22 +142,26 @@ namespace ChessAI.Lib
         /// <returns>a string representing the current game situation that can be printed e.g. to a CLI</returns>
         public override string ToString()
         {
-            const string SEPARATING_LINE = "  -----------------------------------------";
+            const string SEPARATING_LINE = "   -----------------------------------------";
             StringBuilder builder = new StringBuilder(SEPARATING_LINE).AppendLine();
 
-            for (int row = 0; row < CHESS_BOARD_DIMENSION; row++)
+            for (int row = CHESS_BOARD_DIMENSION - 1; row >= 0; row--)
             {
-                builder.Append($"{ row + 1 } |");
+                builder.Append($" { row + 1 } |");
 
                 for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
                 {
+                    // TODO: try to use unicode chess symbols
                     char chessPieceColor = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Color : ' ';
                     char chessPieceType = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Type : ' ';
                     builder.Append($" { chessPieceColor }{ chessPieceType } |");
                 }
-                
-                builder.AppendLine(SEPARATING_LINE).AppendLine();
+
+                builder.AppendLine();
+                builder.AppendLine(SEPARATING_LINE);
             }
+
+            builder.Append(" ");
 
             for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
             {
@@ -139,5 +172,31 @@ namespace ChessAI.Lib
         }
 
         #endregion Methods
+    }
+
+    /// <summary>
+    /// This class provides extension methods for handling 2D chess field arrays.
+    /// </summary>
+    public static class ChessFieldsArrayExtension
+    {
+        /// <summary>
+        /// Retrieve the chess fields array (2D) as a list in 1D.
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        public static List<ChessField> GetFields1D(this ChessField[,] fields)
+        {
+            var list1D = new List<ChessField>();
+
+            for (int row = 0; row < ChessBoard.CHESS_BOARD_DIMENSION; row++)
+            {
+                for (int column = 0; column < ChessBoard.CHESS_BOARD_DIMENSION; column++)
+                {
+                    list1D.Add(fields[row, column]);
+                }
+            }
+
+            return list1D;
+        }
     }
 }

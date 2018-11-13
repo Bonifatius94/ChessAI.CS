@@ -1,4 +1,4 @@
-﻿using ChessAI.Lib;
+﻿using Chess.Lib;
 using System;
 
 namespace Chess.AI

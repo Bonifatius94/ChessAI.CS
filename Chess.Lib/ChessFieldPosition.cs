@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChessAI.Lib
+namespace Chess.Lib
 {
+    /// <summary>
+    /// This class represents a position on a chess board.
+    /// </summary>
     public class ChessFieldPosition
     {
         #region Members
