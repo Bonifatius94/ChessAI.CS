@@ -12,8 +12,9 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="piece">The piece to be drawn</param>
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
+        /// <param name="considerEnemyCheckDraws">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw);
+        List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw, bool considerEnemyCheckDraws);
     }
 
     public class ChessDrawHelper : IChessDrawHelper
@@ -25,8 +26,9 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="piece">The piece to be drawn</param>
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
+        /// <param name="considerEnemyCheckDraws">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw)
+        public List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw, bool considerEnemyCheckDraws)
         {
             IChessDrawHelper helper;
 
@@ -41,14 +43,14 @@ namespace Chess.Lib
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
 
-            var draws = helper.GetPossibleDraws(piece, precedingEnemyDraw);
+            var draws = helper.GetPossibleDraws(piece, precedingEnemyDraw, considerEnemyCheckDraws);
 
             return draws;
         }
-        
+
         #endregion Methods
     }
-    
+
     public class KingChessDrawHelper : IChessDrawHelper
     {
         #region Methods
@@ -124,7 +126,7 @@ namespace Chess.Lib
     public class QueenChessDrawHelper : IChessDrawHelper
     {
         #region Methods
-        
+
         /// <summary>
         /// Compute the field positions that can be captured by the queen (chess piece type obviously needs to be queen).
         /// </summary>
@@ -137,7 +139,7 @@ namespace Chess.Lib
             if (piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a queen."); }
 
             // get positions that a rock or a bishop could capture
-            return GetRockDrawPositions(piece).Union(GetBishopDrawPositions(piece)).ToList();
+            return new RockChessDrawHelper().GetPossibleDraws(piece, precedingEnemyDraw).Union(new BishopChessDrawHelper().GetPossibleDraws(piece, precedingEnemyDraw)).ToList();
         }
 
         #endregion Methods
@@ -151,8 +153,9 @@ namespace Chess.Lib
         /// Compute the field positions that can be captured by the rock (chess piece type obviously needs to be rock-like).
         /// </summary>
         /// <param name="piece">The piece to be drawn</param>
+        /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <returns>a list of field positiosn</returns>
-        public List<ChessFieldPosition> GetRockDrawPositions(ChessPiece piece)
+        public List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw)
         {
             // make sure the chess piece is rock-like
             if (piece.Type != ChessPieceType.Rock || piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rock."); }
@@ -172,8 +175,9 @@ namespace Chess.Lib
         /// Compute the field positions that can be captured by the bishop (chess piece type obviously needs to be bishop-like).
         /// </summary>
         /// <param name="piece">The piece to be drawn</param>
+        /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <returns>a list of field positiosn</returns>
-        public List<ChessFieldPosition> GetBishopDrawPositions(ChessPiece piece)
+        public List<ChessDraw> GetPossibleDraws(ChessPiece piece, ChessDraw precedingEnemyDraw)
         {
             // make sure the chess piece is bishop-like
             if (piece.Type != ChessPieceType.Bishop || piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a bishop."); }
@@ -238,13 +242,13 @@ namespace Chess.Lib
             if (piece.Type != ChessPieceType.Peasant) { throw new InvalidOperationException("The chess piece is not a peasant."); }
 
             // get the possible chess field positions (info: right / left from the point of view of the white side player)
-            var posOneForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column    );
-            var posTwoForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 2 : -2), piece.Position.Column    );
-            var posCatchLeft   = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column + 1);
-            var posCatchRight  = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column - 1);
+            var posOneForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column);
+            var posTwoForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 2 : -2), piece.Position.Column);
+            var posCatchLeft = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column + 1);
+            var posCatchRight = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column - 1);
 
             // get the positions of an enemy chess piece taken by the en-passant rule
-            var posEnPassantEnemyLeft  = new ChessFieldPosition(piece.Position.Row, piece.Position.Column + 1);
+            var posEnPassantEnemyLeft = new ChessFieldPosition(piece.Position.Row, piece.Position.Column + 1);
             var posEnPassantEnemyRight = new ChessFieldPosition(piece.Position.Row, piece.Position.Column - 1);
 
             // check if single / double forward move is possible
@@ -314,8 +318,35 @@ namespace Chess.Lib
                     OldPosition = piece.Position, NewPosition = posCatchRight, TakenEnemyPiece = piece.Board.Fields[posEnPassantEnemyRight].Piece.Type
                 });
             }
-            
+
             return draws;
+        }
+
+        #endregion Methods
+    }
+
+    public class ChessDrawSimulator
+    {
+        #region Methods
+        
+        public bool IsDrawIntoCheck(ChessBoard board, ChessDraw draw)
+        {
+            // clone chess board
+            var simulatedBoard = board.Clone() as ChessBoard;
+
+            // simulate the draw
+            simulatedBoard.Fields[draw.OldPosition].Piece.Draw(draw.NewPosition);
+
+            // get all enemy chess pieces
+            var enemyPieces = (draw.DrawingSide == ChessPieceColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
+
+            // get all enemy draws of the enemy chess pieces
+            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawHelper().GetPossibleDraws(x, draw)).ToList();
+
+            // find out if the allied king would be checked
+            possibleEnemyAnswers.Any(x => x.)
+
+            return false;
         }
 
         #endregion Methods
