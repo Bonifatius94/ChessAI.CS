@@ -6,52 +6,35 @@ using System.Text.RegularExpressions;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This class represents a position on a chess board.
+    /// Represents a position on a chess board.
     /// </summary>
-    public class ChessFieldPosition
+    public readonly struct ChessFieldPosition : ICloneable
     {
+        #region Constants
+
+        /// <summary>
+        /// The regex instance for validating a chess field name.
+        /// </summary>
+        private static readonly Regex _regexFieldName = new Regex("^[A-H]{1}[1-8]{1}$");
+
+        #endregion Constants
+
         #region Constructor
 
         /// <summary>
-        /// Empty constructor.
+        /// Create a new field position instance from the given row and column.
         /// </summary>
-        public ChessFieldPosition() { }
+        public ChessFieldPosition(int row, int column)
+        {
+            Row = row;
+            Column = column;
+        }
 
         /// <summary>
         /// Create a new field position instance from the given field name.
         /// </summary>
         /// <param name="fieldName">the chess field name (e.g. E5)</param>
         public ChessFieldPosition(string fieldName)
-        {
-            initWithFieldName(fieldName);
-        }
-
-        #endregion Constructor
-
-        #region Members
-
-        private static readonly Regex _regexFieldName = new Regex("^[A-H]{1}[1-8]{1}$");
-
-        /// <summary>
-        /// The row index of the chess field position, starting with 0.
-        /// </summary>
-        public int Row { get; set; }
-
-        /// <summary>
-        /// The column index of the chess field position, starting with 0.
-        /// </summary>
-        public int Column { get; set; }
-
-        /// <summary>
-        /// Generates the chess field name out of Row and Column property (e.g. 'A1', 'H8').
-        /// </summary>
-        public string FieldName { get { return $"{ (char)('A' + Column) }{ (char)('1' + Row) }"; } }
-
-        #endregion Members
-
-        #region Methods
-
-        private void initWithFieldName(string fieldName)
         {
             // check if the field name format is correct (otherwise throw argument exception)
             if (!_regexFieldName.IsMatch(fieldName)) { throw new ArgumentException($"invalid field name { fieldName }!"); }
@@ -61,24 +44,60 @@ namespace Chess.Lib
             Column = fieldName[0] - 'A';
         }
 
+        #endregion Constructor
+
+        #region Members
+        
+        /// <summary>
+        /// The row index of the chess field position, starting with 0.
+        /// </summary>
+        public int Row { get; }
+
+        /// <summary>
+        /// The column index of the chess field position, starting with 0.
+        /// </summary>
+        public int Column { get; }
+
+        /// <summary>
+        /// Generates the chess field name out of Row and Column property (e.g. 'A1', 'H8').
+        /// </summary>
+        public string FieldName { get { return $"{ (char)('A' + Column) }{ (char)('1' + Row) }"; } }
+
+        /// <summary>
+        /// Indicates whether the row and column are in bounds of the chess board (0 &lt;= x &lt; 8)
+        /// </summary>
+        public bool IsValid { get { return Row >= 0 && Row < ChessBoard.CHESS_BOARD_DIMENSION && Column >= 0 && Column < ChessBoard.CHESS_BOARD_DIMENSION; } }
+        
+        #endregion Members
+
+        #region Methods
+
         /// <summary>
         /// Overrides Equals() method by evaluating the overloaded object type and comparing the row and column propoerty.
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">The object instance to be compared to 'this'</param>
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            var position = obj as ChessFieldPosition;
-            return (position != null) && (position.Row == Row && position.Column == Column);
+            return (obj.GetType() == typeof(ChessFieldPosition)) && (((ChessFieldPosition)obj).GetHashCode() == GetHashCode());
         }
 
         /// <summary>
-        /// Override of GetHashCode() is required for Equals() method. Therefore always 0 is returned, so the Equals() function needs to be called when hash codes are the same.
+        /// Override of GetHashCode() is required for Equals() method. Therefore column * 8 + row is returned, which is unique for each field position on the chess board.
         /// </summary>
-        /// <returns>a hash code (always 0 in this case)</returns>
+        /// <returns>a hash code that is unique for each (row, column) tuple</returns>
         public override int GetHashCode()
         {
-            return 0;
+            return Column * ChessBoard.CHESS_BOARD_DIMENSION + Row;
+        }
+
+        /// <summary>
+        /// Create a deep copy of the current instance.
+        /// </summary>
+        /// <returns>a deep copy of the current instance</returns>
+        public object Clone()
+        {
+            return new ChessFieldPosition(Row, Column);
         }
 
         #endregion Methods

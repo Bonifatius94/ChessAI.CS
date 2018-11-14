@@ -18,11 +18,11 @@ namespace Chess.Test
 
             // draw white peasant E2-E4
             var draw = new ChessDraw() {
+                Type = ChessDrawType.Standard,
                 DrawingSide = ChessPieceColor.White,
                 DrawingPieceType = ChessPieceType.Peasant,
                 OldPosition = new ChessFieldPosition("E2"),
                 NewPosition = new ChessFieldPosition("E4"),
-                IsRochade = false,
                 TakenEnemyPiece = null,
                 Timestamp = DateTime.UtcNow
             };

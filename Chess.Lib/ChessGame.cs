@@ -27,11 +27,11 @@ namespace Chess.Lib
         /// Create a chess game instance out of a list of all chess draws that have already been made by the chess players.
         /// </summary>
         /// <param name="draws"></param>
-        public ChessGame(List<ChessDraw> draws) : this()
-        {
-            StartOfGame = draws.First().Timestamp;
-            draws.ForEach(draw => ApplyDraw(draw));
-        }
+        //public ChessGame(List<ChessDraw> draws) : this()
+        //{
+        //    StartOfGame = draws.First().Timestamp;
+        //    draws.ForEach(draw => ApplyDraw(draw));
+        //}
 
         #endregion Constructor
 
@@ -72,7 +72,7 @@ namespace Chess.Lib
             if (draw.Validate(Board, _drawHistory.Peek()))
             {
                 // get the chess piece to be drawn
-                var piece = Board.Fields[draw.OldPosition.Row, draw.OldPosition.Column].Piece;
+                var piece = Board.Fields[draw.OldPosition].Piece;
 
                 // draw the chess piece
                 piece.Draw(draw.NewPosition);
@@ -97,7 +97,7 @@ namespace Chess.Lib
             var draw = _drawHistory.Pop();
 
             // get the chess piece that was drawn and move it back
-            var piece = Board.Fields[draw.NewPosition.Row, draw.NewPosition.Column].Piece;
+            var piece = Board.Fields[draw.NewPosition].Piece;
             piece.Draw(draw.OldPosition);
 
             // put the enemy chess piece back on the chess board (if an enemy piece was taken during the draw)

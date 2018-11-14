@@ -6,12 +6,25 @@ using System.Text;
 
 namespace Chess.Lib
 {
+    public enum ChessDrawType
+    {
+        Standard,
+        Rochade,
+        EnPassant,
+        PeasantPromotion
+    }
+
     /// <summary>
     /// This class represents a chess draw that is made by a chess player.
     /// </summary>
-    public class ChessDraw
+    public struct ChessDraw
     {
         #region Members
+
+        /// <summary>
+        /// The type of the draw (default: standrad).
+        /// </summary>
+        public ChessDrawType Type { get; set; }
 
         /// <summary>
         /// The side that is drawing.
@@ -34,20 +47,24 @@ namespace Chess.Lib
         public ChessFieldPosition NewPosition { get; set; }
 
         /// <summary>
-        /// The enemy piece that was taken during this draw. The value is null if no enemy piece was taken.
-        /// </summary>
-        public ChessPieceType? TakenEnemyPiece { get; set; }
-
-        /// <summary>
-        /// Indicates whether the draw is a rochade.
-        /// </summary>
-        public bool IsRochade { get; set; }
-
-        /// <summary>
         /// The timestamp when the chess player finalized the chess draw. Time is measured for UTC timezone.
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime? Timestamp { get; set; }
 
+        #region SpecialDrawOptions
+        
+        /// <summary>
+        /// The type of the enemy chess piece that gets taken by this draw. The value is null if no enemy piece was taken.
+        /// </summary>
+        public ChessPieceType? TakenEnemyPiece { get; set; }
+        
+        /// <summary>
+        /// The chess piece type that the peasant is promoting to.
+        /// </summary>
+        public ChessPieceType? PeasantPromotionPieceType { get; set; }
+
+        #endregion SpecialDrawOptions
+        
         #endregion Members
 
         #region Methods
@@ -61,20 +78,22 @@ namespace Chess.Lib
         public bool Validate(ChessBoard board, ChessDraw predecedingEnemyDraw)
         {
             // get the piece to be drawn
-            var piece = board.Fields[OldPosition.Row, OldPosition.Column].Piece;
+            var piece = board.Fields[OldPosition].Piece;
 
             // make sure that there is a chess piece of the correct color that can be drawn
             if (piece == null) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }
             if (piece.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
-            var possibleDraws = piece.GetPossibleDraws(predecedingEnemyDraw);
+            var possibleDraws = new ChessDrawHelper().GetPossibleDraws(piece, this);
 
             // make sure there is at least one possible draw for the given chess piece
             if (possibleDraws?.Count <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
 
-            // check if there is a possible draw with the same new position and is rochade flag (this implies that the given draw is valid)
-            bool ret = possibleDraws.Any(x => x.IsRochade == IsRochade && x.NewPosition.Equals(NewPosition));
+            // check if there is a possible draw with the same new position and type (this implies that the given draw is valid)
+            var type = Type;
+            var position = NewPosition;
+            bool ret = possibleDraws.Any(x => x.Type == type && x.NewPosition.Equals(position));
 
             return ret;
         }
@@ -85,14 +104,32 @@ namespace Chess.Lib
         /// <returns></returns>
         public override string ToString()
         {
+            string ret;
             string color = DrawingSide.ToString().ToLower();
+            string drawingPiece = DrawingPieceType.ToString().ToLower();
 
-            return 
-                IsRochade 
-                    ? $"{ color } { ((OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White) || (OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black) ? "left" : "right") }-side rochade"
-                    : $"{ color } { DrawingPieceType.ToString().ToLower() } { OldPosition.FieldName }-{ NewPosition.FieldName }";
+            switch (Type)
+            {
+                case ChessDrawType.Standard:
+                    ret = $"{ color } { drawingPiece } { OldPosition.FieldName }-{ NewPosition.FieldName }";
+                    break;
+                case ChessDrawType.Rochade:
+                    bool isLeftSide = (OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White) || (OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black);
+                    ret = $"{ color } { (isLeftSide ? "left" : "right") }-side rochade";
+                    break;
+                case ChessDrawType.EnPassant:
+                    ret = $"{ color } { drawingPiece } { OldPosition.FieldName }-{ NewPosition.FieldName } (en-passant)";
+                    break;
+                case ChessDrawType.PeasantPromotion:
+                    ret = $"{ color } peasant promotion on { NewPosition.FieldName } ({ PeasantPromotionPieceType.ToString().ToLower() })";
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported chess draw type detected!");
+            }
+            
+            return ret;
         }
-
+        
         #endregion Methods
     }
 }

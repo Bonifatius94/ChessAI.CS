@@ -38,7 +38,7 @@ namespace Chess.Lib
         White = 'W'
     }
 
-    public class ChessPiece
+    public class ChessPiece : ICloneable
     {
         #region Members
 
@@ -74,52 +74,18 @@ namespace Chess.Lib
 
         #region Methods
 
-        /// <summary>
-        /// Compute all possible draws for the given chess piece.
-        /// </summary>
-        /// <param name="precedingEnemyDraw">The preceding enemy draw</param>
-        /// <returns>a list of all possible draws</returns>
-        public List<ChessDraw> GetPossibleDraws(ChessDraw precedingEnemyDraw)
-        {
-            switch (Type)
-            {
-                case ChessPieceType.King:
-                case ChessPieceType.Queen:
-                case ChessPieceType.Rock:
-                case ChessPieceType.Bishop:
-                case ChessPieceType.Knight:
-                case ChessPieceType.Peasant:
-                default:
-                    throw new InvalidOperationException("");
-            }
-
-
-            //throw new NotImplementedException("Please implement the GetPossibleDraws() function!");
-        }
-
-        #region PossibleDrawsHelpers
-
-        private List<ChessDraw> getPossibleKingDraws(ChessDraw precedingEnemyDraw)
-        {
-            // get the possible draw positions
-            var positions = GetPossibleKingDrawPositions();
-
-            // only retrieve positions that are not captured by an allied chess piece
-            positions = positions.Where(x => Board.Fields[x.Row, x.Column].Piece?.Color != Color).ToList();
-
-            // only retrieve positions that cannot be captured by the enemy king (-> check)
-            var enemyKing = Color == ChessPieceColor.White ? Board.BlackKing : Board.WhiteKing;
-            var enemyKingDrawPositons = enemyKing.GetPossibleKingDrawPositions();
-            positions = positions.Except(enemyKingDrawPositons).ToList();
-
-            // only retrieve positions that cannot be captured by other enemy chess pieces (-> check)
-            Board.Pieces.Where(x => x.Color != Color && x != enemyKing)
-                .SelectMany(x => x.GetPossibleDraws(precedingEnemyDraw))
-                .;
-        }
+        ///// <summary>
+        ///// Compute all possible draws for the given chess piece.
+        ///// </summary>
+        ///// <param name="precedingEnemyDraw">The preceding enemy draw</param>
+        ///// <returns>a list of all possible draws</returns>
+        //public List<ChessDraw> GetPossibleDraws(ChessDraw precedingEnemyDraw)
+        //{
+        //    // TODO: check if this method can be removed
+        //    var draws = new ChessDrawHelper().GetPossibleDraws(this, precedingEnemyDraw);
+        //    return draws;
+        //}
         
-        #endregion PossibleDrawsHelpers
-
         /// <summary>
         /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken.
         /// </summary>
@@ -127,8 +93,8 @@ namespace Chess.Lib
         public void Draw(ChessFieldPosition newPosition)
         {
             // get the destination chess field instance of the chess board
-            var originalField = Board.Fields[Position.Row, Position.Column];
-            var destinationField = Board.Fields[newPosition.Row, newPosition.Column];
+            var originalField = Board.Fields[Position];
+            var destinationField = Board.Fields[newPosition];
 
             // take enemy piece (if there is one)
             if (destinationField.IsCapturedByPiece && destinationField.Piece.Color != Color)
@@ -139,9 +105,26 @@ namespace Chess.Lib
             // move piece from original field to the destination
             originalField.Piece = null;
             destinationField.Piece = this;
+            WasAlreadyDrawn = true;
 
             // setter of ChessField.Piece already updates the Position property of this instance
             //Position = newPosition;
+        }
+
+        /// <summary>
+        /// Create a deep copy of the current instance.
+        /// </summary>
+        /// <returns>a deep copy of the current instance</returns>
+        public object Clone()
+        {
+            var piece = new ChessPiece() {
+                Type = Type,
+                Color = Color,
+                Position = (ChessFieldPosition)Position.Clone(),
+                WasAlreadyDrawn = WasAlreadyDrawn
+            };
+
+            return piece;
         }
 
         #endregion Methods

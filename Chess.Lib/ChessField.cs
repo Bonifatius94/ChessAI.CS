@@ -7,7 +7,7 @@ namespace Chess.Lib
     /// <summary>
     /// This class represents a chess field on a chess board.
     /// </summary>
-    public class ChessField
+    public class ChessField : ICloneable
     {
         #region Members
 
@@ -19,6 +19,7 @@ namespace Chess.Lib
         private ChessPiece _piece = null;
         /// <summary>
         /// The piece that currently captures the chess field (value is null if there is no chess piece).
+        /// Additionally updates the Position property of the chess piece (if the chess piece is not null).
         /// </summary>
         public ChessPiece Piece
         {
@@ -37,5 +38,23 @@ namespace Chess.Lib
         public bool IsCapturedByPiece { get { return Piece != null; } }
 
         #endregion Members
+
+        #region Methods
+
+        /// <summary>
+        /// Create a deep copy of the current instance.
+        /// </summary>
+        /// <returns>a deep copy of the current instance</returns>
+        public object Clone()
+        {
+            var field = new ChessField() {
+                Position = (ChessFieldPosition)Position.Clone(),
+                Piece = Piece?.Clone() as ChessPiece
+            };
+
+            return field;
+        }
+
+        #endregion Methods
     }
 }

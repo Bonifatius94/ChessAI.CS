@@ -8,7 +8,7 @@ namespace Chess.Lib
     /// <summary>
     /// This class represents a chess board and all fields / pieces on it.
     /// </summary>
-    public class ChessBoard
+    public class ChessBoard : ICloneable
     {
         #region Constructor
 
@@ -18,8 +18,25 @@ namespace Chess.Lib
         public ChessBoard()
         {
             // init fields and pieces
-            Fields = getChessFieldsInStartPosition();
-            Pieces = Fields.GetFields1D().Where(field => field.IsCapturedByPiece).Select(field => field.Piece).ToList();
+            Fields2D = getChessFieldsInStartPosition();
+            Fields = Fields2D.GetFields1D().ToDictionary(x => x.Position);
+            Pieces = Fields2D.GetFields1D().Where(field => field.IsCapturedByPiece).Select(field => field.Piece).ToList();
+        }
+
+        /// <summary>
+        /// Creates a deep copy of the given chess board. (clone constructor)
+        /// </summary>
+        /// <param name="original">the fields to be applied to the board</param>
+        public ChessBoard(ChessBoard original)
+        {
+            // create a deep copy of the given fields
+            var copy = original.Fields.ToList().Select(x => x.Value.Clone() as ChessField).ToDictionary(x => x.Position);
+
+            // init fields and pieces
+            Fields = copy;
+            Fields2D = new ChessField[CHESS_BOARD_DIMENSION, CHESS_BOARD_DIMENSION];
+            Fields.ToList().ForEach(x => Fields2D[x.Key.Row, x.Key.Column] = x.Value);
+            Pieces = Fields2D.GetFields1D().Where(field => field.IsCapturedByPiece).Select(field => field.Piece).ToList();
         }
 
         #endregion Constructor
@@ -34,7 +51,12 @@ namespace Chess.Lib
         /// <summary>
         /// A 2D array (8 x 8) of chess fields.
         /// </summary>
-        public ChessField[,] Fields { get; }
+        public ChessField[,] Fields2D { get; }
+
+        /// <summary>
+        /// A dictionary of all chess fields that can be accessed by a chess field position object.
+        /// </summary>
+        public Dictionary<ChessFieldPosition, ChessField> Fields { get; }
 
         /// <summary>
         /// A list of all chess pieces that are currently on the chess board.
@@ -42,14 +64,24 @@ namespace Chess.Lib
         public List<ChessPiece> Pieces { get; }
 
         /// <summary>
-        /// Selects the white king from the chess pieces list. (computed operation)
+        /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPiece WhiteKing { get { return Pieces.Where(x => x.Color == ChessPieceColor.White && x.Type == ChessPieceType.King).First(); } }
+        public List<ChessPiece> WhitePieces { get { return Pieces.Where(x => x.Color == ChessPieceColor.White).ToList(); } }
+
+        /// <summary>
+        /// Selects all black chess pieces from the chess pieces list. (computed operation)
+        /// </summary>
+        public List<ChessPiece> BlackPieces { get { return Pieces.Where(x => x.Color == ChessPieceColor.Black).ToList(); } }
 
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPiece BlackKing { get { return Pieces.Where(x => x.Color == ChessPieceColor.Black && x.Type == ChessPieceType.King).First(); } }
+        public ChessPiece WhiteKing { get { return WhitePieces.Where(x => x.Type == ChessPieceType.King).First(); } }
+
+        /// <summary>
+        /// Selects the black king from the chess pieces list. (computed operation)
+        /// </summary>
+        public ChessPiece BlackKing { get { return BlackPieces.Where(x => x.Type == ChessPieceType.King).First(); } }
         
         #endregion Members
 
@@ -59,36 +91,36 @@ namespace Chess.Lib
 
         private ChessField[,] getChessFieldsInStartPosition()
         {
-            var fields = new ChessField[CHESS_BOARD_DIMENSION, CHESS_BOARD_DIMENSION];
+            var fields2D = new ChessField[CHESS_BOARD_DIMENSION, CHESS_BOARD_DIMENSION];
 
             for (int row = 0; row < CHESS_BOARD_DIMENSION; row++)
             {
                 for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
                 {
-                    fields[row, column] = new ChessField() { Position = new ChessFieldPosition() { Row = row, Column = column }, Piece = null };
+                    fields2D[row, column] = new ChessField() { Position = new ChessFieldPosition(row, column), Piece = null };
                 }
             }
 
             // init pieces (black + white)
-            initPeasants(ref fields);
-            initHighValuePieces(ref fields);
+            initPeasants(ref fields2D);
+            initHighValuePieces(ref fields2D);
             
-            return fields;
+            return fields2D;
         }
 
-        private void initPeasants(ref ChessField[,] fields)
+        private void initPeasants(ref ChessField[,] fields2D)
         {
             for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
             {
                 // init white peasant of column
-                fields[1, column].Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant, Board = this };
+                fields2D[1, column].Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant, Board = this };
 
                 // init black peasant of column
-                fields[6, column].Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant, Board = this };
+                fields2D[6, column].Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant, Board = this };
             }
         }
 
-        private void initHighValuePieces(ref ChessField[,] fields)
+        private void initHighValuePieces(ref ChessField[,] fields2D)
         {
             // execute this for each side (black + white)
             for (int row = 0; row < CHESS_BOARD_DIMENSION; row += 7)
@@ -96,14 +128,14 @@ namespace Chess.Lib
                 // determine color of the chess pieces
                 var color = (row == 0) ? ChessPieceColor.White : ChessPieceColor.Black;
 
-                fields[row, 0].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
-                fields[row, 1].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
-                fields[row, 2].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
-                fields[row, 3].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen,  Board = this };
-                fields[row, 4].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King,   Board = this };
-                fields[row, 5].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
-                fields[row, 6].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
-                fields[row, 7].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
+                fields2D[row, 0].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
+                fields2D[row, 1].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
+                fields2D[row, 2].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
+                fields2D[row, 3].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen,  Board = this };
+                fields2D[row, 4].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King,   Board = this };
+                fields2D[row, 5].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
+                fields2D[row, 6].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
+                fields2D[row, 7].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
             }
         }
 
@@ -146,8 +178,8 @@ namespace Chess.Lib
                 for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
                 {
                     // TODO: try to use unicode chess symbols
-                    char chessPieceColor = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Color : ' ';
-                    char chessPieceType = Fields[row, column].Piece != null ? (char)Fields[row, column].Piece.Type : ' ';
+                    char chessPieceColor = Fields2D[row, column].Piece != null ? (char)Fields2D[row, column].Piece.Color : ' ';
+                    char chessPieceType = Fields2D[row, column].Piece != null ? (char)Fields2D[row, column].Piece.Type : ' ';
                     builder.Append($" { chessPieceColor }{ chessPieceType } |");
                 }
 
@@ -163,6 +195,11 @@ namespace Chess.Lib
             }
 
             return builder.ToString();
+        }
+
+        public object Clone()
+        {
+            return new ChessBoard(this);
         }
 
         #endregion Methods
