@@ -53,7 +53,7 @@ namespace Chess.Lib
         public ChessDraw(ChessDrawType type, ChessPieceColor drawingSide, ChessFieldPosition oldPosition, ChessFieldPosition newPosition)
         {
             // make sure the chess draw type is an en-passant or rochade
-            if (type != ChessDrawType.EnPassant || type != ChessDrawType.Rochade) { throw new ArgumentException($"Illegal chess draw type { type.ToString() } detected (expected EnPassant or Rochade)."); }
+            if (type != ChessDrawType.EnPassant && type != ChessDrawType.Rochade) { throw new ArgumentException($"Illegal chess draw type { type.ToString() } detected (expected EnPassant or Rochade)."); }
 
             Type = type;
             DrawingSide = drawingSide;
