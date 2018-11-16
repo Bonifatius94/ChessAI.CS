@@ -55,62 +55,17 @@ namespace Chess.Lib
         /// <summary>
         /// The position of the chess piece on the chess board.
         /// </summary>
-        [JsonIgnore]
         public ChessFieldPosition Position { get; set; }
-
-        /// <summary>
-        /// A link to the chess board instance of the chess piece.
-        /// </summary>
-        [JsonIgnore]
-        public ChessBoard Board { get; set; }
-
+        
         /// <summary>
         /// Indicates whether the chess piece was already drawn.
         /// </summary>
         public bool WasAlreadyDrawn { get; set; }
-        // TODO: fix revert feature (this property is currently not revertible)
 
         #endregion Members
 
         #region Methods
-
-        ///// <summary>
-        ///// Compute all possible draws for the given chess piece.
-        ///// </summary>
-        ///// <param name="precedingEnemyDraw">The preceding enemy draw</param>
-        ///// <returns>a list of all possible draws</returns>
-        //public List<ChessDraw> GetPossibleDraws(ChessDraw precedingEnemyDraw)
-        //{
-        //    // TODO: check if this method can be removed
-        //    var draws = new ChessDrawHelper().GetPossibleDraws(this, precedingEnemyDraw);
-        //    return draws;
-        //}
         
-        /// <summary>
-        /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken.
-        /// </summary>
-        /// <param name="newPosition"></param>
-        public void Draw(ChessFieldPosition newPosition)
-        {
-            // get the destination chess field instance of the chess board
-            var originalField = Board.Fields[Position];
-            var destinationField = Board.Fields[newPosition];
-
-            // take enemy piece (if there is one)
-            if (destinationField.IsCapturedByPiece && destinationField.Piece.Color != Color)
-            {
-                Board.Pieces.Remove(destinationField.Piece);
-            }
-
-            // move piece from original field to the destination
-            originalField.Piece = null;
-            destinationField.Piece = this;
-            WasAlreadyDrawn = true;
-
-            // setter of ChessField.Piece already updates the Position property of this instance
-            //Position = newPosition;
-        }
-
         /// <summary>
         /// Create a deep copy of the current instance.
         /// </summary>

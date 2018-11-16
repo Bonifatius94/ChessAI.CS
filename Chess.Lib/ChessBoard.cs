@@ -113,10 +113,10 @@ namespace Chess.Lib
             for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
             {
                 // init white peasant of column
-                fields2D[1, column].Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant, Board = this };
+                fields2D[1, column].Piece = new ChessPiece() { Color = ChessPieceColor.White, Type = ChessPieceType.Peasant };
 
                 // init black peasant of column
-                fields2D[6, column].Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant, Board = this };
+                fields2D[6, column].Piece = new ChessPiece() { Color = ChessPieceColor.Black, Type = ChessPieceType.Peasant };
             }
         }
 
@@ -128,19 +128,45 @@ namespace Chess.Lib
                 // determine color of the chess pieces
                 var color = (row == 0) ? ChessPieceColor.White : ChessPieceColor.Black;
 
-                fields2D[row, 0].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
-                fields2D[row, 1].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
-                fields2D[row, 2].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
-                fields2D[row, 3].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen,  Board = this };
-                fields2D[row, 4].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King,   Board = this };
-                fields2D[row, 5].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop, Board = this };
-                fields2D[row, 6].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight, Board = this };
-                fields2D[row, 7].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock,   Board = this };
+                fields2D[row, 0].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock   };
+                fields2D[row, 1].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight };
+                fields2D[row, 2].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop };
+                fields2D[row, 3].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Queen  };
+                fields2D[row, 4].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.King   };
+                fields2D[row, 5].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Bishop };
+                fields2D[row, 6].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Knight };
+                fields2D[row, 7].Piece = new ChessPiece() { Color = color, Type = ChessPieceType.Rock   };
             }
         }
 
         #endregion ChessFieldsPreparation
-        
+
+        /// <summary>
+        /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken.
+        /// </summary>
+        /// <param name="draw">The chess draw to be executed</param>
+        public void ApplyDraw(ChessDraw draw)
+        {
+            // get the destination chess field instance of the chess board
+            var originalField = Fields[draw.OldPosition];
+            var destinationField = Fields[draw.NewPosition];
+            var piece = originalField.Piece;
+
+            // take enemy piece (if there is one)
+            if (destinationField.IsCapturedByPiece && destinationField.Piece.Color != piece.Color)
+            {
+                Pieces.Remove(destinationField.Piece);
+            }
+
+            // move piece from original field to the destination
+            originalField.Piece = null;
+            destinationField.Piece = piece;
+
+            // update position and was drawn flag of the chess piece
+            piece.Position = destinationField.Position;
+            piece.WasAlreadyDrawn = true;
+        }
+
         /// <summary>
         /// Transform the current game situation of the chess board into a text format.
         /// 

@@ -71,11 +71,8 @@ namespace Chess.Lib
             // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
             if (draw.Validate(Board, _drawHistory.Peek()))
             {
-                // get the chess piece to be drawn
-                var piece = Board.Fields[draw.OldPosition].Piece;
-
                 // draw the chess piece
-                piece.Draw(draw.NewPosition);
+                Board.ApplyDraw(draw);
 
                 // apply the chess draw to the chess draws history
                 _drawHistory.Push(draw);
@@ -93,21 +90,13 @@ namespace Chess.Lib
             // make sure the chess draws stack is not empty (otherwise throw exception)
             if (_drawHistory.Count == 0) { throw new InvalidOperationException("There are no draws to be reverted. Stack is empty."); }
 
-            // retrieve the last draw from the draw history stack (and remove it from the stack; with pop operation)
-            var draw = _drawHistory.Pop();
+            // remove the last chess draw from chess draws history
+            _drawHistory.Pop();
 
-            // get the chess piece that was drawn and move it back
-            var piece = Board.Fields[draw.NewPosition].Piece;
-            piece.Draw(draw.OldPosition);
-
-            // put the enemy chess piece back on the chess board (if an enemy piece was taken during the draw)
-            if (draw.TakenEnemyPiece != null)
-            {
-                var enemyPiece = new ChessPiece() { Board = this.Board, Color = SideToDraw, Type = draw.TakenEnemyPiece.Value };
-                Board.Pieces.Add(enemyPiece);
-                enemyPiece.Draw(draw.NewPosition);
-            }
-
+            // create a new chess board and apply all previous chess draws (-> this results in the situation before the last chess draw was applied)
+            var board = new ChessBoard();
+            _drawHistory.Reverse().ToList().ForEach(x => board.ApplyDraw(x));
+            
             // change the side that has to draw
             SideToDraw = SideToDraw == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
         }

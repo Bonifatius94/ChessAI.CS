@@ -17,15 +17,12 @@ namespace Chess.Test
             Console.WriteLine();
 
             // draw white peasant E2-E4
-            var draw = new ChessDraw() {
-                Type = ChessDrawType.Standard,
-                DrawingSide = ChessPieceColor.White,
-                DrawingPieceType = ChessPieceType.Peasant,
-                OldPosition = new ChessFieldPosition("E2"),
-                NewPosition = new ChessFieldPosition("E4"),
-                TakenEnemyPiece = null,
-                Timestamp = DateTime.UtcNow
-            };
+            var draw = new ChessDraw(
+                drawingSide: ChessPieceColor.White,
+                drawingPieceType: ChessPieceType.Peasant,
+                oldPosition: new ChessFieldPosition("E2"),
+                newPosition: new ChessFieldPosition("E4")
+            );
 
             game.ApplyDraw(draw);
 
