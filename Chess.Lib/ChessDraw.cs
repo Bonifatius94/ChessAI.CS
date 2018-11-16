@@ -21,7 +21,7 @@ namespace Chess.Lib
     {
         #region Constructor
 
-        // TODO: try to model the different chess draw types better (e.g. with inheritance)
+        // TODO: try to model the different chess draw types better or at least improve the constructors so they do not get distinguished when being used
         
         /// <summary>
         /// Create a new chess draw instance representing a standard chess draw.
@@ -53,7 +53,7 @@ namespace Chess.Lib
         public ChessDraw(ChessDrawType type, ChessPieceColor drawingSide, ChessFieldPosition oldPosition, ChessFieldPosition newPosition)
         {
             // make sure the chess draw type is an en-passant or rochade
-            if (type != ChessDrawType.EnPassant || type != ChessDrawType.Rochade) { throw new ArgumentException($"Illegal chess draw type { type.ToString() } detected (EnPassant or Rochade expected)."); }
+            if (type != ChessDrawType.EnPassant || type != ChessDrawType.Rochade) { throw new ArgumentException($"Illegal chess draw type { type.ToString() } detected (expected EnPassant or Rochade)."); }
 
             Type = type;
             DrawingSide = drawingSide;
@@ -68,16 +68,20 @@ namespace Chess.Lib
         /// <summary>
         /// Create a new chess draw instance representing a peasant promotion.
         /// </summary>
+        /// <param name="type">The type of the chess draw</param>
         /// <param name="drawingSide">The side that has to draw</param>
         /// <param name="drawingPieceType">The type of the drawing chess piece</param>
         /// <param name="oldPosition">The old position of the drawing chess piece</param>
         /// <param name="newPosition">The new position of the drawing chess piece</param>
         /// <param name="peasantPromotionPieceType">The new type of the peasant after the promotion</param>
         /// <param name="takenEnemyPiece">The type of the taken enemy piece</param>
-        public ChessDraw(ChessPieceColor drawingSide, ChessPieceType drawingPieceType, ChessFieldPosition oldPosition, ChessFieldPosition newPosition, 
+        public ChessDraw(ChessDrawType type, ChessPieceColor drawingSide, ChessPieceType drawingPieceType, ChessFieldPosition oldPosition, ChessFieldPosition newPosition, 
             ChessPieceType peasantPromotionPieceType, ChessPieceType? takenEnemyPiece = null)
         {
-            Type = ChessDrawType.PeasantPromotion;
+            // make sure the chess draw type is a peasant promotion
+            if (type != ChessDrawType.PeasantPromotion) { throw new ArgumentException($"Illegal chess draw type { type.ToString() } detected (expected PeasantPromotion)."); }
+
+            Type = type;
             DrawingSide = drawingSide;
             DrawingPieceType = drawingPieceType;
             OldPosition = oldPosition;
@@ -87,10 +91,7 @@ namespace Chess.Lib
         }
 
         #endregion Constructor
-
-        // TODO: make chess draw readonly
-        // TODO: define a suitable constructor
-
+        
         #region Members
 
         /// <summary>
@@ -150,7 +151,7 @@ namespace Chess.Lib
         public bool Validate(ChessBoard board, ChessDraw predecedingEnemyDraw)
         {
             // get the piece to be drawn
-            var piece = board.Fields[OldPosition].Piece;
+            var piece = board.PiecesByPosition.GetValueOrDefault(OldPosition);
 
             // make sure that there is a chess piece of the correct color that can be drawn
             if (piece == null) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }

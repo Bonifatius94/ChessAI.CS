@@ -70,7 +70,9 @@ namespace Chess.Lib
             var positions = getKingDrawPositions(piece);
 
             // only retrieve positions that are not captured by an allied chess piece
-            positions = positions.Where(x => board.Fields[x].Piece?.Color != piece.Color).ToList();
+            var alliedPieces = (piece.Color == ChessPieceColor.White) ? board.WhitePieces : board.BlackPieces;
+            var positionsCapturedByEnemy = alliedPieces.Select(x => x.Position).ToList();
+            positions = positions.Except(positionsCapturedByEnemy).ToList();
 
             // only retrieve positions that cannot be captured by the enemy king (-> no check)
             var enemyKing = piece.Color == ChessPieceColor.White ? board.BlackKing : board.WhiteKing;
@@ -86,7 +88,7 @@ namespace Chess.Lib
             positions = positions.Except(enemyCapturablePositions).ToList();
 
             // transform positions to draws
-            var draws = positions.Select(newPos => new ChessDraw(piece.Color, ChessPieceType.King, piece.Position, newPos, board.Fields[newPos]?.Piece.Type)).ToList();
+            var draws = positions.Select(newPos => new ChessDraw(piece.Color, ChessPieceType.King, piece.Position, newPos, board.PiecesByPosition.GetValueOrDefault(newPos)?.Type)).ToList();
 
             return draws;
         }
@@ -227,12 +229,12 @@ namespace Chess.Lib
             // only retrieve positions that are actually onto the chess board (and not off scale)
             positions = positions.Where(x => x.IsValid).ToList();
 
-            // convert capturable positions to chess draws
-            var draws = positions.Select(x => new ChessDraw(gsregsr));
+            // transform positions to chess draws
+            var draws = positions.Select(newPos => new ChessDraw(piece.Color, ChessPieceType.Knight, piece.Position, newPos, board.PiecesByPosition.GetValueOrDefault(newPos)?.Type)).ToList();
 
             // TODO: remove draws that would draw into a check situation
 
-            return positions;
+            return draws;
         }
 
         #endregion Methods
@@ -268,8 +270,8 @@ namespace Chess.Lib
             var posOneForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 1 : -1), piece.Position.Column);
             var posTwoForeward = new ChessFieldPosition(piece.Position.Row + (piece.Color == ChessPieceColor.White ? 2 : -2), piece.Position.Column);
 
-            bool oneForeward = posOneForeward.IsValid && !board.Fields[posOneForeward].IsCapturedByPiece;
-            bool twoForeward = oneForeward && !piece.WasAlreadyDrawn && posTwoForeward.IsValid && !board.Fields[posTwoForeward].IsCapturedByPiece;
+            bool oneForeward = posOneForeward.IsValid && !board.IsFieldCaptured(posOneForeward);
+            bool twoForeward = oneForeward && !piece.WasAlreadyDrawn && posTwoForeward.IsValid && !board.IsFieldCaptured(posTwoForeward);
 
             var draws = new List<ChessDraw>();
 
@@ -292,11 +294,11 @@ namespace Chess.Lib
             var posEnPassantEnemyRight = new ChessFieldPosition(piece.Position.Row, piece.Position.Column - 1);
             
             // check if right / left catch is possible
-            bool catchLeft = posCatchLeft.IsValid && board.Fields[posCatchLeft].IsCapturedByPiece && board.Fields[posCatchLeft].Piece.Color != piece.Color;
-            bool catchRight = posCatchRight.IsValid && board.Fields[posCatchRight].IsCapturedByPiece && board.Fields[posCatchRight].Piece.Color != piece.Color;
+            bool catchLeft = posCatchLeft.IsValid && board.IsFieldCaptured(posCatchLeft) && board.PiecesByPosition[posCatchLeft].Color != piece.Color;
+            bool catchRight = posCatchRight.IsValid && board.IsFieldCaptured(posCatchRight) && board.PiecesByPosition[posCatchRight].Color != piece.Color;
 
-            if (catchLeft) { draws.Add(new ChessDraw(piece.Color, ChessPieceType.Peasant, piece.Position, posCatchLeft, board.Fields[posCatchLeft].Piece.Type)); }
-            if (catchRight) { draws.Add(new ChessDraw(piece.Color, ChessPieceType.Peasant, piece.Position, posCatchRight, board.Fields[posCatchRight].Piece.Type)); }
+            if (catchLeft) { draws.Add(new ChessDraw(piece.Color, ChessPieceType.Peasant, piece.Position, posCatchLeft, board.PiecesByPosition[posCatchLeft].Type)); }
+            if (catchRight) { draws.Add(new ChessDraw(piece.Color, ChessPieceType.Peasant, piece.Position, posCatchRight, board.PiecesByPosition[posCatchRight].Type)); }
 
             // check if en-passant is possible
             bool wasLastDrawPeasantDoubleForeward = precedingEnemyDraw.DrawingPieceType == ChessPieceType.Peasant && Math.Abs(precedingEnemyDraw.OldPosition.Row - precedingEnemyDraw.NewPosition.Row) == 2;
@@ -306,8 +308,8 @@ namespace Chess.Lib
                 bool enPassantLeft = posEnPassantEnemyLeft.Row == piece.Position.Row && Math.Abs(posEnPassantEnemyLeft.Column - piece.Position.Column) == 1;
                 bool enPassantRight = posEnPassantEnemyRight.Row == piece.Position.Row && Math.Abs(posEnPassantEnemyRight.Column - piece.Position.Column) == 1;
 
-                if (enPassantLeft) { draws.Add(new ChessDraw(piece.Color, piece.Position, posCatchLeft, board.Fields[posEnPassantEnemyLeft].Piece.Type)); }
-                if (enPassantRight) { draws.Add(new ChessDraw(piece.Color, piece.Position, posCatchRight, board.Fields[posEnPassantEnemyRight].Piece.Type)); }
+                if (enPassantLeft) { draws.Add(new ChessDraw(ChessDrawType.EnPassant, piece.Color, piece.Position, posCatchLeft)); }
+                if (enPassantRight) { draws.Add(new ChessDraw(ChessDrawType.EnPassant, piece.Color, piece.Position, posCatchRight)); }
             }
             
             return draws;
@@ -339,8 +341,9 @@ namespace Chess.Lib
         public bool CanOpponentCaptureField(ChessBoard board, ChessFieldPosition position, ChessPieceColor opponent)
         {
             // TODO: implement logic
+            return false;
         }
-
+        
         #endregion Methods
     }
 }

@@ -69,7 +69,7 @@ namespace Chess.Lib
         public void ApplyDraw(ChessDraw draw)
         {
             // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
-            if (draw.Validate(Board, _drawHistory.Peek()))
+            if (_drawHistory.Count == 0 || draw.Validate(Board, _drawHistory.Peek()))
             {
                 // draw the chess piece
                 Board.ApplyDraw(draw);
@@ -96,6 +96,7 @@ namespace Chess.Lib
             // create a new chess board and apply all previous chess draws (-> this results in the situation before the last chess draw was applied)
             var board = new ChessBoard();
             _drawHistory.Reverse().ToList().ForEach(x => board.ApplyDraw(x));
+            // TODO: test if Reverse() brings the correct behaviour
             
             // change the side that has to draw
             SideToDraw = SideToDraw == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
