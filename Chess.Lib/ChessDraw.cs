@@ -158,7 +158,7 @@ namespace Chess.Lib
             if (piece.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
-            var possibleDraws = new ChessDrawHelper().GetPossibleDraws(board, piece, this, true);
+            var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, this, true);
 
             // make sure there is at least one possible draw for the given chess piece
             if (possibleDraws?.Count <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }

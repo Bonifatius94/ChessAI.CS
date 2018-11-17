@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chess.Lib
 {
-    public interface IChessDrawHelper
+    public interface IChessDrawPossibilitiesHelper
     {
         /// <summary>
         /// Compute the field positions that can be captured by the given chess piece.
@@ -18,7 +18,7 @@ namespace Chess.Lib
         List<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool avoidDrawIntoCheck);
     }
 
-    public class ChessDrawHelper : IChessDrawHelper
+    public class ChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -32,16 +32,16 @@ namespace Chess.Lib
         /// <returns>a list of field positions</returns>
         public List<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
-            IChessDrawHelper helper;
+            IChessDrawPossibilitiesHelper helper;
 
             switch (piece.Type)
             {
-                case ChessPieceType.King:    helper = new KingChessDrawHelper();    break;
-                case ChessPieceType.Queen:   helper = new QueenChessDrawHelper();   break;
-                case ChessPieceType.Rock:    helper = new RockChessDrawHelper();    break;
-                case ChessPieceType.Bishop:  helper = new BishopChessDrawHelper();  break;
-                case ChessPieceType.Knight:  helper = new KnightChessDrawHelper();  break;
-                case ChessPieceType.Peasant: helper = new PeasantChessDrawHelper(); break;
+                case ChessPieceType.King:    helper = new KingChessDrawPossibilitiesHelper();    break;
+                case ChessPieceType.Queen:   helper = new QueenChessDrawPossibilitiesHelper();   break;
+                case ChessPieceType.Rock:    helper = new RockChessDrawPossibilitiesHelper();    break;
+                case ChessPieceType.Bishop:  helper = new BishopChessDrawPossibilitiesHelper();  break;
+                case ChessPieceType.Knight:  helper = new KnightChessDrawPossibilitiesHelper();  break;
+                case ChessPieceType.Peasant: helper = new PeasantChessDrawPossibilitiesHelper(); break;
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
 
@@ -53,7 +53,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class KingChessDrawHelper : IChessDrawHelper
+    public class KingChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -83,13 +83,15 @@ namespace Chess.Lib
             // only retrieve positions that cannot be captured by other enemy chess pieces (-> no draw into check)
             var enemyCapturablePositions =
                 board.Pieces.Where(x => x.Color != piece.Color && x != enemyKing)                              // select only enemy pieces that are not the king
-                .SelectMany(x => new ChessDrawHelper().GetPossibleDraws(board, x, precedingEnemyDraw, false))  // compute draws of those enemy pieces
+                .SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, precedingEnemyDraw, false))  // compute draws of those enemy pieces
                 .Select(x => x.NewPosition).ToList();
 
             positions = positions.Except(enemyCapturablePositions).ToList();
 
             // transform positions to draws
             var draws = positions.Select(newPos => new ChessDraw(piece.Color, ChessPieceType.King, piece.Position, newPos, board.PiecesByPosition.GetValueOrDefault(newPos)?.Type)).ToList();
+
+            // TODO: add rochade draws
 
             return draws;
         }
@@ -114,14 +116,14 @@ namespace Chess.Lib
 
             // only retrieve positions that are actually onto the chess board (and not off scale)
             positions = positions.Where(x => x.IsValid).ToList();
-
+            
             return positions;
         }
 
         #endregion Methods
     }
 
-    public class QueenChessDrawHelper : IChessDrawHelper
+    public class QueenChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -140,8 +142,8 @@ namespace Chess.Lib
 
             // combine the positions that a rock or a bishop could capture
             var draws =
-                new RockChessDrawHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)
-                .Union(new BishopChessDrawHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)).ToList();
+                new RockChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)
+                .Union(new BishopChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)).ToList();
 
             return draws;
         }
@@ -149,7 +151,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class RockChessDrawHelper : IChessDrawHelper
+    public class RockChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -234,20 +236,10 @@ namespace Chess.Lib
             return draws;
         }
         
-        public ChessDraw? GetRochadeDraw(ChessBoard board, ChessPiece piece)
-        {
-            // get allied king
-            var alliedKing = (piece.Color == ChessPieceColor.White) ? board.WhiteKing : board.BlackKing;
-
-            // TODO: implement logic
-
-            return null;
-        }
-
         #endregion Methods
     }
 
-    public class BishopChessDrawHelper : IChessDrawHelper
+    public class BishopChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -334,7 +326,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class KnightChessDrawHelper : IChessDrawHelper
+    public class KnightChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -378,7 +370,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class PeasantChessDrawHelper : IChessDrawHelper
+    public class PeasantChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
     {
         #region Methods
 
@@ -471,7 +463,7 @@ namespace Chess.Lib
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = (draw.DrawingSide == ChessPieceColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
-            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawHelper().GetPossibleDraws(board, x, draw, false)).ToList();
+            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, draw, false)).ToList();
 
             // find out if the allied king could be taken by at least one enemy answer
             bool ret = possibleEnemyAnswers.Any(x => x.TakenEnemyPiece == ChessPieceType.King);
