@@ -22,6 +22,8 @@ namespace Chess.Lib
         #region Constructor
 
         // TODO: try to model the different chess draw types better or at least improve the constructors so they do not get distinguished when being used
+
+        // TODO: remove rochade / en-passant constructor and express the draw type by using king's / peasant's new position
         
         /// <summary>
         /// Create a new chess draw instance representing a standard chess draw.
@@ -151,14 +153,14 @@ namespace Chess.Lib
         public bool Validate(ChessBoard board, ChessDraw predecedingEnemyDraw)
         {
             // get the piece to be drawn
-            var piece = board.PiecesByPosition.GetValueOrDefault(OldPosition);
+            var piece = board.GetPieceAt(OldPosition);
 
             // make sure that there is a chess piece of the correct color that can be drawn
             if (piece == null) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }
-            if (piece.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
+            if (piece.Value.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
-            var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, this, true);
+            var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece.Value, this, true);
 
             // make sure there is at least one possible draw for the given chess piece
             if (possibleDraws?.Count <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
@@ -184,9 +186,10 @@ namespace Chess.Lib
             switch (Type)
             {
                 case ChessDrawType.Standard:
-                    ret = $"{ color } { drawingPiece } { OldPosition.FieldName }-{ NewPosition.FieldName }";
+                    ret = $"{ color } { drawingPiece } { OldPosition.ToString() }-{ NewPosition.ToString() }";
                     break;
                 case ChessDrawType.Rochade:
+                    // TODO: rework this using the new position of the king as indicator
                     bool isLeftSide = (OldPosition.Column == 0 && DrawingSide == ChessPieceColor.White) || (OldPosition.Column == 7 && DrawingSide == ChessPieceColor.Black);
                     ret = $"{ color } { (isLeftSide ? "left" : "right") }-side rochade";
                     break;
