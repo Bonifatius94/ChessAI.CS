@@ -8,6 +8,8 @@ namespace Chess.Test
     {
         #region Main
 
+        // TODO: transform this program into an interactive chess console game
+
         public static void Main(string[] args)
         {
             // create a new chess game instance and print it to the console

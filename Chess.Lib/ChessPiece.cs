@@ -109,7 +109,7 @@ namespace Chess.Lib
         /// </summary>
         public ChessFieldPosition Position
         {
-            get { return new ChessFieldPosition(_hashCode & BITS_OF_POSITION); }
+            get { return new ChessFieldPosition((byte)(_hashCode & BITS_OF_POSITION)); }
             set { _hashCode = (short)((_hashCode & ~BITS_OF_POSITION) | value.GetHashCode()); }
         }
         

@@ -16,53 +16,57 @@ namespace Chess.Lib
         /// The regex instance for validating a chess field name.
         /// </summary>
         private static readonly Regex _regexFieldName = new Regex("^[A-H]{1}[1-8]{1}$");
-
+        
         #endregion Constants
 
         #region Constructor
-
-        /// <summary>
-        /// Create a new field position instance from the given row and column.
-        /// </summary>
-        public ChessFieldPosition(int row, int column)
-        {
-            Row = row;
-            Column = column;
-        }
-
+        
         /// <summary>
         /// Create a new field position instance from the given field name.
         /// </summary>
         /// <param name="fieldName">the chess field name (e.g. E5)</param>
         public ChessFieldPosition(string fieldName)
         {
+            // TODO: remove this check if the performance is too bad
             // check if the field name format is correct (otherwise throw argument exception)
             if (!_regexFieldName.IsMatch(fieldName)) { throw new ArgumentException($"invalid field name { fieldName }!"); }
 
             // parse row and column
-            Row = fieldName[1] - '1';
-            Column = fieldName[0] - 'A';
+            int row = fieldName[1] - '1';
+            int column = fieldName[0] - 'A';
+
+            // set hash code
+            _hashCode = (byte)((row << 3) | column);
         }
 
-        public ChessFieldPosition(int hashCode)
+        /// <summary>
+        /// Create a new field position instance from the given row and column.
+        /// </summary>
+        public ChessFieldPosition(int row, int column)
         {
-            Column = (hashCode >> 3);
-            Row = (hashCode & 7);
+            _hashCode = (byte)((row << 3) | column);
+        }
+
+        public ChessFieldPosition(byte hashCode)
+        {
+            _hashCode = hashCode;
         }
 
         #endregion Constructor
 
         #region Members
+
+        private readonly byte _hashCode;
         
         /// <summary>
         /// The row index of the chess field position, starting with 0.
         /// </summary>
-        public int Row { get; }
+        public int Row { get { return _hashCode >> 3; } }
 
         /// <summary>
         /// The column index of the chess field position, starting with 0.
         /// </summary>
-        public int Column { get; }
+        public int Column { get { return _hashCode & 7; } }
 
         /// <summary>
         /// Generates the chess field name out of Row and Column property (e.g. 'A1', 'H8').
@@ -98,13 +102,12 @@ namespace Chess.Lib
         }
 
         /// <summary>
-        /// Override of GetHashCode() is required for Equals() method. Therefore column * 8 + row is returned, which is unique for each field position on the chess board.
+        /// Override of GetHashCode() is required for Equals() method. Therefore the hash code of the instance is returned.
         /// </summary>
         /// <returns>a hash code that is unique for each (row, column) tuple</returns>
         public override int GetHashCode()
         {
-            // TODO: check if this calculation can be optimized by binary operations
-            return Column * ChessBoard.CHESS_BOARD_DIMENSION + Row;
+            return _hashCode;
         }
 
         /// <summary>
