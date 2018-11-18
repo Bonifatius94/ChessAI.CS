@@ -17,7 +17,7 @@ namespace Chess.Lib
         /// </summary>
         public const int CHESS_BOARD_DIMENSION = 8;
 
-        public static readonly List<short> START_FORMATION = new List<ChessPiece>()
+        public static readonly List<ChessPiece> START_FORMATION = new List<ChessPiece>()
         {
             new ChessPiece() { Position = new ChessFieldPosition("A1"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
             new ChessPiece() { Position = new ChessFieldPosition("B1"), Type = ChessPieceType.Knight , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
@@ -54,8 +54,7 @@ namespace Chess.Lib
             new ChessPiece() { Position = new ChessFieldPosition("F8"), Type = ChessPieceType.Bishop , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
             new ChessPiece() { Position = new ChessFieldPosition("G8"), Type = ChessPieceType.Knight , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
             new ChessPiece() { Position = new ChessFieldPosition("H8"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-
-        }.Select(x => (short)x.GetHashCode()).ToList();
+        };
 
         #endregion Constants
 
@@ -71,25 +70,18 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="original">The chess board to be cloned</param>
         public ChessBoard(ChessBoard original) : this(original.Pieces) { }
-
+        
         /// <summary>
         /// Create a new instance of a chess board with the given chess pieces.
         /// </summary>
         /// <param name="pieces">The chess pieces to be applied to the chess board</param>
-        public ChessBoard(IEnumerable<ChessPiece> pieces) : this(pieces.Select(x => (short)x.GetHashCode())) { }
-
-        /// <summary>
-        /// Create a new instance of a chess board with the given chess pieces (as short values).
-        /// </summary>
-        /// <param name="piecesAsHashCodes">The chess pieces to be applied to the chess board</param>
-        public ChessBoard(IEnumerable<short> piecesAsHashCodes)
+        public ChessBoard(IEnumerable<ChessPiece> pieces)
         {
-            _pieces = new short?[CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION];
+            _pieces = new ChessPiece?[CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION];
 
-            foreach (var hashCode in piecesAsHashCodes)
+            foreach (var piece in pieces)
             {
-                var piece = new ChessPiece(hashCode);
-                _pieces[piece.Position.GetHashCode()] = hashCode;
+                _pieces[piece.Position.GetHashCode()] = piece;
             }
         }
 
@@ -100,12 +92,12 @@ namespace Chess.Lib
         /// <summary>
         /// An array of all chess pieces at the index of their position's hash code. (value is null if there is no chess piece at the position)
         /// </summary>
-        private short?[] _pieces { get; }
+        private ChessPiece?[] _pieces { get; }
 
         /// <summary>
         /// A list of all chess pieces that are currently on the chess board.
         /// </summary>
-        public List<ChessPiece> Pieces { get { return _pieces.Where(x => x != null).Select(x => new ChessPiece(x.Value)).ToList(); } }
+        public List<ChessPiece> Pieces { get { return _pieces.Where(x => x != null).Select(x => x.Value).ToList(); } }
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
@@ -148,12 +140,17 @@ namespace Chess.Lib
         /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
         public ChessPiece? GetPieceAt(ChessFieldPosition position)
         {
-            return IsCapturedAt(position) ? (ChessPiece?)new ChessPiece(_pieces[position.GetHashCode()].Value) : null;
+            return _pieces[position.GetHashCode()];
         }
 
-        public void UpdatePieceAt(ChessFieldPosition position, ChessPiece? piece)
+        /// <summary>
+        /// Update the chess piece at the given position.
+        /// </summary>
+        /// <param name="position">The position of the chess piece to be updated</param>
+        /// <param name="newPiece">The new chess piece data</param>
+        public void UpdatePieceAt(ChessFieldPosition position, ChessPiece? newPiece)
         {
-            _pieces[position.GetHashCode()] = (short?)piece?.GetHashCode();
+            _pieces[position.GetHashCode()] = newPiece;
         }
 
         /// <summary>

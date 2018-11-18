@@ -37,9 +37,17 @@ namespace Chess.Lib
     public struct ChessPiece : ICloneable
     {
         #region Constants
-
-        private const int POSITION_BITS = 6;
-        private const int TYPE_BITS = 3;
+        
+        // define the trailing bits after the data bits
+        private const short TYPE_TRAILING_BITS      = 6;
+        private const short WAS_MOVED_TRAILING_BITS = 9;
+        private const short COLOR_TRAILING_BITS     = 10;
+        
+        // define which bits of the hash code store the data
+        private const short BITS_OF_COLOR          = 1024;   // bits: 100 00000000
+        private const short BITS_OF_WAS_MOVED_FLAG = 512;    // bits: 010 00000000
+        private const short BITS_OF_TYPE           = 448;    // bits: 001 11000000
+        private const short BITS_OF_POSITION       = 63;     // bits: 000 00111111
 
         #endregion Constants
 
@@ -49,19 +57,9 @@ namespace Chess.Lib
         /// Creates a chess piece instance from hash code.
         /// </summary>
         /// <param name="hashCode">The hash code containing the chess piece data</param>
-        public ChessPiece(int hashCode)
+        public ChessPiece(short hashCode)
         {
-            // decode color flag (1st leading bit)
-            Color = (ChessPieceColor)((hashCode & 1024) >> 10);
-
-            // decode was moved flag (2nd leading bit)
-            WasAlreadyDrawn = ((hashCode & 512) >> 9) == 1;
-
-            // decode chess piece type (3rd - 5th leading bit)
-            Type = (ChessPieceType)((hashCode & 448) >> 6);
-
-            // decode position (last 6 bits of the code)
-            Position = new ChessFieldPosition(hashCode & 63);
+            _hashCode = hashCode;
         }
 
         #endregion Constructor
@@ -69,24 +67,51 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// The type of the chess piece.
+        /// The binary representation containing the chess piece data.
+        /// 
+        /// The code consists of 11 bits: 
+        /// 6 bits for position, 3 bits for piece type and another 1 bit for color / was moved flag
+        /// 
+        /// | unused | color | was moved | type | position |
+        /// |  xxxxx |     x |         x |  xxx |   xxxxxx |
         /// </summary>
-        public ChessPieceType Type { get; set; }
-
-        /// <summary>
-        /// The color of the chess piece.
-        /// </summary>
-        public ChessPieceColor Color { get; set; }
-
-        /// <summary>
-        /// The position of the chess piece on the chess board.
-        /// </summary>
-        public ChessFieldPosition Position { get; set; }
+        private short _hashCode;
         
         /// <summary>
-        /// Indicates whether the chess piece was already drawn.
+        /// The color of the chess piece. (calculated from hash code)
         /// </summary>
-        public bool WasAlreadyDrawn { get; set; }
+        public ChessPieceColor Color
+        {
+            get { return (ChessPieceColor)((_hashCode & BITS_OF_COLOR) >> COLOR_TRAILING_BITS); }
+            set { _hashCode = (short)((_hashCode & ~BITS_OF_COLOR) | (((short)value) << COLOR_TRAILING_BITS)); }
+        }
+
+        /// <summary>
+        /// Indicates whether the chess piece was already drawn. (calculated from hash code)
+        /// </summary>
+        public bool WasAlreadyDrawn
+        {
+            get { return ((_hashCode & BITS_OF_WAS_MOVED_FLAG) >> WAS_MOVED_TRAILING_BITS) == 1; }
+            set { _hashCode = (short)((_hashCode & ~BITS_OF_WAS_MOVED_FLAG) | (((short)(value ? 1 : 0)) << WAS_MOVED_TRAILING_BITS)); }
+        }
+
+        /// <summary>
+        /// The type of the chess piece. (calculated from hash code)
+        /// </summary>
+        public ChessPieceType Type
+        {
+            get { return (ChessPieceType)((_hashCode & BITS_OF_TYPE) >> TYPE_TRAILING_BITS); }
+            set { _hashCode = (short)((_hashCode & ~BITS_OF_TYPE) | (((short)value) << TYPE_TRAILING_BITS)); }
+        }
+
+        /// <summary>
+        /// The position of the chess piece on the chess board. (calculated from hash code)
+        /// </summary>
+        public ChessFieldPosition Position
+        {
+            get { return new ChessFieldPosition(_hashCode & BITS_OF_POSITION); }
+            set { _hashCode = (short)((_hashCode & ~BITS_OF_POSITION) | value.GetHashCode()); }
+        }
         
         #endregion Members
 
@@ -131,31 +156,12 @@ namespace Chess.Lib
         }
 
         /// <summary>
-        /// Override of GetHashCode() is required for Equals() method. Therefore a unique number is returned.
-        /// 
-        /// The code consists of 11 bits: 
-        /// 6 bits for position, 3 bits for piece type and another 1 bit for color / was moved flag
-        /// 
-        /// | color | was moved | type | position |
-        /// |     x |         x |  xxx |   xxxxxx |
+        /// Override of GetHashCode() is required for Equals() method. Therefore the hash code of the instance is returned.
         /// </summary>
         /// <returns>a hash code that is unique for each (row, column) tuple</returns>
         public override int GetHashCode()
         {
-            int code;
-            
-            // encode color / was moved flag (leading 2 bits of the code)
-            code = (((int)Color) << 1) + ((WasAlreadyDrawn) ? 1 : 0);
-
-            // encode type (next 3 bits of the code)
-            code = code << TYPE_BITS;
-            code += (int)Type;
-            
-            // encode position (last 6 bits of the code)
-            code = code << POSITION_BITS;
-            code += Position.GetHashCode();
-            
-            return code;
+            return _hashCode;
         }
 
         /// <summary>
@@ -189,11 +195,11 @@ namespace Chess.Lib
         {
             switch (type)
             {
-                case ChessPieceType.King: return 'K';
-                case ChessPieceType.Queen: return 'Q';
-                case ChessPieceType.Rock: return 'R';
-                case ChessPieceType.Bishop: return 'B';
-                case ChessPieceType.Knight: return 'H'; // 'H' like hourse (because 'K' is already taken by king)
+                case ChessPieceType.King:    return 'K';
+                case ChessPieceType.Queen:   return 'Q';
+                case ChessPieceType.Rock:    return 'R';
+                case ChessPieceType.Bishop:  return 'B';
+                case ChessPieceType.Knight:  return 'H'; // 'H' like hourse (because 'K' is already taken by king)
                 case ChessPieceType.Peasant: return 'P';
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }

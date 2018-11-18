@@ -20,10 +20,10 @@ namespace Chess.Test
             // define some draws to test if the chess pieces behave correctly
             var draws = new List<ChessDraw>() {
                 new ChessDraw(ChessPieceColor.White, ChessPieceType.Peasant, new ChessFieldPosition("E2"), new ChessFieldPosition("E4")), // test peasant two foreward
-                new ChessDraw(ChessPieceColor.Black, ChessPieceType.Peasant, new ChessFieldPosition("E7"), new ChessFieldPosition("E6")), // test peasamt one foreward
-                new ChessDraw(ChessPieceColor.White, ChessPieceType.Queen, new ChessFieldPosition("D1"), new ChessFieldPosition("F3")),   // test queen / bishop
-                new ChessDraw(ChessPieceColor.Black, ChessPieceType.Knight, new ChessFieldPosition("B8"), new ChessFieldPosition("C6")),  // test knight
-                new ChessDraw(ChessPieceColor.White, ChessPieceType.Queen, new ChessFieldPosition("F3"), new ChessFieldPosition("F5")),   // test queen / rock
+                new ChessDraw(ChessPieceColor.Black, ChessPieceType.Peasant, new ChessFieldPosition("E7"), new ChessFieldPosition("E6")), // test peasant one foreward
+                new ChessDraw(ChessPieceColor.White, ChessPieceType.Queen,   new ChessFieldPosition("D1"), new ChessFieldPosition("F3")), // test queen / bishop
+                new ChessDraw(ChessPieceColor.Black, ChessPieceType.Knight,  new ChessFieldPosition("B8"), new ChessFieldPosition("C6")), // test knight
+                new ChessDraw(ChessPieceColor.White, ChessPieceType.Queen,   new ChessFieldPosition("F3"), new ChessFieldPosition("F5")), // test queen / rock
             };
 
             foreach (var draw in draws)
