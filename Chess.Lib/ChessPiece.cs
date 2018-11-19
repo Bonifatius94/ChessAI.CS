@@ -28,7 +28,7 @@ namespace Chess.Lib
     ///  - Black (B)
     ///  - White (W)
     /// </summary>
-    public enum ChessPieceColor
+    public enum ChessColor
     {
         Black = 0,
         White = 1
@@ -80,9 +80,9 @@ namespace Chess.Lib
         /// <summary>
         /// The color of the chess piece. (calculated from hash code)
         /// </summary>
-        public ChessPieceColor Color
+        public ChessColor Color
         {
-            get { return (ChessPieceColor)((_hashCode & BITS_OF_COLOR) >> COLOR_TRAILING_BITS); }
+            get { return (ChessColor)((_hashCode & BITS_OF_COLOR) >> COLOR_TRAILING_BITS); }
             set { _hashCode = (short)((_hashCode & ~BITS_OF_COLOR) | (((short)value) << COLOR_TRAILING_BITS)); }
         }
 
@@ -107,9 +107,9 @@ namespace Chess.Lib
         /// <summary>
         /// The position of the chess piece on the chess board. (calculated from hash code)
         /// </summary>
-        public ChessFieldPosition Position
+        public ChessPosition Position
         {
-            get { return new ChessFieldPosition((byte)(_hashCode & BITS_OF_POSITION)); }
+            get { return new ChessPosition((byte)(_hashCode & BITS_OF_POSITION)); }
             set { _hashCode = (short)((_hashCode & ~BITS_OF_POSITION) | value.GetHashCode()); }
         }
         
@@ -123,14 +123,7 @@ namespace Chess.Lib
         /// <returns>a deep copy of the current instance</returns>
         public object Clone()
         {
-            var piece = new ChessPiece() {
-                Type = Type,
-                Color = Color,
-                Position = (ChessFieldPosition)Position.Clone(),
-                WasAlreadyDrawn = WasAlreadyDrawn
-            };
-
-            return piece;
+            return new ChessPiece(_hashCode);
         }
 
         /// <summary>
@@ -152,7 +145,7 @@ namespace Chess.Lib
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            return (obj.GetType() == typeof(ChessFieldPosition)) && (((ChessFieldPosition)obj).GetHashCode() == GetHashCode());
+            return (obj.GetType() == typeof(ChessPosition)) && (((ChessPosition)obj).GetHashCode() == GetHashCode());
         }
 
         /// <summary>
@@ -199,7 +192,7 @@ namespace Chess.Lib
                 case ChessPieceType.Queen:   return 'Q';
                 case ChessPieceType.Rock:    return 'R';
                 case ChessPieceType.Bishop:  return 'B';
-                case ChessPieceType.Knight:  return 'H'; // 'H' like hourse (because 'K' is already taken by king)
+                case ChessPieceType.Knight:  return 'H'; // 'H' like horse (because 'K' is already taken by king)
                 case ChessPieceType.Peasant: return 'P';
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
@@ -208,12 +201,12 @@ namespace Chess.Lib
 
     public static class ChessPieceColorAsChar
     {
-        public static char ToChar(this ChessPieceColor type)
+        public static char ToChar(this ChessColor type)
         {
             switch (type)
             {
-                case ChessPieceColor.White: return 'W';
-                case ChessPieceColor.Black: return 'B';
+                case ChessColor.White: return 'W';
+                case ChessColor.Black: return 'B';
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
         }

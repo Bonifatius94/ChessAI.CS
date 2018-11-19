@@ -8,7 +8,7 @@ namespace Chess.Lib
     /// <summary>
     /// Represents a position on a chess board.
     /// </summary>
-    public readonly struct ChessFieldPosition : ICloneable
+    public readonly struct ChessPosition : ICloneable
     {
         #region Constants
 
@@ -25,7 +25,7 @@ namespace Chess.Lib
         /// Create a new field position instance from the given field name.
         /// </summary>
         /// <param name="fieldName">the chess field name (e.g. E5)</param>
-        public ChessFieldPosition(string fieldName)
+        public ChessPosition(string fieldName)
         {
             // TODO: remove this check if the performance is too bad
             // check if the field name format is correct (otherwise throw argument exception)
@@ -42,12 +42,12 @@ namespace Chess.Lib
         /// <summary>
         /// Create a new field position instance from the given row and column.
         /// </summary>
-        public ChessFieldPosition(int row, int column)
+        public ChessPosition(int row, int column)
         {
             _hashCode = (byte)((row << 3) | column);
         }
 
-        public ChessFieldPosition(byte hashCode)
+        public ChessPosition(byte hashCode)
         {
             _hashCode = hashCode;
         }
@@ -98,7 +98,7 @@ namespace Chess.Lib
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            return (obj.GetType() == typeof(ChessFieldPosition)) && (((ChessFieldPosition)obj).GetHashCode() == GetHashCode());
+            return (obj.GetType() == typeof(ChessPosition)) && (((ChessPosition)obj).GetHashCode() == GetHashCode());
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Chess.Lib
         /// <returns>a deep copy of the current instance</returns>
         public object Clone()
         {
-            return new ChessFieldPosition(Row, Column);
+            return new ChessPosition(_hashCode);
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace Chess.Lib
         /// <param name="c1">The first position to compare</param>
         /// <param name="c2">The second position to compare</param>
         /// <returns>a boolean that indicates whether the positions are equal</returns>
-        public static bool operator ==(ChessFieldPosition c1, ChessFieldPosition c2)
+        public static bool operator ==(ChessPosition c1, ChessPosition c2)
         {
             return c1.GetHashCode() == c2.GetHashCode();
         }
@@ -136,7 +136,7 @@ namespace Chess.Lib
         /// <param name="c1">The first position to compare</param>
         /// <param name="c2">The second position to compare</param>
         /// <returns>a boolean that indicates whether the positions are not equal</returns>
-        public static bool operator !=(ChessFieldPosition c1, ChessFieldPosition c2)
+        public static bool operator !=(ChessPosition c1, ChessPosition c2)
         {
             return c1.GetHashCode() != c2.GetHashCode();
         }

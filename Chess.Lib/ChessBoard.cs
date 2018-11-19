@@ -8,7 +8,7 @@ namespace Chess.Lib
     /// <summary>
     /// This class represents a chess board and all fields / pieces on it.
     /// </summary>
-    public class ChessBoard : ICloneable
+    public struct ChessBoard : ICloneable
     {
         #region Constants
 
@@ -17,59 +17,59 @@ namespace Chess.Lib
         /// </summary>
         public const int CHESS_BOARD_DIMENSION = 8;
 
-        public static readonly List<ChessPiece> START_FORMATION = new List<ChessPiece>()
+        private static readonly List<ChessPiece> START_FORMATION = new List<ChessPiece>()
         {
-            new ChessPiece() { Position = new ChessFieldPosition("A1"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("B1"), Type = ChessPieceType.Knight , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("C1"), Type = ChessPieceType.Bishop , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("D1"), Type = ChessPieceType.Queen  , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("E1"), Type = ChessPieceType.King   , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("F1"), Type = ChessPieceType.Bishop , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("G1"), Type = ChessPieceType.Knight , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("H1"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("A1"), Type = ChessPieceType.Rock   , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("B1"), Type = ChessPieceType.Knight , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("C1"), Type = ChessPieceType.Bishop , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("D1"), Type = ChessPieceType.Queen  , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("E1"), Type = ChessPieceType.King   , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("F1"), Type = ChessPieceType.Bishop , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("G1"), Type = ChessPieceType.Knight , Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("H1"), Type = ChessPieceType.Rock   , Color = ChessColor.White, WasAlreadyDrawn = false },
 
-            new ChessPiece() { Position = new ChessFieldPosition("A2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("B2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("C2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("D2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("E2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("F2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("G2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("H2"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("A2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("B2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("C2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("D2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("E2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("F2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("G2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("H2"), Type = ChessPieceType.Peasant, Color = ChessColor.White, WasAlreadyDrawn = false },
 
-            new ChessPiece() { Position = new ChessFieldPosition("A7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("B7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("C7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("D7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("E7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("F7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("G7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("H7"), Type = ChessPieceType.Peasant, Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("A7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("B7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("C7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("D7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("E7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("F7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("G7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("H7"), Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasAlreadyDrawn = false },
 
-            new ChessPiece() { Position = new ChessFieldPosition("A8"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("B8"), Type = ChessPieceType.Knight , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("C8"), Type = ChessPieceType.Bishop , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("D8"), Type = ChessPieceType.Queen  , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("E8"), Type = ChessPieceType.King   , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("F8"), Type = ChessPieceType.Bishop , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("G8"), Type = ChessPieceType.Knight , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
-            new ChessPiece() { Position = new ChessFieldPosition("H8"), Type = ChessPieceType.Rock   , Color = ChessPieceColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("A8"), Type = ChessPieceType.Rock   , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("B8"), Type = ChessPieceType.Knight , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("C8"), Type = ChessPieceType.Bishop , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("D8"), Type = ChessPieceType.Queen  , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("E8"), Type = ChessPieceType.King   , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("F8"), Type = ChessPieceType.Bishop , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("G8"), Type = ChessPieceType.Knight , Color = ChessColor.Black, WasAlreadyDrawn = false },
+            new ChessPiece() { Position = new ChessPosition("H8"), Type = ChessPieceType.Rock   , Color = ChessColor.Black, WasAlreadyDrawn = false },
         };
 
         #endregion Constants
 
         #region Constructor
 
-        /// <summary>
-        /// Create a new instance of a chess board in start position.
-        /// </summary>
-        public ChessBoard() : this(START_FORMATION) { }
+        ///// <summary>
+        ///// Create a new instance of a chess board in start position.
+        ///// </summary>
+        //public ChessBoard() : this(START_FORMATION) { }
         
-        /// <summary>
-        /// Create a deep copy of the given chess board. (clone constructor)
-        /// </summary>
-        /// <param name="original">The chess board to be cloned</param>
-        public ChessBoard(ChessBoard original) : this(original.Pieces) { }
+        ///// <summary>
+        ///// Create a deep copy of the given chess board. (clone constructor)
+        ///// </summary>
+        ///// <param name="original">The chess board to be cloned</param>
+        //public ChessBoard(ChessBoard original) : this(original.Pieces) { }
         
         /// <summary>
         /// Create a new instance of a chess board with the given chess pieces.
@@ -88,11 +88,16 @@ namespace Chess.Lib
         #endregion Constructor
 
         #region Members
-        
+
         /// <summary>
         /// An array of all chess pieces at the index of their position's hash code. (value is null if there is no chess piece at the position)
         /// </summary>
-        private ChessPiece?[] _pieces { get; }
+        private ChessPiece?[] _pieces;
+
+        /// <summary>
+        /// Retrieve a new chess board instance with start formation.
+        /// </summary>
+        public static ChessBoard StartFormation { get { return new ChessBoard(START_FORMATION); } }
 
         /// <summary>
         /// A list of all chess pieces that are currently on the chess board.
@@ -102,12 +107,12 @@ namespace Chess.Lib
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public List<ChessPiece> WhitePieces { get { return Pieces.Where(x => x.Color == ChessPieceColor.White).ToList(); } }
+        public List<ChessPiece> WhitePieces { get { return Pieces.Where(x => x.Color == ChessColor.White).ToList(); } }
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public List<ChessPiece> BlackPieces { get { return Pieces.Where(x => x.Color == ChessPieceColor.Black).ToList(); } }
+        public List<ChessPiece> BlackPieces { get { return Pieces.Where(x => x.Color == ChessColor.Black).ToList(); } }
 
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
@@ -128,7 +133,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The chess field to check</param>
         /// <returns>A boolean that indicates whether the given chess field is captured</returns>
-        public bool IsCapturedAt(ChessFieldPosition position)
+        public bool IsCapturedAt(ChessPosition position)
         {
             return _pieces[position.GetHashCode()] != null;
         }
@@ -138,7 +143,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The chess field</param>
         /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
-        public ChessPiece? GetPieceAt(ChessFieldPosition position)
+        public ChessPiece? GetPieceAt(ChessPosition position)
         {
             return _pieces[position.GetHashCode()];
         }
@@ -148,7 +153,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece to be updated</param>
         /// <param name="newPiece">The new chess piece data</param>
-        public void UpdatePieceAt(ChessFieldPosition position, ChessPiece? newPiece)
+        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece)
         {
             _pieces[position.GetHashCode()] = newPiece;
         }
@@ -210,7 +215,7 @@ namespace Chess.Lib
 
                 for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
                 {
-                    var position = new ChessFieldPosition(row, column);
+                    var position = new ChessPosition(row, column);
                     var piece = GetPieceAt(position);
 
                     // TODO: try to use unicode chess symbols
@@ -235,7 +240,7 @@ namespace Chess.Lib
 
         public object Clone()
         {
-            return new ChessBoard(this);
+            return new ChessBoard(this.Pieces);
         }
 
         #endregion Methods

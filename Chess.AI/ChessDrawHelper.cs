@@ -24,7 +24,7 @@ namespace Chess.AI
         /// <param name="activePlayer">the side that has to draw</param>
         /// <param name="level">the difficulty level</param>
         /// <returns>one possible chess draw</returns>
-        ChessDraw GetNextDraw(ChessBoard board, ChessPieceColor activePlayer, ChessDifficultyLevel level);
+        ChessDraw GetNextDraw(ChessBoard board, ChessColor activePlayer, ChessDifficultyLevel level);
     }
 
     public class ChessDrawHelper : IChessDrawHelper
@@ -38,7 +38,7 @@ namespace Chess.AI
         /// <param name="activePlayer">the side that has to draw</param>
         /// <param name="level">the difficulty level</param>
         /// <returns>one possible chess draw</returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessPieceColor activePlayer, ChessDifficultyLevel level)
+        public ChessDraw GetNextDraw(ChessBoard board, ChessColor activePlayer, ChessDifficultyLevel level)
         {
             throw new NotImplementedException("Please implement GetNextDraw() function!");
         }

@@ -18,9 +18,9 @@ namespace Chess.Lib
         /// </summary>
         public ChessGame()
         {
-            Board = new ChessBoard();
+            Board = ChessBoard.StartFormation;
             StartOfGame = DateTime.UtcNow;
-            SideToDraw = ChessPieceColor.White;
+            SideToDraw = ChessColor.White;
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Chess.Lib
         /// <summary>
         /// The side that has to draw.
         /// </summary>
-        public ChessPieceColor SideToDraw { get; set; }
+        public ChessColor SideToDraw { get; set; }
 
         /// <summary>
         /// A stack with all chess draws that have been applied to this chess game instance.
@@ -78,7 +78,7 @@ namespace Chess.Lib
                 _drawHistory.Push(draw);
 
                 // change the side that has to draw
-                SideToDraw = SideToDraw == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
+                SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
             }
         }
 
@@ -99,7 +99,7 @@ namespace Chess.Lib
             // TODO: test if Reverse() brings the correct behaviour
             
             // change the side that has to draw
-            SideToDraw = SideToDraw == ChessPieceColor.White ? ChessPieceColor.Black : ChessPieceColor.White;
+            SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
         }
 
         #endregion Methods
