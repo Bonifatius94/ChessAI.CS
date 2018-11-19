@@ -38,7 +38,7 @@ namespace Chess.Lib
             {
                 case ChessPieceType.King:    helper = new KingChessDrawPossibilitiesHelper();    break;
                 case ChessPieceType.Queen:   helper = new QueenChessDrawPossibilitiesHelper();   break;
-                case ChessPieceType.Rock:    helper = new RockChessDrawPossibilitiesHelper();    break;
+                case ChessPieceType.Rook:    helper = new RockChessDrawPossibilitiesHelper();    break;
                 case ChessPieceType.Bishop:  helper = new BishopChessDrawPossibilitiesHelper();  break;
                 case ChessPieceType.Knight:  helper = new KnightChessDrawPossibilitiesHelper();  break;
                 case ChessPieceType.Peasant: helper = new PeasantChessDrawPossibilitiesHelper(); break;
@@ -82,7 +82,7 @@ namespace Chess.Lib
 
             // only retrieve positions that cannot be captured by other enemy chess pieces (-> no draw into check)
             var enemyCapturablePositions =
-                board.Pieces.Where(x => x.Color != piece.Color && x != enemyKing)                                           // select only enemy pieces that are not the king
+                board.Pieces.Where(x => x.Color != piece.Color && x.Type != ChessPieceType.King)                            // select only enemy pieces that are not the king
                 .SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, precedingEnemyDraw, false))  // compute draws of those enemy pieces
                 .Select(x => x.NewPosition).ToList();
 
@@ -91,8 +91,9 @@ namespace Chess.Lib
             // transform positions to draws
             var draws = positions.Select(newPos => new ChessDraw(board, piece.Position, newPos)).ToList();
 
-            // TODO: add rochade draws
-
+            // add rochade draws
+            draws = draws.Concat(getPossibleRochadeDraws(board, piece.Color, enemyCapturablePositions)).ToList();
+            
             return draws;
         }
 
@@ -101,23 +102,63 @@ namespace Chess.Lib
             // make sure the chess piece is a king
             if (piece.Type != ChessPieceType.King) { throw new InvalidOperationException("The chess piece is not a king."); }
 
+            // cache old position (avoid multiple re-calculations in getter)
+            var oldPos = piece.Position;
+
             // get positions next to the current position of the king (all permutations of { -1, 0, +1 }^2 except (0, 0))
-            var positions = new List<ChessPosition>()
+            var coords = new List<Tuple<int, int>>()
             {
-                new ChessPosition(piece.Position.Row - 1, piece.Position.Column - 1),
-                new ChessPosition(piece.Position.Row - 1, piece.Position.Column    ),
-                new ChessPosition(piece.Position.Row - 1, piece.Position.Column + 1),
-                new ChessPosition(piece.Position.Row    , piece.Position.Column - 1),
-                new ChessPosition(piece.Position.Row    , piece.Position.Column + 1),
-                new ChessPosition(piece.Position.Row + 1, piece.Position.Column - 1),
-                new ChessPosition(piece.Position.Row + 1, piece.Position.Column    ),
-                new ChessPosition(piece.Position.Row + 1, piece.Position.Column + 1),
+                new Tuple<int, int>(oldPos.Row - 1, oldPos.Column - 1),
+                new Tuple<int, int>(oldPos.Row - 1, oldPos.Column    ),
+                new Tuple<int, int>(oldPos.Row - 1, oldPos.Column + 1),
+                new Tuple<int, int>(oldPos.Row    , oldPos.Column - 1),
+                new Tuple<int, int>(oldPos.Row    , oldPos.Column + 1),
+                new Tuple<int, int>(oldPos.Row + 1, oldPos.Column - 1),
+                new Tuple<int, int>(oldPos.Row + 1, oldPos.Column    ),
+                new Tuple<int, int>(oldPos.Row + 1, oldPos.Column + 1),
             };
 
             // only retrieve positions that are actually onto the chess board (and not off scale)
-            positions = positions.Where(x => x.IsValid).ToList();
-            
+            var positions = coords.Where(x => ChessPosition.AreCoordsValid(x)).Select(x => new ChessPosition(x.Item1, x.Item2)).ToList();
+
             return positions;
+        }
+
+        private List<ChessDraw> getPossibleRochadeDraws(ChessBoard board, ChessColor drawingSide, List<ChessPosition> enemyCapturablePositions)
+        {
+            var draws = new List<ChessDraw>();
+
+            // get the allied king and towers
+            int row = drawingSide == ChessColor.White ? 0 : 7;
+            var alliedKing = drawingSide == ChessColor.White ? board.WhiteKing : board.BlackKing;
+            var farAlliedTower = board.GetPieceAt(new ChessPosition(row, 0));
+            var nearAlliedTower = board.GetPieceAt(new ChessPosition(row, 7));
+
+            // define the fields that must not be capturable by the opponent
+            var bigRochadeKingPassagePositions = new List<ChessPosition>() { new ChessPosition(row, 2), new ChessPosition(row, 3), new ChessPosition(row, 4) };
+            var smallRochadeKingPassagePositions = new List<ChessPosition>() { new ChessPosition(row, 4), new ChessPosition(row, 5) };
+
+            // check for preconditions of big rochade
+            if (farAlliedTower != null && !alliedKing.WasMoved && !farAlliedTower.Value.WasMoved && bigRochadeKingPassagePositions.All(x => board.GetPieceAt(x) == null))
+            {
+                // make sure that no rochade field can be captured by the opponent
+                bool canBigRochade = !enemyCapturablePositions.Any(pos => bigRochadeKingPassagePositions.Contains(pos));
+
+                // add the draw to the list
+                if (canBigRochade) { draws.Add(new ChessDraw(board, alliedKing.Position, new ChessPosition(row, 2))); }
+            }
+
+            // check for preconditions of small rochade
+            if (nearAlliedTower != null && !alliedKing.WasMoved && !nearAlliedTower.Value.WasMoved && smallRochadeKingPassagePositions.All(x => board.GetPieceAt(x) == null))
+            {
+                // make sure that no rochade field can be captured by the opponent
+                bool canBigRochade = !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
+
+                // add the draw to the list
+                if (canBigRochade) { draws.Add(new ChessDraw(board, alliedKing.Position, new ChessPosition(row, 2))); }
+            }
+
+            return draws;
         }
 
         #endregion Methods
@@ -165,9 +206,8 @@ namespace Chess.Lib
         /// <returns>a list of field positions</returns>
         public List<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
-            
             // make sure the chess piece is rock-like
-            if (piece.Type != ChessPieceType.Rock && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rock."); }
+            if (piece.Type != ChessPieceType.Rook && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rock."); }
 
             var draws = new List<ChessDraw>();
             
@@ -175,14 +215,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row + i, piece.Position.Column);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row + i, piece.Position.Column);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -190,14 +237,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row - i, piece.Position.Column);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row - i, piece.Position.Column);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -205,14 +259,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row, piece.Position.Column + i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row, piece.Position.Column + i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -220,19 +281,24 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row, piece.Position.Column - i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row, piece.Position.Column - i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
-
-            // TODO: remove draws that would draw into a check situation
-
+            
             return draws;
         }
         
@@ -262,14 +328,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row + i, piece.Position.Column - i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row + i, piece.Position.Column - i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -277,14 +350,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row - i, piece.Position.Column - i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row - i, piece.Position.Column - i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -292,14 +372,21 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row + i, piece.Position.Column + i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row + i, piece.Position.Column + i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
 
@@ -307,19 +394,24 @@ namespace Chess.Lib
             for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
-                var newPos = new ChessPosition(piece.Position.Row - i, piece.Position.Column + i);
-                if (!newPos.IsValid) { break; }
+                var coords = new Tuple<int, int>(piece.Position.Row - i, piece.Position.Column + i);
+                if (!ChessPosition.AreCoordsValid(coords)) { break; }
 
+                var newPos = new ChessPosition(coords);
                 var pieceAtPos = board.GetPieceAt(newPos);
-                bool addPosAsDraw = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
+                bool canDrawToPos = (pieceAtPos == null || pieceAtPos.Value.Color != piece.Color);
                 bool abort = pieceAtPos != null;
 
-                if (addPosAsDraw) { draws.Add(new ChessDraw(board, piece.Position, newPos)); }
+                if (canDrawToPos)
+                {
+                    var draw = new ChessDraw(board, piece.Position, newPos);
+                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
+                    draws.Add(draw);
+                }
+
                 if (abort) { break; }
             }
-
-            // TODO: remove draws that would draw into a check situation
-
+            
             return draws;
         }
         
@@ -344,25 +436,29 @@ namespace Chess.Lib
             if (piece.Type != ChessPieceType.Knight) { throw new InvalidOperationException("The chess piece is not a knight."); }
 
             // get positions next to the current position of the king (all permutations of { -1, 0, +1 }^2 except (0, 0))
-            var positions = new List<ChessPosition>()
+            var coords = new List<Tuple<int, int>>()
             {
-                new ChessPosition(piece.Position.Row - 2, piece.Position.Column - 1),
-                new ChessPosition(piece.Position.Row - 2, piece.Position.Column + 1),
-                new ChessPosition(piece.Position.Row - 1, piece.Position.Column - 2),
-                new ChessPosition(piece.Position.Row - 1, piece.Position.Column + 2),
-                new ChessPosition(piece.Position.Row + 1, piece.Position.Column - 2),
-                new ChessPosition(piece.Position.Row + 1, piece.Position.Column + 2),
-                new ChessPosition(piece.Position.Row + 2, piece.Position.Column - 1),
-                new ChessPosition(piece.Position.Row + 2, piece.Position.Column + 1),
+                new Tuple<int, int>(piece.Position.Row - 2, piece.Position.Column - 1),
+                new Tuple<int, int>(piece.Position.Row - 2, piece.Position.Column + 1),
+                new Tuple<int, int>(piece.Position.Row - 1, piece.Position.Column - 2),
+                new Tuple<int, int>(piece.Position.Row - 1, piece.Position.Column + 2),
+                new Tuple<int, int>(piece.Position.Row + 1, piece.Position.Column - 2),
+                new Tuple<int, int>(piece.Position.Row + 1, piece.Position.Column + 2),
+                new Tuple<int, int>(piece.Position.Row + 2, piece.Position.Column - 1),
+                new Tuple<int, int>(piece.Position.Row + 2, piece.Position.Column + 1),
             };
 
             // only retrieve positions that are actually onto the chess board (and not off scale)
-            positions = positions.Where(x => x.IsValid).ToList();
+            var positions = coords.Where(x => ChessPosition.AreCoordsValid(x)).Select(x => new ChessPosition(x)).ToList();
 
             // transform positions to chess draws
             var draws = positions.Select(newPos => new ChessDraw(board, piece.Position, newPos)).ToList();
 
-            // TODO: remove draws that would draw into a check situation
+            if (analyzeDrawIntoCheck)
+            {
+                // remove draws that would draw into a check situation (all moves are invalid if one draws into check)
+                draws = !(new ChessDrawSimulator().IsDrawIntoCheck(board, draws.First())) ? draws : new List<ChessDraw>();
+            }
 
             return draws;
         }
@@ -387,27 +483,46 @@ namespace Chess.Lib
             // make sure the chess piece is a king
             if (piece.Type != ChessPieceType.Peasant) { throw new InvalidOperationException("The chess piece is not a peasant."); }
 
-            // init draws list
+            // get all possible draws
             var draws = getForewardDraws(board, piece).Union(getCatchDraws(board, piece, precedingEnemyDraw)).ToList();
 
-            // TODO: remove draws that would draw into a check situation
+            if (analyzeDrawIntoCheck)
+            {
+                // remove draws that would draw into a check situation
+                draws = draws.Where(x => !new ChessDrawSimulator().IsDrawIntoCheck(board, x)).ToList();
+            }
 
             return draws;
         }
 
         private List<ChessDraw> getForewardDraws(ChessBoard board, ChessPiece piece)
         {
-            var posOneForeward = new ChessPosition(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column);
-            var posTwoForeward = new ChessPosition(piece.Position.Row + (piece.Color == ChessColor.White ? 2 : -2), piece.Position.Column);
-
-            bool oneForeward = posOneForeward.IsValid && !board.IsCapturedAt(posOneForeward);
-            bool twoForeward = oneForeward && !piece.WasAlreadyDrawn && posTwoForeward.IsValid && !board.IsCapturedAt(posTwoForeward);
-
             var draws = new List<ChessDraw>();
 
-            if (oneForeward) { draws.Add(new ChessDraw(board, piece.Position, posOneForeward)); }
-            if (twoForeward) { draws.Add(new ChessDraw(board, piece.Position, posTwoForeward)); }
+            var coordsPosOneForeward = new Tuple<int, int>(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column);
+            var coordsPosTwoForeward = new Tuple<int, int>(piece.Position.Row + (piece.Color == ChessColor.White ? 2 : -2), piece.Position.Column);
+            
+            if (ChessPosition.AreCoordsValid(coordsPosOneForeward))
+            {
+                var posOneForeward = new ChessPosition(coordsPosOneForeward);
+                bool oneForeward = !board.IsCapturedAt(posOneForeward);
 
+                if (oneForeward)
+                {
+                    draws.Add(new ChessDraw(board, piece.Position, posOneForeward));
+
+                    if (!piece.WasMoved && ChessPosition.AreCoordsValid(coordsPosTwoForeward))
+                    {
+                        var posTwoForeward = new ChessPosition(coordsPosTwoForeward);
+
+                        if (!board.IsCapturedAt(posTwoForeward))
+                        {
+                            draws.Add(new ChessDraw(board, piece.Position, posTwoForeward));
+                        }
+                    }
+                }
+            }
+            
             return draws;
         }
 
@@ -416,33 +531,46 @@ namespace Chess.Lib
             var draws = new List<ChessDraw>();
 
             // get the possible chess field positions (info: right / left from the point of view of the white side player)
-            var posCatchLeft = new ChessPosition(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column + 1);
-            var posCatchRight = new ChessPosition(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column - 1);
-            
-            // check if right / left catch is possible
-            bool catchLeft = posCatchLeft.IsValid && board.IsCapturedAt(posCatchLeft) && board.GetPieceAt(posCatchLeft).Value.Color != piece.Color;
-            bool catchRight = posCatchRight.IsValid && board.IsCapturedAt(posCatchRight) && board.GetPieceAt(posCatchRight).Value.Color != piece.Color;
+            var coordsPosCatchLeft  = new Tuple<int, int>(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column + 1);
+            var coordsPosCatchRight = new Tuple<int, int>(piece.Position.Row + (piece.Color == ChessColor.White ? 1 : -1), piece.Position.Column - 1);
 
-            if (catchLeft) { draws.Add(new ChessDraw(board, piece.Position, posCatchLeft)); }
-            if (catchRight) { draws.Add(new ChessDraw(board, piece.Position, posCatchRight)); }
-
-            // check if en-passant is possible
+            // check for en-passant precondition
             bool wasLastDrawPeasantDoubleForeward = precedingEnemyDraw.DrawingPieceType == ChessPieceType.Peasant && Math.Abs(precedingEnemyDraw.OldPosition.Row - precedingEnemyDraw.NewPosition.Row) == 2;
 
-            if (wasLastDrawPeasantDoubleForeward)
+            // check if left catch / en-passant is possible
+            if (ChessPosition.AreCoordsValid(coordsPosCatchLeft))
             {
-                // get the positions of an enemy chess piece taken by a possible en-passant
-                var posEnPassantEnemyLeft = new ChessPosition(piece.Position.Row, piece.Position.Column + 1);
-                var posEnPassantEnemyRight = new ChessPosition(piece.Position.Row, piece.Position.Column - 1);
+                var posCatchLeft = new ChessPosition(coordsPosCatchLeft);
 
-                bool isLeftFieldCapturedByEnemy = board.IsCapturedAt(posEnPassantEnemyLeft) && board.GetPieceAt(posEnPassantEnemyLeft).Value.Color != piece.Color;
-                bool isRightFieldCapturedByEnemy = board.IsCapturedAt(posEnPassantEnemyRight) && board.GetPieceAt(posEnPassantEnemyRight).Value.Color != piece.Color;
+                bool catchLeft = board.IsCapturedAt(posCatchLeft) && board.GetPieceAt(posCatchLeft).Value.Color != piece.Color;
+                if (catchLeft) { draws.Add(new ChessDraw(board, piece.Position, posCatchLeft)); }
 
-                bool enPassantLeft = isLeftFieldCapturedByEnemy && Math.Abs(posEnPassantEnemyLeft.Column - piece.Position.Column) == 1;
-                bool enPassantRight = isRightFieldCapturedByEnemy && Math.Abs(posEnPassantEnemyRight.Column - piece.Position.Column) == 1;
+                if (wasLastDrawPeasantDoubleForeward)
+                {
+                    // get the positions of an enemy chess piece taken by a possible en-passant
+                    var posEnPassantEnemyLeft = new ChessPosition(piece.Position.Row, piece.Position.Column + 1);
+                    bool isLeftFieldCapturedByEnemy = board.IsCapturedAt(posEnPassantEnemyLeft) && board.GetPieceAt(posEnPassantEnemyLeft).Value.Color != piece.Color;
+                    bool enPassantLeft = isLeftFieldCapturedByEnemy && Math.Abs(posEnPassantEnemyLeft.Column - piece.Position.Column) == 1;
+                    if (enPassantLeft) { draws.Add(new ChessDraw(board, piece.Position, posCatchLeft)); }
+                }
+            }
 
-                if (enPassantLeft) { draws.Add(new ChessDraw(board, piece.Position, posCatchLeft)); }
-                if (enPassantRight) { draws.Add(new ChessDraw(board, piece.Position, posCatchRight)); }
+            // check if right catch / en-passant is possible
+            if (ChessPosition.AreCoordsValid(coordsPosCatchRight))
+            {
+                var posCatchRight = new ChessPosition(coordsPosCatchRight);
+
+                bool catchRight = board.IsCapturedAt(posCatchRight) && board.GetPieceAt(posCatchRight).Value.Color != piece.Color;
+                if (catchRight) { draws.Add(new ChessDraw(board, piece.Position, posCatchRight)); }
+
+                if (wasLastDrawPeasantDoubleForeward)
+                {
+                    // get the positions of an enemy chess piece taken by a possible en-passant
+                    var posEnPassantEnemyRight = new ChessPosition(piece.Position.Row, piece.Position.Column - 1);
+                    bool isRightFieldCapturedByEnemy = board.IsCapturedAt(posEnPassantEnemyRight) && board.GetPieceAt(posEnPassantEnemyRight).Value.Color != piece.Color;
+                    bool enPassantRight = isRightFieldCapturedByEnemy && Math.Abs(posEnPassantEnemyRight.Column - piece.Position.Column) == 1;
+                    if (enPassantRight) { draws.Add(new ChessDraw(board, piece.Position, posCatchRight)); }
+                }
             }
             
             return draws;
@@ -457,6 +585,8 @@ namespace Chess.Lib
         
         public bool IsDrawIntoCheck(ChessBoard board, ChessDraw draw)
         {
+            // TODO: remove clone operation if it causes performance issues (cache the chess piece that could be taken out during the draw and restore it afterwards)
+
             // clone chess board and simulate the draw
             var simulatedBoard = (ChessBoard)board.Clone();
             simulatedBoard.ApplyDraw(draw);
@@ -470,12 +600,6 @@ namespace Chess.Lib
             bool ret = possibleEnemyAnswers.Any(x => x.NewPosition == alliedKing.Position);
 
             return ret;
-        }
-
-        public bool CanOpponentCaptureField(ChessBoard board, ChessPosition position, ChessColor opponent)
-        {
-            // TODO: implement logic
-            return false;
         }
         
         #endregion Methods

@@ -6,7 +6,7 @@ namespace Chess.UnitTest
     public class ChessPieceTests
     {
         [Fact]
-        public void Test1()
+        public void ChessPiece()
         {
 
         }

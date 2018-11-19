@@ -26,6 +26,7 @@ namespace Chess.CLI
                 new Tuple<ChessPosition, ChessPosition>(new ChessPosition("D1"), new ChessPosition("F3")), // test queen / bishop
                 new Tuple<ChessPosition, ChessPosition>(new ChessPosition("B8"), new ChessPosition("C6")), // test knight
                 new Tuple<ChessPosition, ChessPosition>(new ChessPosition("F3"), new ChessPosition("F5")), // test queen / rock
+                new Tuple<ChessPosition, ChessPosition>(new ChessPosition("E8"), new ChessPosition("E7")), // test king
             };
 
             foreach (var move in moves)

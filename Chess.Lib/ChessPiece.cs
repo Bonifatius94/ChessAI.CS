@@ -7,7 +7,7 @@ namespace Chess.Lib
     /// 
     ///  - King (K)
     ///  - Queen (Q)
-    ///  - Rock (R)
+    ///  - Rook (R)
     ///  - Bishop (B)
     ///  - Knight (H)
     ///  - Peasant (P)
@@ -16,7 +16,7 @@ namespace Chess.Lib
     {
         King     = 0,
         Queen    = 1,
-        Rock     = 2,
+        Rook     = 2,
         Bishop   = 3,
         Knight   = 4,
         Peasant  = 5
@@ -89,7 +89,7 @@ namespace Chess.Lib
         /// <summary>
         /// Indicates whether the chess piece was already drawn. (calculated from hash code)
         /// </summary>
-        public bool WasAlreadyDrawn
+        public bool WasMoved
         {
             get { return ((_hashCode & BITS_OF_WAS_MOVED_FLAG) >> WAS_MOVED_TRAILING_BITS) == 1; }
             set { _hashCode = (short)((_hashCode & ~BITS_OF_WAS_MOVED_FLAG) | (((short)(value ? 1 : 0)) << WAS_MOVED_TRAILING_BITS)); }
@@ -190,7 +190,7 @@ namespace Chess.Lib
             {
                 case ChessPieceType.King:    return 'K';
                 case ChessPieceType.Queen:   return 'Q';
-                case ChessPieceType.Rock:    return 'R';
+                case ChessPieceType.Rook:    return 'R';
                 case ChessPieceType.Bishop:  return 'B';
                 case ChessPieceType.Knight:  return 'H'; // 'H' like horse (because 'K' is already taken by king)
                 case ChessPieceType.Peasant: return 'P';
