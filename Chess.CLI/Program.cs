@@ -29,6 +29,8 @@ namespace Chess.CLI
                 new Tuple<ChessPosition, ChessPosition>(new ChessPosition("E8"), new ChessPosition("E7")), // test king
             };
 
+            var start = DateTime.Now;
+
             foreach (var move in moves)
             {
                 game.ApplyDraw(new ChessDraw(game.Board, move.Item1, move.Item2));
@@ -39,6 +41,9 @@ namespace Chess.CLI
                 Console.WriteLine(game.Board);
                 Console.WriteLine();
             }
+
+            var end = DateTime.Now;
+            Console.WriteLine($"applying 6 draws took { (end - start).TotalMilliseconds } ms");
 
             // wait for exit
             Console.Write("Program finished. Exit with ENTER.");

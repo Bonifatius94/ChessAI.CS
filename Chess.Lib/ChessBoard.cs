@@ -59,17 +59,6 @@ namespace Chess.Lib
         #endregion Constants
 
         #region Constructor
-
-        ///// <summary>
-        ///// Create a new instance of a chess board in start position.
-        ///// </summary>
-        //public ChessBoard() : this(START_FORMATION) { }
-        
-        ///// <summary>
-        ///// Create a deep copy of the given chess board. (clone constructor)
-        ///// </summary>
-        ///// <param name="original">The chess board to be cloned</param>
-        //public ChessBoard(ChessBoard original) : this(original.Pieces) { }
         
         /// <summary>
         /// Create a new instance of a chess board with the given chess pieces.
@@ -78,10 +67,10 @@ namespace Chess.Lib
         public ChessBoard(IEnumerable<ChessPiece> pieces)
         {
             _pieces = new ChessPiece?[CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION];
-
+            
             foreach (var piece in pieces)
             {
-                _pieces[piece.Position.GetHashCode()] = piece;
+                _pieces[piece.Position.GetHashCode()] = (ChessPiece)piece.Clone();
             }
         }
 
@@ -159,7 +148,7 @@ namespace Chess.Lib
         }
 
         /// <summary>
-        /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken.
+        /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draw">The chess draw to be executed</param>
         public void ApplyDraw(ChessDraw draw)
@@ -172,11 +161,35 @@ namespace Chess.Lib
             drawingPiece.Position = draw.NewPosition;
             drawingPiece.WasMoved = true;
 
+            // handle peasant promotion
+            if (draw.Type == ChessDrawType.PeasantPromotion)
+            {
+                drawingPiece.Type = draw.PeasantPromotionPieceType.Value;
+            }
+
+            // handle rochade
+            if (draw.Type == ChessDrawType.Rochade)
+            {
+                // get old and new position of the tower involved
+                var oldTowerPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 0 : 7);
+                var newTowerPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 3 : 5);
+
+                // move the tower
+                UpdatePieceAt(draw.OldPosition, null);
+                UpdatePieceAt(draw.NewPosition, drawingPiece);
+            }
+
+            // handle en-passant
+            if (draw.Type == ChessDrawType.EnPassant)
+            {
+                // get position of the taken enemy peasant and remove it
+                var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
+                UpdatePieceAt(takenPeasantPosition, null);
+            }
+
             // apply data to the chess board
             UpdatePieceAt(draw.OldPosition, null);
             UpdatePieceAt(draw.NewPosition, drawingPiece);
-
-            // TODO: implement rochade, en-passant, peasant promotion
         }
         
         /// <summary>
@@ -238,6 +251,10 @@ namespace Chess.Lib
             return builder.ToString();
         }
 
+        /// <summary>
+        /// Create a new chess board instance with the same game situation.
+        /// </summary>
+        /// <returns>a new chess board instance</returns>
         public object Clone()
         {
             return new ChessBoard(this.Pieces);

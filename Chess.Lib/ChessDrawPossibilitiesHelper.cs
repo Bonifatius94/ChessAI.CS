@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Chess.Lib
 {
+    // TODO: use multiple threads to calculate the possible draws
+
     public interface IChessDrawPossibilitiesHelper
     {
         /// <summary>
@@ -585,7 +586,7 @@ namespace Chess.Lib
         
         public bool IsDrawIntoCheck(ChessBoard board, ChessDraw draw)
         {
-            // TODO: remove clone operation if it causes performance issues (cache the chess piece that could be taken out during the draw and restore it afterwards)
+            // TODO: remove clone operation if it causes performance issues
 
             // clone chess board and simulate the draw
             var simulatedBoard = (ChessBoard)board.Clone();

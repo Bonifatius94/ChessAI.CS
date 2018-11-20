@@ -39,15 +39,15 @@ namespace Chess.Lib
         #region Constants
         
         // define the trailing bits after the data bits
-        private const short TYPE_TRAILING_BITS      = 6;
-        private const short WAS_MOVED_TRAILING_BITS = 9;
+        private const short TYPE_TRAILING_BITS      =  6;
+        private const short WAS_MOVED_TRAILING_BITS =  9;
         private const short COLOR_TRAILING_BITS     = 10;
         
         // define which bits of the hash code store the data
         private const short BITS_OF_COLOR          = 1024;   // bits: 100 00000000
-        private const short BITS_OF_WAS_MOVED_FLAG = 512;    // bits: 010 00000000
-        private const short BITS_OF_TYPE           = 448;    // bits: 001 11000000
-        private const short BITS_OF_POSITION       = 63;     // bits: 000 00111111
+        private const short BITS_OF_WAS_MOVED_FLAG =  512;   // bits: 010 00000000
+        private const short BITS_OF_TYPE           =  448;   // bits: 001 11000000
+        private const short BITS_OF_POSITION       =   63;   // bits: 000 00111111
 
         #endregion Constants
 
@@ -59,6 +59,9 @@ namespace Chess.Lib
         /// <param name="hashCode">The hash code containing the chess piece data</param>
         public ChessPiece(short hashCode)
         {
+            // make sure the hash code is within the expected value range
+            if (hashCode < 0 || hashCode >= 2048) { throw new ArgumentException("invalid hash code detected (expected a number between 0 and 2047)"); }
+
             _hashCode = hashCode;
         }
 

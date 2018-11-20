@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Chess.Lib
 {
@@ -22,17 +21,7 @@ namespace Chess.Lib
             StartOfGame = DateTime.UtcNow;
             SideToDraw = ChessColor.White;
         }
-
-        /// <summary>
-        /// Create a chess game instance out of a list of all chess draws that have already been made by the chess players.
-        /// </summary>
-        /// <param name="draws"></param>
-        //public ChessGame(List<ChessDraw> draws) : this()
-        //{
-        //    StartOfGame = draws.First().Timestamp;
-        //    draws.ForEach(draw => ApplyDraw(draw));
-        //}
-
+        
         #endregion Constructor
 
         #region Members

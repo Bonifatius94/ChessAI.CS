@@ -1,7 +1,5 @@
 ﻿using Chess.Lib;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace Chess.UnitTest
@@ -11,23 +9,32 @@ namespace Chess.UnitTest
         #region Tests
 
         [Fact]
-        public void FieldNameTest()
+        public void ConstructorTest()
         {
             // test if all valid chess positions can be created and have the correct features
             for (int row = 0; row < ChessBoard.CHESS_BOARD_DIMENSION; row++)
             {
                 for (int column = 0; column < ChessBoard.CHESS_BOARD_DIMENSION; column++)
                 {
-                    // get the field name
-                    char rowChar = (char)(row + '1');
-                    char columnChar = (char)(column + 'A');
-                    string fieldName = $"{ columnChar }{ rowChar }";
+                    ChessPosition position;
+                    string fieldName = $"{ (char)(column + 'A') }{ (char)(row + '1') }";
+                    byte hashCode = (byte)(row * ChessBoard.CHESS_BOARD_DIMENSION + column);
+                    
+                    // create a new chess position instance and check if the row, column and hash code values are set as expected
+                    position = new ChessPosition(fieldName);
+                    Assert.True(position.Row == row && position.Column == column && position.GetHashCode() == hashCode);
 
-                    // create a new chess position instance
-                    var position = new ChessPosition(fieldName);
+                    // create a new chess position instance and check if the row, column and hash code values are set as expected
+                    position = new ChessPosition(new Tuple<int, int>(row, column));
+                    Assert.True(position.Row == row && position.Column == column && position.GetHashCode() == hashCode);
 
-                    // check if the row, column and hash code values are set as expected
-                    Assert.True(position.Row == row && position.Column == column && position.GetHashCode() >= 0 && position.GetHashCode() < 64);
+                    // create a new chess position instance and check if the row, column and hash code values are set as expected
+                    position = new ChessPosition(row, column);
+                    Assert.True(position.Row == row && position.Column == column && position.GetHashCode() == hashCode);
+
+                    // create a new chess position instance and check if the row, column and hash code values are set as expected
+                    position = new ChessPosition((byte)(row * 8 + column));
+                    Assert.True(position.Row == row && position.Column == column && position.GetHashCode() == hashCode);
                 }
             }
 
@@ -47,8 +54,40 @@ namespace Chess.UnitTest
                 Assert.True(false);
             }
             catch (Exception) { /* nothing to do here ... */ }
-        }
+            
+            try
+            {
+                // create invalid chess position (should throw an exception)
+                new ChessPosition(8, 8);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
 
+            try
+            {
+                // create invalid chess position (should throw an exception)
+                new ChessPosition(-1, -1);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
+            
+            try
+            {
+                // create invalid chess position (should throw an exception)
+                new ChessPosition(72);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
+
+            try
+            {
+                // create invalid chess position (should throw an exception)
+                new ChessPosition(255);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
+        }
+        
         #endregion Tests
     }
 }

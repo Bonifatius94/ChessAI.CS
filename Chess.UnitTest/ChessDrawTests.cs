@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Xunit;
 
 namespace Chess.UnitTest
 {
-    public class ChessBoardTests
+    class ChessDrawTests
     {
-        [Fact]
-        public void Test()
-        {
-
-        }
     }
 }

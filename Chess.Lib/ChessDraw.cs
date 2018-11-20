@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
 
 namespace Chess.Lib
 {
@@ -20,11 +17,7 @@ namespace Chess.Lib
     public readonly struct ChessDraw
     {
         #region Constructor
-
-        // TODO: try to model the different chess draw types better or at least improve the constructors so they do not get distinguished when being used
-
-        // TODO: remove rochade / en-passant constructor and express the draw type by using king's / peasant's new position
-
+        
         /// <summary>
         /// Create a new chess draw instance representing a chess draw.
         /// </summary>
@@ -87,11 +80,6 @@ namespace Chess.Lib
         ///// The timestamp when the chess player finalized the chess draw. Time is measured for UTC timezone.
         ///// </summary>
         //public DateTime? Timestamp { get; set; }
-
-        ///// <summary>
-        ///// The type of the enemy chess piece that gets taken by this draw. The value is null if no enemy piece was taken.
-        ///// </summary>
-        //public ChessPieceType? TakenEnemyPiece { get; }
         
         #endregion Members
 
@@ -166,8 +154,7 @@ namespace Chess.Lib
                     ret = $"{ color } { drawingPiece } { OldPosition.ToString() }-{ NewPosition.ToString() }";
                     break;
                 case ChessDrawType.Rochade:
-                    // TODO: rework this using the new position of the king as indicator
-                    bool isLeftSide = (OldPosition.Column == 0 && DrawingSide == ChessColor.White) || (OldPosition.Column == 7 && DrawingSide == ChessColor.Black);
+                    bool isLeftSide = (NewPosition.Column == 2 && DrawingSide == ChessColor.White) || (OldPosition.Column == 6 && DrawingSide == ChessColor.Black);
                     ret = $"{ color } { (isLeftSide ? "left" : "right") }-side rochade";
                     break;
                 case ChessDrawType.EnPassant:
