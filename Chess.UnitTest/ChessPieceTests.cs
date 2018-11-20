@@ -9,7 +9,7 @@ namespace Chess.UnitTest
         #region Tests
 
         [Fact]
-        public void ConstructorTest()
+        public void ConstructorAndGetterSetterTest()
         {
             // test if all valid chess pieces can be created and invalid inputs are rejected
             // also test all getters / setters of the chess piece

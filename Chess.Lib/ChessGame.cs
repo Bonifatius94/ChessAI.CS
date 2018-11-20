@@ -58,7 +58,7 @@ namespace Chess.Lib
         public void ApplyDraw(ChessDraw draw)
         {
             // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
-            if (_drawHistory.Count == 0 || draw.Validate(Board, _drawHistory.Peek()))
+            if (_drawHistory.Count == 0 || draw.IsValid(Board, _drawHistory.Peek()))
             {
                 // draw the chess piece
                 Board.ApplyDraw(draw);

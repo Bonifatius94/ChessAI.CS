@@ -60,7 +60,7 @@ namespace Chess.Lib
         public ChessPiece(short hashCode)
         {
             // make sure the hash code is within the expected value range
-            if (hashCode < 0 || hashCode >= 2048) { throw new ArgumentException("invalid hash code detected (expected a number between 0 and 2047)"); }
+            if (hashCode < 0 || hashCode >= 2048) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 2047 })"); }
 
             _hashCode = hashCode;
         }
@@ -148,13 +148,13 @@ namespace Chess.Lib
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            return (obj.GetType() == typeof(ChessPosition)) && (((ChessPosition)obj).GetHashCode() == GetHashCode());
+            return (obj.GetType() == typeof(ChessPiece)) && (((ChessPiece)obj).GetHashCode() == GetHashCode());
         }
 
         /// <summary>
         /// Override of GetHashCode() is required for Equals() method. Therefore the hash code of the instance is returned.
         /// </summary>
-        /// <returns>a hash code that is unique for each (row, column) tuple</returns>
+        /// <returns>a hash code that is unique for each chess piece</returns>
         public override int GetHashCode()
         {
             return _hashCode;

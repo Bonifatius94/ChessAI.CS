@@ -33,10 +33,11 @@ namespace Chess.CLI
 
             foreach (var move in moves)
             {
-                game.ApplyDraw(new ChessDraw(game.Board, move.Item1, move.Item2));
+                var draw = new ChessDraw(game.Board, move.Item1, move.Item2);
+                game.ApplyDraw(draw);
 
                 // print board again and check if the draw was applied correctly
-                Console.WriteLine($"chess game situation after drawing { move.ToString() }:");
+                Console.WriteLine($"chess game situation after drawing { draw.ToString() }:");
                 Console.WriteLine();
                 Console.WriteLine(game.Board);
                 Console.WriteLine();
