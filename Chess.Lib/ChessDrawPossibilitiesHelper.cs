@@ -183,8 +183,8 @@ namespace Chess.Lib
 
             // combine the positions that a rock or a bishop could capture
             var draws =
-                new RockChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)
-                .Union(new BishopChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true)).ToList();
+                new RockChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck)
+                .Union(new BishopChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck)).ToList();
 
             return draws;
         }
