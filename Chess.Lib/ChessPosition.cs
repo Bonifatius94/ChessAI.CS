@@ -17,7 +17,7 @@ namespace Chess.Lib
         {
             // parse row and column
             int row = fieldName[1] - '1';
-            int column = fieldName[0] - 'A';
+            int column = char.ToUpper(fieldName[0]) - 'A';
             
             // check if the field name format is correct (otherwise throw argument exception)
             if (!AreCoordsValid(row, column)) { throw new ArgumentException($"invalid field name { fieldName }!"); }

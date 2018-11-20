@@ -10,6 +10,7 @@ namespace Chess.UnitTest
     {
         #region Tests
 
+        [Fact]
         public void ConstructorAndGetterSetterTest()
         {
             // check if all possible chess draws can be created
@@ -54,8 +55,26 @@ namespace Chess.UnitTest
                     }
                 }
             }
+
+            // test if several invalid chess draws are rejected
+            try
+            {
+                // create invalid chess draw (should throw an exception)
+                new ChessDraw(-1);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
+
+            try
+            {
+                // create invalid chess draw (should throw an exception)
+                new ChessDraw(2097152);
+                Assert.True(false);
+            }
+            catch (Exception) { /* nothing to do here ... */ }
         }
 
+        [Fact]
         public void IsValidTest()
         {
             // TODO: implement test
