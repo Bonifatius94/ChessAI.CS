@@ -3,6 +3,14 @@ using System.Linq;
 
 namespace Chess.Lib
 {
+    /// <summary>
+    /// This enumeration represents the chess draw types:
+    ///  
+    ///  - Rochade
+    ///  - En-Passant
+    ///  - Peasant Promotion
+    ///  - Standard (all other draws according to the drawing rules of the given chess piece)
+    /// </summary>
     public enum ChessDrawType
     {
         Standard         = 0,
@@ -188,7 +196,7 @@ namespace Chess.Lib
             if (piece.Value.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
-            var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece.Value, this, true);
+            var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece.Value, predecedingEnemyDraw, true);
 
             // make sure there is at least one possible draw for the given chess piece
             if (possibleDraws?.Count() <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
@@ -196,7 +204,7 @@ namespace Chess.Lib
             // check if there is a possible draw with the same new position and type (this implies that the given draw is valid)
             var type = Type;
             var position = NewPosition;
-            bool ret = possibleDraws.Any(x => x.Type == type && x.NewPosition.Equals(position));
+            bool ret = possibleDraws.Any(x => x.Type == type && x.NewPosition == position);
 
             return ret;
         }
