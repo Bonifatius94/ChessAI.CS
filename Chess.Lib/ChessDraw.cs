@@ -191,7 +191,7 @@ namespace Chess.Lib
             var possibleDraws = new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece.Value, this, true);
 
             // make sure there is at least one possible draw for the given chess piece
-            if (possibleDraws?.Count <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
+            if (possibleDraws?.Count() <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
 
             // check if there is a possible draw with the same new position and type (this implies that the given draw is valid)
             var type = Type;

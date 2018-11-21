@@ -91,17 +91,17 @@ namespace Chess.Lib
         /// <summary>
         /// A list of all chess pieces that are currently on the chess board.
         /// </summary>
-        public List<ChessPiece> Pieces { get { return _pieces.Where(x => x != null).Select(x => x.Value).ToList(); } }
+        public IEnumerable<ChessPiece> Pieces { get { return _pieces.Where(x => x != null).Select(x => x.Value); } }
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public List<ChessPiece> WhitePieces { get { return Pieces.Where(x => x.Color == ChessColor.White).ToList(); } }
+        public IEnumerable<ChessPiece> WhitePieces { get { return Pieces.Where(x => x.Color == ChessColor.White); } }
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public List<ChessPiece> BlackPieces { get { return Pieces.Where(x => x.Color == ChessColor.Black).ToList(); } }
+        public IEnumerable<ChessPiece> BlackPieces { get { return Pieces.Where(x => x.Color == ChessColor.Black); } }
 
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
