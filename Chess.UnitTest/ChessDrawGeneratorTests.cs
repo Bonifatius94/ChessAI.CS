@@ -21,6 +21,19 @@ namespace Chess.UnitTest
         [Fact]
         public void KingDrawsTest()
         {
+            try
+            {
+                testStandardKingDraws();
+                testRochadeKingDraws();
+            }
+            catch (Exception ex)
+            {
+                output.WriteLine(ex.ToString());
+            }
+        }
+
+        private void testStandardKingDraws()
+        {
             // check if only draws are computed where the destination is actually on the chess board
             // and also make sure that only enemy pieces are taken (blocking allied pieces not)
             for (int run = 0; run < 4; run++)
@@ -29,59 +42,64 @@ namespace Chess.UnitTest
                 int row = run / 2 == 0 ? 0 : 7;
                 int col = run % 2 == 0 ? 0 : 7;
 
-                var pieces = new List<ChessPiece>()
+                var pieces = new List<ChessPieceAtPos>()
                 {
-                    new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, Position = new ChessPosition(row, col), WasMoved = true },
-                    new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, Position = new ChessPosition(6, 1),     WasMoved = true },
-                    new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, Position = new ChessPosition(5, 2),     WasMoved = true },
-                    new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.Black, Position = new ChessPosition(2, 5),     WasMoved = true },
+                    new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(6, 1),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(5, 2),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.Black,  WasMoved = true }),
                 };
 
                 // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
                 var board = new ChessBoard(pieces);
-                var draws = new ChessDrawGenerator().GetDraws(board, board.WhiteKing, new ChessDraw(), true);
+                var draws = new ChessDrawGenerator().GetDraws(board, board.WhiteKing.Position, new ChessDraw(), true);
                 Assert.True(draws.Count() == ((row + col == 7) ? 2 : 3));
 
                 // evaluate black king draws (when white king is onto A8, then the white peasant cannot be taken because of draw into check by the black king)
                 board = new ChessBoard(pieces);
-                draws = new ChessDrawGenerator().GetDraws(board, board.BlackKing, new ChessDraw(), true);
+                draws = new ChessDrawGenerator().GetDraws(board, board.BlackKing.Position, new ChessDraw(), true);
                 Assert.True(draws.Count() == ((row == 7 && col == 0) ? 7 : 8));
             }
-            
-            // check if rochade draws are handled correctly
+        }
+
+        private void testRochadeKingDraws()
+        {
+            // go through each king x rook combo
             for (int run = 0; run < 4; run++)
             {
+                // get the (row, column) of the rook before rochade
+                int rookRow = run / 2 == 0 ? 0 : 7;
+                int rookCol = run % 2 == 0 ? 0 : 7;
+
+                // determine the old and new positions of king / rook after rochade
+                var oldKingPos = new ChessPosition(rookRow, 4);
+                var newKingPos = new ChessPosition(rookRow, (rookCol == 0 ? 2 : 6));
+                var oldRookPos = new ChessPosition(rookRow, rookCol);
+                var newRookPos = new ChessPosition(rookRow, (rookCol == 0 ? 3 : 5));
+
+                // determine the side performing a rochade
+                var allyColor = (rookRow == 0) ? ChessColor.White : ChessColor.Black;
+                var enemyColor = (rookRow == 0) ? ChessColor.Black : ChessColor.White;
+
+                // go through all 4 tuples bool x bool; only (false, false) should enable a rochade
                 for (int wasMovedValue = 0; wasMovedValue < 4; wasMovedValue++)
                 {
                     // determine whether king / rook was already moved before the rochade
                     bool wasKingMoved = wasMovedValue / 2 == 0;
                     bool wasRookMoved = wasMovedValue % 2 == 0;
 
-                    // get the (row, column) of the rook before rochade
-                    int rookRow = run / 2 == 0 ? 0 : 7;
-                    int rookCol = run % 2 == 0 ? 0 : 7;
-
-                    // determine the old and new positions of king / rook after rochade
-                    var oldKingPos = new ChessPosition(rookRow, 4);
-                    var newKingPos = new ChessPosition(rookRow, (rookCol == 0 ? 2 : 6));
-                    var oldRookPos = new ChessPosition(rookRow, rookCol);
-                    var newRookPos = new ChessPosition(rookRow, (rookCol == 0 ? 3 : 5));
-
-                    // determine the side performing a rochade
-                    var allyColor = (rookRow == 0) ? ChessColor.White : ChessColor.Black;
-                    var enemyColor = (rookRow == 0) ? ChessColor.Black : ChessColor.White;
-
+                    // attach with a rook and go through every scenario threatening the king's rochade passage
                     for (int attack = 0; attack < 4; attack++)
                     {
-                        var enemyPos = new ChessPosition(4, (rookRow == 0) ? (4 - attack) : (4 + attack));
+                        var enemyPos = new ChessPosition(4, (rookCol == 0) ? (4 - attack) : (4 + attack));
                         var enemyKingPos = new ChessPosition(4, 0);
 
-                        var pieces = new List<ChessPiece>()
+                        var pieces = new List<ChessPieceAtPos>()
                         {
-                            new ChessPiece() { Type = ChessPieceType.King, Color = allyColor,  Position = oldKingPos,   WasMoved = wasKingMoved },
-                            new ChessPiece() { Type = ChessPieceType.Rook, Color = allyColor,  Position = oldRookPos,   WasMoved = wasRookMoved },
-                            new ChessPiece() { Type = ChessPieceType.Rook, Color = enemyColor, Position = enemyPos,     WasMoved = true         },
-                            new ChessPiece() { Type = ChessPieceType.King, Color = enemyColor, Position = enemyKingPos, WasMoved = true         },
+                            new ChessPieceAtPos(oldKingPos,   new ChessPiece() { Type = ChessPieceType.King, Color = allyColor,  WasMoved = wasKingMoved }),
+                            new ChessPieceAtPos(oldRookPos,   new ChessPiece() { Type = ChessPieceType.Rook, Color = allyColor,  WasMoved = wasRookMoved }),
+                            new ChessPieceAtPos(enemyPos,     new ChessPiece() { Type = ChessPieceType.Rook, Color = enemyColor, WasMoved = true         }),
+                            new ChessPieceAtPos(enemyKingPos, new ChessPiece() { Type = ChessPieceType.King, Color = enemyColor, WasMoved = true         }),
                         };
 
                         // init chess board and rochade draw
@@ -98,7 +116,7 @@ namespace Chess.UnitTest
                         {
                             board.ApplyDraw(draw);
                             Assert.True(
-                                board.GetPieceAt(oldKingPos) == null && board.GetPieceAt(newKingPos).Value.Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Value.Color == allyColor
+                                   board.GetPieceAt(oldKingPos) == null && board.GetPieceAt(newKingPos).Value.Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Value.Color == allyColor
                                 && board.GetPieceAt(oldRookPos) == null && board.GetPieceAt(newRookPos).Value.Type == ChessPieceType.Rook && board.GetPieceAt(newRookPos).Value.Color == allyColor
                             );
                         }
@@ -106,7 +124,7 @@ namespace Chess.UnitTest
                 }
             }
         }
-
+        
         [Fact]
         public void QueenDrawsTest()
         {

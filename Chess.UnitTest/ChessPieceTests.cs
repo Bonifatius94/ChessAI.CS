@@ -20,40 +20,31 @@ namespace Chess.UnitTest
         {
             // test if all valid chess pieces can be created and invalid inputs are rejected
             // also test all getters / setters of the chess piece
-            for (int row = 0; row < ChessBoard.CHESS_BOARD_DIMENSION; row++)
+            for (int pieceType = 0; pieceType < 6; pieceType++)
             {
-                for (int column = 0; column < ChessBoard.CHESS_BOARD_DIMENSION; column++)
+                // get chess piece type
+                var type = (ChessPieceType)pieceType;
+
+                for (int pieceColor = 0; pieceColor < 2; pieceColor++)
                 {
-                    // get position out of (row, column) tuple
-                    var position = new ChessPosition(row, column);
+                    // get chess color
+                    var color = (ChessColor)pieceColor;
 
-                    for (int pieceType = 0; pieceType < 6; pieceType++)
+                    for (int wasPieceMoved = 0; wasPieceMoved < 2; wasPieceMoved++)
                     {
-                        // get chess piece type
-                        var type = (ChessPieceType)pieceType;
+                        // get was moved
+                        bool wasMoved = wasPieceMoved == 1;
 
-                        for (int pieceColor = 0; pieceColor < 2; pieceColor++)
-                        {
-                            // get chess color
-                            var color = (ChessColor)pieceColor;
+                        // calculate expected hash code
+                        byte hashCode = (byte)((pieceColor << 4) | (wasPieceMoved << 3) | pieceType);
 
-                            for (int wasPieceMoved = 0; wasPieceMoved < 2; wasPieceMoved++)
-                            {
-                                // get was moved
-                                bool wasMoved = wasPieceMoved == 1;
+                        // create a new chess piece instance (setters test) and check if the chess piece has the correct features (getters test)
+                        var piece = new ChessPiece() { Type = type, Color = color, WasMoved = wasMoved };
+                        Assert.True(piece.Type == type && piece.Color == color&& piece.WasMoved == wasMoved && piece.GetHashCode() == hashCode);
 
-                                // calculate expected hash code
-                                short hashCode = (short)((pieceColor << 10) | (wasPieceMoved << 9) | (pieceType << 6) | (position.GetHashCode()));
-
-                                // create a new chess piece instance (setters test) and check if the chess piece has the correct features (getters test)
-                                var piece = new ChessPiece() { Type = type, Color = color, Position = position, WasMoved = wasMoved };
-                                Assert.True(piece.Type == type && piece.Color == color && piece.Position == position && piece.WasMoved == wasMoved && piece.GetHashCode() == hashCode);
-
-                                // create a new chess piece instance (setters test) and check if the chess piece has the correct features (getters test)
-                                piece = new ChessPiece(hashCode);
-                                Assert.True(piece.Type == type && piece.Color == color && piece.Position == position && piece.WasMoved == wasMoved && piece.GetHashCode() == hashCode);
-                            }
-                        }
+                        // create a new chess piece instance (setters test) and check if the chess piece has the correct features (getters test)
+                        piece = new ChessPiece(hashCode);
+                        Assert.True(piece.Type == type && piece.Color == color && piece.WasMoved == wasMoved && piece.GetHashCode() == hashCode);
                     }
                 }
             }
@@ -62,7 +53,7 @@ namespace Chess.UnitTest
             try
             {
                 // create invalid chess piece (should throw an exception)
-                new ChessPiece(-1);
+                new ChessPiece(0xFF);
                 Assert.True(false);
             }
             catch (Exception) { /* nothing to do here ... */ }
@@ -71,7 +62,7 @@ namespace Chess.UnitTest
             try
             {
                 // create invalid chess piece (should throw an exception)
-                new ChessPiece(2048);
+                new ChessPiece(0x20);
                 Assert.True(false);
             }
             catch (Exception) { /* nothing to do here ... */ }

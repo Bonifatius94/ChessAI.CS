@@ -39,15 +39,13 @@ namespace Chess.Lib
         #region Constants
         
         // define the trailing bits after the data bits
-        private const short TYPE_TRAILING_BITS      =  6;
-        private const short WAS_MOVED_TRAILING_BITS =  9;
-        private const short COLOR_TRAILING_BITS     = 10;
+        private const byte WAS_MOVED_TRAILING_BITS = 3;
+        private const byte COLOR_TRAILING_BITS     = 4;
         
         // define which bits of the hash code store the data
-        private const short BITS_OF_COLOR          = 1024;   // bits: 100 00000000
-        private const short BITS_OF_WAS_MOVED_FLAG =  512;   // bits: 010 00000000
-        private const short BITS_OF_TYPE           =  448;   // bits: 001 11000000
-        private const short BITS_OF_POSITION       =   63;   // bits: 000 00111111
+        private const byte BITS_OF_COLOR          = 16;   // bits: 10000
+        private const byte BITS_OF_WAS_MOVED_FLAG =  8;   // bits: 01000
+        private const byte BITS_OF_TYPE           =  7;   // bits: 00111
 
         #endregion Constants
 
@@ -57,10 +55,10 @@ namespace Chess.Lib
         /// Creates a chess piece instance from hash code.
         /// </summary>
         /// <param name="hashCode">The hash code containing the chess piece data</param>
-        public ChessPiece(short hashCode)
+        public ChessPiece(byte hashCode)
         {
             // make sure the hash code is within the expected value range
-            if (hashCode < 0 || hashCode >= 2048) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 2047 })"); }
+            if (hashCode < 0 || hashCode >= 32) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 31 })"); }
 
             _hashCode = hashCode;
         }
@@ -72,13 +70,13 @@ namespace Chess.Lib
         /// <summary>
         /// The binary representation containing the chess piece data.
         /// 
-        /// The code consists of 11 bits: 
-        /// 6 bits for position, 3 bits for piece type and another 1 bit for color / was moved flag
+        /// The code consists of 5 bits: 
+        /// 3 bits for piece type and another 1 bit for color / was moved flag
         /// 
-        /// | unused | color | was moved | type | position |
-        /// |  xxxxx |     x |         x |  xxx |   xxxxxx |
+        /// | unused | color | was moved | type |
+        /// |    xxx |     x |         x |  xxx |
         /// </summary>
-        private short _hashCode;
+        private byte _hashCode;
         
         /// <summary>
         /// The color of the chess piece. (calculated from hash code)
@@ -86,7 +84,7 @@ namespace Chess.Lib
         public ChessColor Color
         {
             get { return (ChessColor)((_hashCode & BITS_OF_COLOR) >> COLOR_TRAILING_BITS); }
-            set { _hashCode = (short)((_hashCode & ~BITS_OF_COLOR) | (((short)value) << COLOR_TRAILING_BITS)); }
+            set { _hashCode = (byte)((_hashCode & ~BITS_OF_COLOR) | (((byte)value) << COLOR_TRAILING_BITS)); }
         }
 
         /// <summary>
@@ -95,7 +93,7 @@ namespace Chess.Lib
         public bool WasMoved
         {
             get { return ((_hashCode & BITS_OF_WAS_MOVED_FLAG) >> WAS_MOVED_TRAILING_BITS) == 1; }
-            set { _hashCode = (short)((_hashCode & ~BITS_OF_WAS_MOVED_FLAG) | (((short)(value ? 1 : 0)) << WAS_MOVED_TRAILING_BITS)); }
+            set { _hashCode = (byte)((_hashCode & ~BITS_OF_WAS_MOVED_FLAG) | (((byte)(value ? 1 : 0)) << WAS_MOVED_TRAILING_BITS)); }
         }
 
         /// <summary>
@@ -103,17 +101,8 @@ namespace Chess.Lib
         /// </summary>
         public ChessPieceType Type
         {
-            get { return (ChessPieceType)((_hashCode & BITS_OF_TYPE) >> TYPE_TRAILING_BITS); }
-            set { _hashCode = (short)((_hashCode & ~BITS_OF_TYPE) | (((short)value) << TYPE_TRAILING_BITS)); }
-        }
-
-        /// <summary>
-        /// The position of the chess piece on the chess board. (calculated from hash code)
-        /// </summary>
-        public ChessPosition Position
-        {
-            get { return new ChessPosition((byte)(_hashCode & BITS_OF_POSITION)); }
-            set { _hashCode = (short)((_hashCode & ~BITS_OF_POSITION) | value.GetHashCode()); }
+            get { return (ChessPieceType)(_hashCode & BITS_OF_TYPE); }
+            set { _hashCode = (byte)((_hashCode & ~BITS_OF_TYPE) | ((byte)value)); }
         }
         
         #endregion Members
@@ -138,7 +127,7 @@ namespace Chess.Lib
             string color = Color.ToString().ToLower();
             string type = Type.ToString().ToLower();
 
-            return $"{ color } { type } ({ Position.ToString() })";
+            return $"{ color } { type }";
         }
 
         /// <summary>

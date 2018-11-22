@@ -73,7 +73,7 @@ namespace Chess.UnitTest
                 }
 
                 // get all possible draws
-                var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece, draw, true));
+                var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, draw, true));
                 
                 // select one of the possible draws (random)
                 int index = _random.Next(0, possibleDraws.Count());
