@@ -128,13 +128,57 @@ namespace Chess.UnitTest
         [Fact]
         public void QueenDrawsTest()
         {
-            // TODO: implement test
+            // check if only draws are computed where the destination is actually on the chess board
+            // and also make sure that only enemy pieces are taken (blocking allied pieces not)
+            for (int run = 0; run < 4; run++)
+            {
+                // get the (row, column) of the white king
+                int row = run / 2 == 0 ? 0 : 7;
+                int col = run % 2 == 0 ? 0 : 7;
+
+                var pieces = new List<ChessPieceAtPos>()
+                {
+                    new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(4, 3),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.White,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
+                };
+
+                // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
+                var board = new ChessBoard(pieces);
+                var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, new ChessDraw(), true);
+                Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
+            }
         }
 
         [Fact]
         public void RookDrawsTest()
         {
-            // TODO: implement test
+            // check if only draws are computed where the destination is actually on the chess board
+            // and also make sure that only enemy pieces are taken (blocking allied pieces not)
+            for (int run = 0; run < 4; run++)
+            {
+                // get the (row, column) of the white king
+                int row = run / 2 == 0 ? 0 : 7;
+                int col = run % 2 == 0 ? 0 : 7;
+
+                // TODO: implement test
+
+                //var pieces = new List<ChessPieceAtPos>()
+                //{
+                //    new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.White,  WasMoved = true }),
+                //    new ChessPieceAtPos(new ChessPosition(4, 3),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White,  WasMoved = true }),
+                //    new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White,  WasMoved = true }),
+                //    new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.White,  WasMoved = true }),
+                //    new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
+                //};
+
+                //// evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
+                //var board = new ChessBoard(pieces);
+                //var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, new ChessDraw(), true);
+                //Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
+            }
         }
 
         [Fact]
