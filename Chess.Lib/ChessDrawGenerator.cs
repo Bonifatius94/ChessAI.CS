@@ -6,7 +6,7 @@ namespace Chess.Lib
 {
     // TODO: use multiple threads to calculate the possible draws
 
-    public interface IChessDrawPossibilitiesHelper
+    public interface IChessDrawGenerator
     {
         /// <summary>
         /// Compute the field positions that can be captured by the given chess piece.
@@ -16,10 +16,10 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="avoidDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool avoidDrawIntoCheck);
+        IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool avoidDrawIntoCheck);
     }
 
-    public class ChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class ChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -31,22 +31,22 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
-            IChessDrawPossibilitiesHelper helper;
+            IChessDrawGenerator helper;
 
             switch (piece.Type)
             {
-                case ChessPieceType.King:    helper = new KingChessDrawPossibilitiesHelper();    break;
-                case ChessPieceType.Queen:   helper = new QueenChessDrawPossibilitiesHelper();   break;
-                case ChessPieceType.Rook:    helper = new RockChessDrawPossibilitiesHelper();    break;
-                case ChessPieceType.Bishop:  helper = new BishopChessDrawPossibilitiesHelper();  break;
-                case ChessPieceType.Knight:  helper = new KnightChessDrawPossibilitiesHelper();  break;
-                case ChessPieceType.Peasant: helper = new PeasantChessDrawPossibilitiesHelper(); break;
+                case ChessPieceType.King:    helper = new KingChessDrawGenerator();    break;
+                case ChessPieceType.Queen:   helper = new QueenChessDrawGenerator();   break;
+                case ChessPieceType.Rook:    helper = new RockChessDrawGenerator();    break;
+                case ChessPieceType.Bishop:  helper = new BishopChessDrawGenerator();  break;
+                case ChessPieceType.Knight:  helper = new KnightChessDrawGenerator();  break;
+                case ChessPieceType.Peasant: helper = new PeasantChessDrawGenerator(); break;
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
 
-            var draws = helper.GetPossibleDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck).ToList();
+            var draws = helper.GetDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck).ToList();
             
             return draws;
         }
@@ -54,7 +54,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class KingChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class KingChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -66,10 +66,10 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // get the possible draw positions
-            var positions = getKingDrawPositions(piece);
+            var positions = getStandardDrawPositions(piece);
 
             // only retrieve positions that are not captured by an allied chess piece
             var alliedPieces = (piece.Color == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
@@ -78,13 +78,13 @@ namespace Chess.Lib
 
             // only retrieve positions that cannot be captured by the enemy king (-> avoid draw into check)
             var enemyKing = piece.Color == ChessColor.White ? board.BlackKing : board.WhiteKing;
-            var enemyKingDrawPositons = getKingDrawPositions(enemyKing);
+            var enemyKingDrawPositons = getStandardDrawPositions(enemyKing);
             positions = positions.Except(enemyKingDrawPositons);
 
             // only retrieve positions that cannot be captured by other enemy chess pieces (-> no draw into check)
             var enemyCapturablePositions =
                 board.Pieces.Where(x => x.Color != piece.Color && x.Type != ChessPieceType.King)                            // select only enemy pieces that are not the king
-                .SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, precedingEnemyDraw, false))  // compute draws of those enemy pieces
+                .SelectMany(x => new ChessDrawGenerator().GetDraws(board, x, precedingEnemyDraw, false))  // compute draws of those enemy pieces
                 .Select(x => x.NewPosition).ToList();
 
             positions = positions.Except(enemyCapturablePositions);
@@ -93,12 +93,12 @@ namespace Chess.Lib
             var draws = positions.Select(newPos => new ChessDraw(board, piece.Position, newPos));
 
             // add rochade draws
-            draws = draws.Concat(getPossibleRochadeDraws(board, piece.Color, enemyCapturablePositions));
+            draws = draws.Concat(getRochadeDraws(board, piece.Color, enemyCapturablePositions));
             
             return draws;
         }
 
-        private IEnumerable<ChessPosition> getKingDrawPositions(ChessPiece piece)
+        private IEnumerable<ChessPosition> getStandardDrawPositions(ChessPiece piece)
         {
             // make sure the chess piece is a king
             if (piece.Type != ChessPieceType.King) { throw new InvalidOperationException("The chess piece is not a king."); }
@@ -125,7 +125,7 @@ namespace Chess.Lib
             return positions;
         }
 
-        private IEnumerable<ChessDraw> getPossibleRochadeDraws(ChessBoard board, ChessColor drawingSide, List<ChessPosition> enemyCapturablePositions)
+        private IEnumerable<ChessDraw> getRochadeDraws(ChessBoard board, ChessColor drawingSide, List<ChessPosition> enemyCapturablePositions)
         {
             var draws = new List<ChessDraw>();
 
@@ -140,7 +140,8 @@ namespace Chess.Lib
             var smallRochadeKingPassagePositions = new List<ChessPosition>() { new ChessPosition(row, 4), new ChessPosition(row, 5) };
 
             // check for preconditions of big rochade
-            if (farAlliedTower != null && !alliedKing.WasMoved && !farAlliedTower.Value.WasMoved && bigRochadeKingPassagePositions.All(x => board.GetPieceAt(x) == null))
+            if (farAlliedTower != null && !alliedKing.WasMoved && !farAlliedTower.Value.WasMoved 
+                && bigRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
             {
                 // make sure that no rochade field can be captured by the opponent
                 bool canBigRochade = !enemyCapturablePositions.Any(pos => bigRochadeKingPassagePositions.Contains(pos));
@@ -150,7 +151,8 @@ namespace Chess.Lib
             }
 
             // check for preconditions of small rochade
-            if (nearAlliedTower != null && !alliedKing.WasMoved && !nearAlliedTower.Value.WasMoved && smallRochadeKingPassagePositions.All(x => board.GetPieceAt(x) == null))
+            if (nearAlliedTower != null && !alliedKing.WasMoved && !nearAlliedTower.Value.WasMoved 
+                && smallRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
             {
                 // make sure that no rochade field can be captured by the opponent
                 bool canBigRochade = !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
@@ -165,7 +167,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class QueenChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class QueenChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -177,15 +179,15 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // make sure the chess piece is a queen
             if (piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a queen."); }
 
             // combine the positions that a rock or a bishop could capture
             var draws =
-                new RockChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck)
-                .Union(new BishopChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck));
+                new RockChessDrawGenerator().GetDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck)
+                .Union(new BishopChessDrawGenerator().GetDraws(board, piece, precedingEnemyDraw, analyzeDrawIntoCheck));
 
             return draws;
         }
@@ -193,7 +195,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class RockChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class RockChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -205,7 +207,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // make sure the chess piece is rock-like
             if (piece.Type != ChessPieceType.Rook && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rock."); }
@@ -306,7 +308,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class BishopChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class BishopChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -318,7 +320,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // make sure the chess piece is bishop-like
             if (piece.Type != ChessPieceType.Bishop && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a bishop."); }
@@ -419,7 +421,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class KnightChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class KnightChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -431,7 +433,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // make sure the chess piece is a knight
             if (piece.Type != ChessPieceType.Knight) { throw new InvalidOperationException("The chess piece is not a knight."); }
@@ -472,7 +474,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class PeasantChessDrawPossibilitiesHelper : IChessDrawPossibilitiesHelper
+    public class PeasantChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -484,7 +486,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of field positions</returns>
-        public IEnumerable<ChessDraw> GetPossibleDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
+        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPiece piece, ChessDraw precedingEnemyDraw, bool analyzeDrawIntoCheck)
         {
             // make sure the chess piece is a king
             if (piece.Type != ChessPieceType.Peasant) { throw new InvalidOperationException("The chess piece is not a peasant."); }

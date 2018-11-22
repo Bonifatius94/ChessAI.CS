@@ -170,13 +170,15 @@ namespace Chess.Lib
             // handle rochade
             if (draw.Type == ChessDrawType.Rochade)
             {
-                // get old and new position of the tower involved
-                var oldTowerPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 0 : 7);
-                var newTowerPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 3 : 5);
+                // get the rook involved and its old and new position
+                var oldRookPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 0 : 7);
+                var newRookPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 3 : 5);
+                var drawingRook = GetPieceAt(oldRookPosition).Value;
+                drawingRook.Position = newRookPosition;
 
                 // move the tower
-                UpdatePieceAt(draw.OldPosition, null);
-                UpdatePieceAt(draw.NewPosition, drawingPiece);
+                UpdatePieceAt(oldRookPosition, null);
+                UpdatePieceAt(newRookPosition, drawingRook);
             }
 
             // handle en-passant

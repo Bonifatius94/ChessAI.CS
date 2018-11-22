@@ -33,7 +33,7 @@ namespace Chess.Lib
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
-            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, draw, false));
+            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x, draw, false));
 
             // find out if the allied king could be taken by at least one enemy answer
             var alliedKing = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.WhiteKing : simulatedBoard.BlackKing;
@@ -52,7 +52,7 @@ namespace Chess.Lib
         {
             // find out if any allied chess piece can draw
             var alliedPieces = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.BlackPieces : board.WhitePieces;
-            bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, precedingEnemyDraw, true).Count() > 0);
+            bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece, precedingEnemyDraw, true).Count() > 0);
 
             // find out whether the allied king is checked
             var alliedKing = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.BlackKing : board.WhiteKing;
@@ -60,7 +60,7 @@ namespace Chess.Lib
 
             bool isAlliedKingChecked = 
                 enemyPieces.Any(piece => 
-                    new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, piece, new ChessDraw(), false)
+                    new ChessDrawGenerator().GetDraws(board, piece, new ChessDraw(), false)
                     .Any(y => y.NewPosition == alliedKing.Position)
                 );
             

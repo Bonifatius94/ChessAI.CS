@@ -1,6 +1,7 @@
 ﻿using Chess.Lib;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Chess.CLI
@@ -15,14 +16,15 @@ namespace Chess.CLI
         {
             int testsCount = 10000;
             var spans = new TimeSpan[testsCount];
+            var stopwatch = new Stopwatch();
 
             for (int i = 0; i < testsCount; i++)
             {
-                var start = DateTime.Now;
+                stopwatch.Restart();
                 test();
-                var end = DateTime.Now;
+                stopwatch.Stop();
 
-                spans[i] = end - start;
+                spans[i] = new TimeSpan(stopwatch.ElapsedTicks);
                 Console.WriteLine($"time for applying 6 draws: { spans[i].TotalMilliseconds } ms");
             }
 
