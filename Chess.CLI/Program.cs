@@ -57,7 +57,7 @@ namespace Chess.CLI
             {
                 var move = moves[i];
                 var draw = new ChessDraw(game.Board, move.Item1, move.Item2);
-                game.ApplyDraw(draw);
+                game.ApplyDraw(draw, true);
 
                 //// print board again and check if the draw was applied correctly
                 //Console.WriteLine($"chess game situation after drawing { draw.ToString() }:");

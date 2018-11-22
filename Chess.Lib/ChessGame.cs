@@ -55,10 +55,11 @@ namespace Chess.Lib
         /// Furthermore change the side that has to draw and store the chess draw in the chess draws history (stack).
         /// </summary>
         /// <param name="draw">The chess draw to be made</param>
-        public void ApplyDraw(ChessDraw draw)
+        /// <param name="validate">Indicates whether the chess draw should be validated</param>
+        public void ApplyDraw(ChessDraw draw, bool validate = false)
         {
             // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
-            if (_drawHistory.Count == 0 || draw.IsValid(Board, _drawHistory.Peek()))
+            if (!validate || (draw.IsValid(Board, _drawHistory?.Count > 0 ? _drawHistory.Peek() : new ChessDraw())))
             {
                 // draw the chess piece
                 Board.ApplyDraw(draw);

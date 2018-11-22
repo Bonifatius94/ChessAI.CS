@@ -1,11 +1,18 @@
 ﻿using Chess.Lib;
 using System;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Chess.UnitTest
 {
-    public class ChessPositionTests
+    public class ChessPositionTests : TestBase
     {
+        #region Constructor
+
+        public ChessPositionTests(ITestOutputHelper output) : base(output) { }
+
+        #endregion Constructor
+
         #region Tests
 
         [Fact]

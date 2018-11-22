@@ -3,11 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Chess.UnitTest
 {
-    public class ChessDrawTests
+    public class ChessDrawTests : TestBase
     {
+        #region Constructor
+
+        public ChessDrawTests(ITestOutputHelper output) : base(output) { }
+
+        #endregion Constructor
+
         #region Tests
 
         [Fact]

@@ -463,7 +463,7 @@ namespace Chess.Lib
                 draws = positions.Select(newPos => new ChessDraw(board, piece.Position, newPos));
 
                 // remove draws that would draw into a check situation (all moves are invalid if one draws into check)
-                draws = !(new ChessDrawSimulator().IsDrawIntoCheck(board, draws.First())) ? draws : new List<ChessDraw>();
+                draws = !(draws?.Count() > 0 && new ChessDrawSimulator().IsDrawIntoCheck(board, draws.First())) ? draws : new List<ChessDraw>();
             }
             
             return draws;
@@ -515,7 +515,18 @@ namespace Chess.Lib
 
                 if (oneForeward)
                 {
-                    draws.Add(new ChessDraw(board, piece.Position, posOneForeward));
+                    // handle peasant promotion
+                    if ((posOneForeward.Row == 7 && piece.Color == ChessColor.White) || (posOneForeward.Row == 0 && piece.Color == ChessColor.Black))
+                    {
+                        // add options for peasant promotion (all piece types except king and peasant)
+                        for (int i = 1; i < 5; i++)
+                        {
+                            var pieceType = (ChessPieceType)i;
+                            draws.Add(new ChessDraw(board, piece.Position, posOneForeward, pieceType));
+                        }
+                    }
+                    // handle normal foreward draw
+                    else { draws.Add(new ChessDraw(board, piece.Position, posOneForeward)); }
 
                     if (!piece.WasMoved && ChessPosition.AreCoordsValid(coordsPosTwoForeward))
                     {
@@ -582,32 +593,6 @@ namespace Chess.Lib
             return draws;
         }
 
-        #endregion Methods
-    }
-
-    public class ChessDrawSimulator
-    {
-        #region Methods
-        
-        public bool IsDrawIntoCheck(ChessBoard board, ChessDraw draw)
-        {
-            // TODO: remove clone operation if it causes performance issues
-
-            // clone chess board and simulate the draw
-            var simulatedBoard = (ChessBoard)board.Clone();
-            simulatedBoard.ApplyDraw(draw);
-
-            // get all enemy chess pieces and their possible answers
-            var enemyPieces = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
-            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawPossibilitiesHelper().GetPossibleDraws(board, x, draw, false));
-
-            // find out if the allied king could be taken by at least one enemy answer
-            var alliedKing = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.WhiteKing : simulatedBoard.BlackKing;
-            bool ret = possibleEnemyAnswers.Any(x => x.NewPosition == alliedKing.Position);
-
-            return ret;
-        }
-        
         #endregion Methods
     }
 }
