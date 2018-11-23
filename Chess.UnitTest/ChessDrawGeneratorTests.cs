@@ -10,6 +10,7 @@ namespace Chess.UnitTest
 {
     public class ChessDrawGeneratorTests : TestBase
     {
+        private int attColDiff;
         #region Constructor
 
         public ChessDrawGeneratorTests(ITestOutputHelper output) : base(output) { }
@@ -17,6 +18,8 @@ namespace Chess.UnitTest
         #endregion Constructor
 
         #region Tests
+
+        #region KingDraws
 
         [Fact]
         public void KingDrawsTest()
@@ -29,6 +32,7 @@ namespace Chess.UnitTest
             catch (Exception ex)
             {
                 output.WriteLine(ex.ToString());
+                Assert.True(false);
             }
         }
 
@@ -124,7 +128,11 @@ namespace Chess.UnitTest
                 }
             }
         }
-        
+
+        #endregion KingDraws
+
+        #region QueenDraws
+
         [Fact]
         public void QueenDrawsTest()
         {
@@ -145,12 +153,16 @@ namespace Chess.UnitTest
                     new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
                 };
 
-                // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
+                // evaluate queen draws
                 var board = new ChessBoard(pieces);
                 var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, new ChessDraw(), true);
                 Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
             }
         }
+
+        #endregion QueenDraws
+
+        #region RookDraws
 
         [Fact]
         public void RookDrawsTest()
@@ -181,11 +193,19 @@ namespace Chess.UnitTest
             }
         }
 
+        #endregion RookDraws
+
+        #region BishopDraws
+
         [Fact]
         public void BishopDrawsTest()
         {
             // TODO: implement test
         }
+
+        #endregion BishopDraws
+
+        #region KnightDraws
 
         [Fact]
         public void KnightDrawsTest()
@@ -193,12 +213,110 @@ namespace Chess.UnitTest
             // TODO: implement test
         }
 
+        #endregion KnightDraws
+
+        #region PeasantDraws
+
         [Fact]
-        public void PawnDrawsTest()
+        public void PeasantDrawsTest()
         {
-            // TODO: implement test
+            try
+            {
+                testOneAndDoubleForeward();
+                testCatchDraws();
+                testEnPassant();
+                testPeasantPromotion();
+            }
+            catch (Exception ex)
+            {
+                output.WriteLine(ex.ToString());
+                Assert.True(false);
+            }
         }
-        
+
+        private void testOneAndDoubleForeward()
+        {
+            //for (int rowOfSide = 1; rowOfSide < 8; rowOfSide++)
+            //{
+            //    int row = ;
+            //}
+
+            // TODO: implement logic
+        }
+
+        private void testCatchDraws()
+        {
+            // TODO: implement logic
+        }
+
+        private void testEnPassant()
+        {
+            // simulate for white and black side
+            for (int dfwColorValue = 0; dfwColorValue < 2; dfwColorValue++)
+            {
+                var dfwColor = (ChessColor)dfwColorValue;
+                var epColor = (dfwColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+
+                // get the column where the peasant is moving foreward
+                for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+                {
+                    int dfwRow = (dfwColor == ChessColor.White) ? 1 : 6;
+                    int attRow = (dfwColor == ChessColor.White) ? 3 : 4;
+                    var dfwOldPos = new ChessPosition(dfwRow, fwCol);
+                    var dfwNewPos = new ChessPosition(attRow, fwCol);
+
+                    // get the column where the en-passant peasant is placed
+                    for (int attCol = 0; attCol < ChessBoard.CHESS_BOARD_DIMENSION; attCol++)
+                    {
+                        if (fwCol != attCol)
+                        {
+                            var attOldPos = new ChessPosition(attRow, attCol);
+                            var attNewPos = new ChessPosition(attRow + ((dfwColor == ChessColor.White) ? -1 : 1), fwCol);
+
+                            var pieces = new List<ChessPieceAtPos>()
+                            {
+                                new ChessPieceAtPos(dfwOldPos,               new ChessPiece() { Type = ChessPieceType.Peasant, Color = dfwColor,         WasMoved = false }),
+                                new ChessPieceAtPos(attOldPos,               new ChessPiece() { Type = ChessPieceType.Peasant, Color = epColor,          WasMoved = true  }),
+                                new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, WasMoved = false }),
+                                new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, WasMoved = false }),
+                            };
+
+                            // apply the double foreward draw as preparation for the en-passant
+                            var board = new ChessBoard(pieces);
+                            var drawDfw = new ChessDraw(board, dfwOldPos, dfwNewPos);
+                            board.ApplyDraw(drawDfw);
+
+                            // create the en-passant draw and validate it
+                            var drawEp = new ChessDraw(board, attOldPos, attNewPos);
+                            bool shouldDrawBeValid = Math.Abs(attCol - fwCol) == 1;
+                            bool isDrawValid = drawEp.IsValid(board, drawDfw);
+                            Assert.True(shouldDrawBeValid == isDrawValid);
+
+                            if (shouldDrawBeValid)
+                            {
+                                // check if the en-passant draw gets correctly applied to the chess board
+                                board.ApplyDraw(drawEp);
+                                Assert.True(board.GetPieceAt(dfwNewPos) == null && board.GetPieceAt(attNewPos).Value == pieces[1].Piece);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void testPeasantPromotion()
+        {
+            // get the column where the peasant is moving foreward
+            for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+            {
+
+            }
+
+            // TODO: implement logic
+        }
+
+        #endregion PeasantDraws
+
         #endregion Tests
     }
 }

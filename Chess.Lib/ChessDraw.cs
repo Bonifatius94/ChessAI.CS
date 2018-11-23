@@ -133,11 +133,6 @@ namespace Chess.Lib
                 return (digits != CHESS_PIECE_TYPE_NULL) ? (ChessPieceType?)((ChessPieceType)digits) : null;
             }
         }
-
-        ///// <summary>
-        ///// The timestamp when the chess player finalized the chess draw. Time is measured for UTC timezone.
-        ///// </summary>
-        //public DateTime? Timestamp { get; set; }
         
         #endregion Members
 
@@ -146,14 +141,18 @@ namespace Chess.Lib
         private static int toHashCode(ChessDrawType drawType, ChessColor drawingSide, ChessPieceType drawingPieceType, 
             ChessPieceType? promotionPieceType, ChessPosition oldPosition, ChessPosition newPosition)
         {
+            // shift the bits to the right position (preparation for bitwise OR)
             int drawTypeBits = ((int)drawType) << DRAW_TYPE_TRAILING_BITS;
             int drawingSideBits = ((int)drawingSide) << DRAWING_SIDE_TRAILING_BITS;
             int drawingPieceTypeBits = ((int)drawingPieceType) << DRAWING_PIECE_TYPE_TRAILING_BITS;
-            int promotionPieceTypeBits = ((promotionPieceType != null ? (int)promotionPieceType.Value : CHESS_PIECE_TYPE_NULL)) << PROMOTION_PIECE_TYPE_TRAILING_BITS;
+            int promotionPieceTypeBits = ((promotionPieceType != null) ? (int)promotionPieceType.Value : CHESS_PIECE_TYPE_NULL) << PROMOTION_PIECE_TYPE_TRAILING_BITS;
             int oldPositionBits = oldPosition.GetHashCode() << OLD_POSITION_TRAILING_BITS;
             int newPositionBits = newPosition.GetHashCode();
-            
-            return (drawTypeBits | drawingSideBits | drawingPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
+
+            // fuse the shifted bits to the hash code (by bitwise OR)
+            int hashCode = (drawTypeBits | drawingSideBits | drawingPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
+
+            return hashCode;
         }
 
         private static ChessDrawType getDrawType(ChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType)
