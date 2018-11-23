@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Chess.Lib
 {
-    // TODO: use multiple threads to calculate the possible draws
+    // TODO: use multiple threads to calculate the possible draws (=> already tested, but was actually slower than the single-thread approach)
 
     public interface IChessDrawGenerator
     {
@@ -504,6 +504,26 @@ namespace Chess.Lib
             // get all possible draws
             var draws = getForewardDraws(board, drawingPiecePosition).Union(getCatchDraws(board, drawingPiecePosition, precedingEnemyDraw));
 
+            // handle peasant promotion
+            draws = draws.SelectMany(x => {
+                
+                if ((x.NewPosition.Row == 7 && piece.Color == ChessColor.White) || (x.NewPosition.Row == 0 && piece.Color == ChessColor.Black))
+                {
+                    var promotionDraws = new List<ChessDraw>();
+
+                    // add options for peasant promotion (all piece types except king and peasant)
+                    for (int i = 1; i < 5; i++)
+                    {
+                        var pieceType = (ChessPieceType)i;
+                        promotionDraws.Add(new ChessDraw(board, x.OldPosition, x.NewPosition, pieceType));
+                    }
+
+                    return promotionDraws;
+                }
+
+                return new List<ChessDraw>() { x };
+            });
+            
             if (analyzeDrawIntoCheck)
             {
                 // remove draws that would draw into a check situation
@@ -528,18 +548,7 @@ namespace Chess.Lib
 
                 if (oneForeward)
                 {
-                    // handle peasant promotion
-                    if ((posOneForeward.Row == 7 && piece.Color == ChessColor.White) || (posOneForeward.Row == 0 && piece.Color == ChessColor.Black))
-                    {
-                        // add options for peasant promotion (all piece types except king and peasant)
-                        for (int i = 1; i < 5; i++)
-                        {
-                            var pieceType = (ChessPieceType)i;
-                            draws.Add(new ChessDraw(board, drawingPiecePosition, posOneForeward, pieceType));
-                        }
-                    }
-                    // handle normal foreward draw
-                    else { draws.Add(new ChessDraw(board, drawingPiecePosition, posOneForeward)); }
+                    draws.Add(new ChessDraw(board, drawingPiecePosition, posOneForeward));
 
                     if (!piece.WasMoved && ChessPosition.AreCoordsValid(coordsPosTwoForeward))
                     {

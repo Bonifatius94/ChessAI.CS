@@ -10,7 +10,6 @@ namespace Chess.UnitTest
 {
     public class ChessDrawGeneratorTests : TestBase
     {
-        private int attColDiff;
         #region Constructor
 
         public ChessDrawGeneratorTests(ITestOutputHelper output) : base(output) { }
@@ -306,13 +305,57 @@ namespace Chess.UnitTest
 
         private void testPeasantPromotion()
         {
-            // get the column where the peasant is moving foreward
-            for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+            // simulate for white and black side
+            for (int colorValue = 0; colorValue < 2; colorValue++)
             {
+                var allyColor = (ChessColor)colorValue;
+                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                
+                // go through all columns where the promoting peasant is moving foreward
+                for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+                {
+                    int fwRow = (allyColor == ChessColor.White) ? 6 : 1;
+                    var fwPos = new ChessPosition(fwRow, fwCol);
+                    
+                    var pieces = new List<ChessPieceAtPos>()
+                    {
+                        new ChessPieceAtPos(new ChessPosition(4, 0), new ChessPiece() { Color = ChessColor.White, Type = ChessPieceType.King,    WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 7), new ChessPiece() { Color = ChessColor.Black, Type = ChessPieceType.King,    WasMoved = true }),
+                        new ChessPieceAtPos(fwPos,                   new ChessPiece() { Color = allyColor,        Type = ChessPieceType.Peasant, WasMoved = true }),
+                    };
 
+                    int catchRow = (allyColor == ChessColor.White) ? 7 : 0;
+                    int leftCatchCol  = fwCol - 1;
+                    int rightCatchCol = fwCol + 1;
+
+                    var enemyPeasant = new ChessPiece() { Color = enemyColor, Type = ChessPieceType.Peasant, WasMoved = true };
+                    ChessPosition posCatchLeft;
+                    ChessPosition posCatchRight;
+
+                    if (ChessPosition.AreCoordsValid(catchRow, leftCatchCol))
+                    {
+                        posCatchLeft = new ChessPosition(catchRow, leftCatchCol);
+                        pieces.Add(new ChessPieceAtPos(posCatchLeft, enemyPeasant));
+                    }
+
+                    if (ChessPosition.AreCoordsValid(catchRow, rightCatchCol))
+                    {
+                        posCatchRight = new ChessPosition(catchRow, rightCatchCol);
+                        pieces.Add(new ChessPieceAtPos(posCatchRight, enemyPeasant));
+                    }
+
+                    var board = new ChessBoard(pieces);
+                    var draws = new ChessDrawGenerator().GetDraws(board, fwPos, new ChessDraw(), true);
+                    Assert.True(draws.Count() ==  (4 * ((fwCol % 7 == 0) ? 2 : 3)));
+                        
+                    foreach (var draw in draws)
+                    {
+                        board = new ChessBoard(pieces);
+                        board.ApplyDraw(draw);
+                        Assert.True(board.Pieces.All(x => x.Piece.Color == enemyColor || x.Piece.Type != ChessPieceType.Peasant));
+                    }
+                }
             }
-
-            // TODO: implement logic
         }
 
         #endregion PeasantDraws
