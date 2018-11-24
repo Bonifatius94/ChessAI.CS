@@ -111,7 +111,7 @@ namespace Chess.UnitTest
 
                         // check whether the draw validation returns the expected value
                         bool shouldRochadeBeValid = !wasKingMoved && !wasRookMoved && attack >= 3;
-                        bool isRochadeValid = draw.IsValid(board, new ChessDraw());
+                        bool isRochadeValid = draw.IsValid(board);
                         Assert.True(shouldRochadeBeValid == isRochadeValid);
 
                         // check whether the rochade is applied correctly to the chess board
@@ -235,17 +235,122 @@ namespace Chess.UnitTest
 
         private void testOneAndDoubleForeward()
         {
-            //for (int rowOfSide = 1; rowOfSide < 8; rowOfSide++)
-            //{
-            //    int row = ;
-            //}
+            // simulate for white and black side
+            for (int dfwColorValue = 0; dfwColorValue < 2; dfwColorValue++)
+            {
+                var allyColor = (ChessColor)dfwColorValue;
 
-            // TODO: implement logic
+                // get the column where the peasant is moving foreward
+                for (int col = 0; col < ChessBoard.CHESS_BOARD_DIMENSION; col++)
+                {
+                    int oldRow    = (allyColor == ChessColor.White) ? 1 : 6;
+                    int sfwNewRow = (allyColor == ChessColor.White) ? 2 : 5;
+                    int dfwNewRow = (allyColor == ChessColor.White) ? 3 : 4;
+                    var oldPos = new ChessPosition(oldRow, col);
+                    var sfwNewPos = new ChessPosition(sfwNewRow, col);
+                    var dfwNewPos = new ChessPosition(dfwNewRow, col);
+
+                    // check if the draw is only valid if the peasant was not already moved
+                    for (int wasMovedValue = 0; wasMovedValue < 2; wasMovedValue++)
+                    {
+                        var wasMoved = (wasMovedValue == 1);
+
+                        // check if blocking pieces of both colors are taken in consideration
+                        for (int blockingPieceRowDiff = 2; blockingPieceRowDiff < 4; blockingPieceRowDiff++)
+                        {
+                            int blockRow = (allyColor == ChessColor.White) ? (oldRow + blockingPieceRowDiff) : (oldRow - blockingPieceRowDiff);
+                            var blockPos = new ChessPosition(blockRow, col);
+
+                            for (int bpColorValue = 0; bpColorValue < 2; bpColorValue++)
+                            {
+                                var bpColor = (ChessColor)bpColorValue;
+                                //output.WriteLine($"testing constellation: allyColor={ allyColor.ToString() }, sfwNewPos={ sfwNewPos }, dfwNewPos={ dfwNewPos }, blockPos={ blockPos }, wasMoved={ wasMoved }");
+
+                                var pieces = new List<ChessPieceAtPos>()
+                                {
+                                    new ChessPieceAtPos(oldPos,                  new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor,        WasMoved = wasMoved }),
+                                    new ChessPieceAtPos(blockPos,                new ChessPiece() { Type = ChessPieceType.Peasant, Color = bpColor,          WasMoved = wasMoved }),
+                                    new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, WasMoved = false    }),
+                                    new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, WasMoved = false    }),
+                                };
+
+                                var board = new ChessBoard(pieces);
+
+                                var sfwDraw = new ChessDraw(board, oldPos, sfwNewPos);
+                                bool shouldSfwBeValid = (blockingPieceRowDiff > 1);
+                                bool isSfwValid = sfwDraw.IsValid(board);
+                                Assert.True(shouldSfwBeValid == isSfwValid);
+
+                                var dfwDraw = new ChessDraw(board, oldPos, dfwNewPos);
+                                bool shouldDfwBeValid = (wasMoved == false) && (blockingPieceRowDiff > 2);
+                                bool isDfwValid = dfwDraw.IsValid(board);
+                                Assert.True(shouldDfwBeValid == isDfwValid);
+
+                                if (isSfwValid)
+                                {
+                                    // check if the chess piece is moved correctly
+                                    board = new ChessBoard(pieces);
+                                    board.ApplyDraw(dfwDraw);
+                                    Assert.True(
+                                        board.GetPieceAt(oldPos) == null
+                                        && board.GetPieceAt(dfwNewPos).Value == new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor, WasMoved = true }
+                                    );
+                                }
+
+                                if (isDfwValid)
+                                {
+                                    // check if the chess piece is moved correctly
+                                    board = new ChessBoard(pieces);
+                                    board.ApplyDraw(dfwDraw);
+                                    Assert.True(
+                                        board.GetPieceAt(oldPos) == null
+                                        && board.GetPieceAt(dfwNewPos).Value == new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor, WasMoved = !wasMoved }
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void testCatchDraws()
         {
-            // TODO: implement logic
+            // simulate for white and black side for each ally and target chess pieces 
+            for (int colorValues = 0; colorValues < 4; colorValues++)
+            {
+                var allyColor = (ChessColor)(colorValues / 2);
+                var targetColor = (ChessColor)(colorValues % 2);
+
+                // check for all rows on the chess board
+                for (int rowDiff = 0; rowDiff < 6; rowDiff++)
+                {
+                    int allyRow = (allyColor == ChessColor.White) ? (1 + rowDiff) : (6 - rowDiff);
+                    int nextRow = (allyColor == ChessColor.White) ? (allyRow + 1) : (allyRow - 1);
+
+                    // get the column where the peasant is moving foreward
+                    for (int allyCol = 0; allyCol < ChessBoard.CHESS_BOARD_DIMENSION; allyCol++)
+                    {
+                        var oldPos = new ChessPosition(allyRow, allyCol);
+                        int leftCatchCol  = allyCol - 1;
+                        int rightCatchCol = allyCol + 1;
+
+                        for (int targetColMiddle = 1; targetColMiddle < 7; targetColMiddle++)
+                        {
+                            var targetPosLeft  = new ChessPosition(nextRow, targetColMiddle - 1);
+                            var targetPosRight = new ChessPosition(nextRow, targetColMiddle + 1);
+                            
+                            // investigate left catch if valid
+                            if (ChessPosition.AreCoordsValid(leftCatchCol, nextRow))
+                            {
+                                var lcNewPos = new ChessPosition(nextRow, leftCatchCol);
+
+                                // TODO: implement test
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void testEnPassant()

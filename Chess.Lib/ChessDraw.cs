@@ -185,7 +185,7 @@ namespace Chess.Lib
         /// <param name="board">the chess board where the draw should be applied to</param>
         /// <param name="predecedingEnemyDraw">The last draw that the oponent made</param>
         /// <returns>boolean whether the draw is valid</returns>
-        public bool IsValid(ChessBoard board, ChessDraw predecedingEnemyDraw)
+        public bool IsValid(ChessBoard board, ChessDraw? predecedingEnemyDraw = null)
         {
             // get the piece to be drawn
             var piece = board.GetPieceAt(OldPosition);
@@ -196,14 +196,11 @@ namespace Chess.Lib
 
             // compute the possible chess draws for the given chess piece
             var possibleDraws = new ChessDrawGenerator().GetDraws(board, OldPosition, predecedingEnemyDraw, true);
-
-            // make sure there is at least one possible draw for the given chess piece
-            if (possibleDraws?.Count() <= 0) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } can not draw at all."); }
-
+            
             // check if there is a possible draw with the same new position and type (this implies that the given draw is valid)
             var type = Type;
             var position = NewPosition;
-            bool ret = possibleDraws.Any(x => x.Type == type && x.NewPosition == position);
+            bool ret = (possibleDraws?.Count() > 0) && possibleDraws.Any(x => x.Type == type && x.NewPosition == position);
 
             return ret;
         }
