@@ -57,10 +57,10 @@ namespace Chess.Lib
             // find out whether the allied king is checked
             var alliedKing = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.BlackKing : board.WhiteKing;
             var enemyPieces = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.WhitePieces : board.BlackPieces;
-
+            
             bool isAlliedKingChecked = 
                 enemyPieces.Any(piece => 
-                    new ChessDrawGenerator().GetDraws(board, piece.Position, new ChessDraw(), false)
+                    new ChessDrawGenerator().GetDraws(board, piece.Position, null, false)
                     .Any(y => y.NewPosition == alliedKing.Position)
                 );
             

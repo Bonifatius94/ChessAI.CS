@@ -55,12 +55,12 @@ namespace Chess.UnitTest
 
                 // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
                 var board = new ChessBoard(pieces);
-                var draws = new ChessDrawGenerator().GetDraws(board, board.WhiteKing.Position, new ChessDraw(), true);
+                var draws = new ChessDrawGenerator().GetDraws(board, board.WhiteKing.Position, null, true);
                 Assert.True(draws.Count() == ((row + col == 7) ? 2 : 3));
 
                 // evaluate black king draws (when white king is onto A8, then the white peasant cannot be taken because of draw into check by the black king)
                 board = new ChessBoard(pieces);
-                draws = new ChessDrawGenerator().GetDraws(board, board.BlackKing.Position, new ChessDraw(), true);
+                draws = new ChessDrawGenerator().GetDraws(board, board.BlackKing.Position, null, true);
                 Assert.True(draws.Count() == ((row == 7 && col == 0) ? 7 : 8));
             }
         }
@@ -139,23 +139,39 @@ namespace Chess.UnitTest
             // and also make sure that only enemy pieces are taken (blocking allied pieces not)
             for (int run = 0; run < 4; run++)
             {
-                // get the (row, column) of the white king
+                // get the (row, column) of the white rook
                 int row = run / 2 == 0 ? 0 : 7;
                 int col = run % 2 == 0 ? 0 : 7;
 
-                var pieces = new List<ChessPieceAtPos>()
+                // test draws of white / black queens
+                for (int colorValue = 0; colorValue < 2; colorValue++)
                 {
-                    new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.White,  WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(4, 3),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White,  WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White,  WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.White,  WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
-                };
+                    var allyColor = (ChessColor)colorValue;
+                    var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
 
-                // evaluate queen draws
-                var board = new ChessBoard(pieces);
-                var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, new ChessDraw(), true);
-                Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
+                    var pieces = new List<ChessPieceAtPos>()
+                    {
+                        new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Queen,   Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 3),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.King,    Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = enemyColor, WasMoved = true }),
+                    };
+
+                    // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
+                    var board = new ChessBoard(pieces);
+                    var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, null, true);
+                    Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
+
+                    // check if the draws are correctly applied to the chess board
+                    foreach (var draw in draws)
+                    {
+                        board = new ChessBoard(pieces);
+                        board.ApplyDraw(draw);
+                        var pieceCmp = new ChessPiece() { Type = ChessPieceType.Queen, Color = allyColor, WasMoved = true };
+                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                    }
+                }
             }
         }
 
@@ -170,25 +186,41 @@ namespace Chess.UnitTest
             // and also make sure that only enemy pieces are taken (blocking allied pieces not)
             for (int run = 0; run < 4; run++)
             {
-                // get the (row, column) of the white king
+                // get the (row, column) of the white queen
                 int row = run / 2 == 0 ? 0 : 7;
                 int col = run % 2 == 0 ? 0 : 7;
 
-                // TODO: implement test
+                // test draws of white / black rooks
+                for (int colorValue = 0; colorValue < 2; colorValue++)
+                {
+                    var allyColor = (ChessColor)colorValue;
+                    var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
 
-                //var pieces = new List<ChessPieceAtPos>()
-                //{
-                //    new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.White,  WasMoved = true }),
-                //    new ChessPieceAtPos(new ChessPosition(4, 3),     new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White,  WasMoved = true }),
-                //    new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White,  WasMoved = true }),
-                //    new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = ChessColor.White,  WasMoved = true }),
-                //    new ChessPieceAtPos(new ChessPosition(2, 5),     new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black,  WasMoved = true }),
-                //};
+                    var pieces = new List<ChessPieceAtPos>()
+                    {
+                        new ChessPieceAtPos(new ChessPosition(row, col), new ChessPiece() { Type = ChessPieceType.Rook,    Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(0, 3),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(7, 4),     new ChessPiece() { Type = ChessPieceType.Queen,   Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(3, 4),     new ChessPiece() { Type = ChessPieceType.King,    Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(3, 0),     new ChessPiece() { Type = ChessPieceType.Bishop,  Color = enemyColor, WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 7),     new ChessPiece() { Type = ChessPieceType.Queen,   Color = enemyColor, WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 2),     new ChessPiece() { Type = ChessPieceType.King,    Color = enemyColor, WasMoved = true }),
+                    };
 
-                //// evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
-                //var board = new ChessBoard(pieces);
-                //var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, new ChessDraw(), true);
-                //Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
+                    // evaluate queen draws
+                    var board = new ChessBoard(pieces);
+                    var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, null, true);
+                    Assert.True(draws.Count() == ((row + col == 7) ? 7 : 5));
+
+                    // check if the draws are correctly applied to the chess board
+                    foreach (var draw in draws)
+                    {
+                        board = new ChessBoard(pieces);
+                        board.ApplyDraw(draw);
+                        var pieceCmp = new ChessPiece() { Type = ChessPieceType.Rook, Color = allyColor, WasMoved = true };
+                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                    }
+                }
             }
         }
 
@@ -199,7 +231,37 @@ namespace Chess.UnitTest
         [Fact]
         public void BishopDrawsTest()
         {
-            // TODO: implement test
+            // test draws of white / black bishops
+            for (int colorValue = 0; colorValue < 2; colorValue++)
+            {
+                var allyColor = (ChessColor)colorValue;
+                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var bishopPos = new ChessPosition(4, 4);
+
+                var pieces = new List<ChessPieceAtPos>()
+                {
+                    new ChessPieceAtPos(bishopPos,               new ChessPiece() { Type = ChessPieceType.Bishop, Color = allyColor,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(0, 0), new ChessPiece() { Type = ChessPieceType.Queen,  Color = allyColor,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(7, 7), new ChessPiece() { Type = ChessPieceType.Knight, Color = allyColor,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(0, 6), new ChessPiece() { Type = ChessPieceType.King,   Color = allyColor,  WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(6, 2), new ChessPiece() { Type = ChessPieceType.Bishop, Color = enemyColor, WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(1, 7), new ChessPiece() { Type = ChessPieceType.Knight, Color = enemyColor, WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece() { Type = ChessPieceType.King,   Color = enemyColor, WasMoved = true }),
+                };
+
+                var board = new ChessBoard(pieces);
+                var draws = new ChessDrawGenerator().GetDraws(board, bishopPos, null, true);
+                Assert.True(draws.Count() == 10);
+
+                // check if the draws are correctly applied to the chess board
+                foreach (var draw in draws)
+                {
+                    board = new ChessBoard(pieces);
+                    board.ApplyDraw(draw);
+                    var pieceCmp = new ChessPiece() { Type = ChessPieceType.Bishop, Color = allyColor, WasMoved = true };
+                    Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                }
+            }
         }
 
         #endregion BishopDraws
@@ -209,7 +271,48 @@ namespace Chess.UnitTest
         [Fact]
         public void KnightDrawsTest()
         {
-            // TODO: implement test
+            // test draws of white / black knights
+            for (int colorValue = 0; colorValue < 2; colorValue++)
+            {
+                var allyColor = (ChessColor)colorValue;
+                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+
+                var knightPositions = new List<ChessPosition>()
+                {
+                    new ChessPosition(1, 2),
+                    new ChessPosition(2, 6),
+                    new ChessPosition(6, 4),
+                    new ChessPosition(5, 1),
+                };
+
+                // go through all knight positions (including positions at the margin of the chess board, etc.)
+                foreach (var knightPos in knightPositions)
+                {
+                    var pieces = new List<ChessPieceAtPos>()
+                    {
+                        new ChessPieceAtPos(knightPos,               new ChessPiece() { Type = ChessPieceType.Knight,  Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 3), new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(0, 7), new ChessPiece() { Type = ChessPieceType.Rook,    Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = allyColor,  WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(4, 7), new ChessPiece() { Type = ChessPieceType.Peasant, Color = enemyColor, WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(7, 2), new ChessPiece() { Type = ChessPieceType.Queen,   Color = enemyColor, WasMoved = true }),
+                        new ChessPieceAtPos(new ChessPosition(6, 5), new ChessPiece() { Type = ChessPieceType.King,    Color = enemyColor, WasMoved = true }),
+                    };
+
+                    var board = new ChessBoard(pieces);
+                    var draws = new ChessDrawGenerator().GetDraws(board, knightPos, null, true);
+                    Assert.True(draws.Count() == 5);
+
+                    // check if the draws are correctly applied to the chess board
+                    foreach (var draw in draws)
+                    {
+                        board = new ChessBoard(pieces);
+                        board.ApplyDraw(draw);
+                        var pieceCmp = new ChessPiece() { Type = ChessPieceType.Knight, Color = allyColor, WasMoved = true };
+                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                    }
+                }
+            }
         }
 
         #endregion KnightDraws
@@ -450,7 +553,7 @@ namespace Chess.UnitTest
                     }
 
                     var board = new ChessBoard(pieces);
-                    var draws = new ChessDrawGenerator().GetDraws(board, fwPos, new ChessDraw(), true);
+                    var draws = new ChessDrawGenerator().GetDraws(board, fwPos, null, true);
                     Assert.True(draws.Count() ==  (4 * ((fwCol % 7 == 0) ? 2 : 3)));
                         
                     foreach (var draw in draws)
