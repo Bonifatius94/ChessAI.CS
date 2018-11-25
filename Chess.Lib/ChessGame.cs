@@ -46,6 +46,11 @@ namespace Chess.Lib
         /// </summary>
         private readonly Stack<ChessDraw> _drawHistory = new Stack<ChessDraw>();
 
+        /// <summary>
+        /// The last chess draw that was made.
+        /// </summary>
+        public ChessDraw LastDraw { get { return _drawHistory.Peek(); } }
+
         #endregion Members
 
         #region Methods
@@ -56,10 +61,14 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="draw">The chess draw to be made</param>
         /// <param name="validate">Indicates whether the chess draw should be validated</param>
-        public void ApplyDraw(ChessDraw draw, bool validate = false)
+        /// <returns>boolean whether the draw could be applied</returns>
+        public bool ApplyDraw(ChessDraw draw, bool validate = false)
         {
+            var lastDraw = (_drawHistory?.Count > 0) ? (ChessDraw?)_drawHistory.Peek() : null;
+            bool isDrawValid = !validate || draw.IsValid(Board, lastDraw);
+
             // info: Validate() throws an exception if the draw is invalid -> catch this exception and make use of the exception message
-            if (!validate || (draw.IsValid(Board, _drawHistory?.Count > 0 ? (ChessDraw?)_drawHistory.Peek() : null)))
+            if (isDrawValid)
             {
                 // draw the chess piece
                 Board.ApplyDraw(draw);
@@ -70,6 +79,8 @@ namespace Chess.Lib
                 // change the side that has to draw
                 SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
             }
+
+            return isDrawValid;
         }
 
         /// <summary>
