@@ -40,7 +40,7 @@ namespace Chess.Lib
             {
                 case ChessPieceType.King:    helper = new KingChessDrawGenerator();    break;
                 case ChessPieceType.Queen:   helper = new QueenChessDrawGenerator();   break;
-                case ChessPieceType.Rook:    helper = new RockChessDrawGenerator();    break;
+                case ChessPieceType.Rook:    helper = new RookChessDrawGenerator();    break;
                 case ChessPieceType.Bishop:  helper = new BishopChessDrawGenerator();  break;
                 case ChessPieceType.Knight:  helper = new KnightChessDrawGenerator();  break;
                 case ChessPieceType.Peasant: helper = new PeasantChessDrawGenerator(); break;
@@ -89,8 +89,8 @@ namespace Chess.Lib
 
             // only retrieve positions that cannot be captured by other enemy chess pieces (-> no draw into check)
             var enemyCapturablePositions =
-                board.Pieces.Where(x => x.Piece.Color != piece.Color && x.Piece.Type != ChessPieceType.King)      // select only enemy pieces that are not the king
-                .SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, precedingEnemyDraw, false)) // compute draws of those enemy pieces
+                board.Pieces.Where(x => x.Piece.Color != piece.Color && x.Piece.Type != ChessPieceType.King) // select only enemy pieces that are not the king
+                .SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, null, false))          // compute draws of those enemy pieces
                 .Select(x => x.NewPosition).ToList();
 
             positions = positions.Except(enemyCapturablePositions);
@@ -188,7 +188,7 @@ namespace Chess.Lib
 
             // combine the positions that a rock or a bishop could capture
             var draws =
-                new RockChessDrawGenerator().GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck)
+                new RookChessDrawGenerator().GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck)
                 .Union(new BishopChessDrawGenerator().GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck));
 
             return draws;
@@ -197,7 +197,7 @@ namespace Chess.Lib
         #endregion Methods
     }
 
-    public class RockChessDrawGenerator : IChessDrawGenerator
+    public class RookChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
 
@@ -213,8 +213,8 @@ namespace Chess.Lib
         {
             var piece = board.GetPieceAt(drawingPiecePosition).Value;
 
-            // make sure the chess piece is rock-like
-            if (piece.Type != ChessPieceType.Rook && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rock."); }
+            // make sure the chess piece is rook-like
+            if (piece.Type != ChessPieceType.Rook && piece.Type != ChessPieceType.Queen) { throw new InvalidOperationException("The chess piece is not a rook."); }
 
             var draws = new List<ChessDraw>();
             
@@ -233,8 +233,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -255,8 +254,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -277,8 +275,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -299,8 +296,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -348,8 +344,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -370,8 +365,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -392,8 +386,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -414,8 +407,7 @@ namespace Chess.Lib
                 if (canDrawToPos)
                 {
                     var draw = new ChessDraw(board, drawingPiecePosition, newPos);
-                    if (i == 1 && analyzeDrawIntoCheck && new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { break; }
-                    draws.Add(draw);
+                    if (!analyzeDrawIntoCheck || !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)) { draws.Add(draw); }
                 }
 
                 if (abort) { break; }
@@ -472,8 +464,8 @@ namespace Chess.Lib
                 // transform positions to chess draws
                 draws = positions.Select(newPos => new ChessDraw(board, drawingPiecePosition, newPos));
 
-                // remove draws that would draw into a check situation (all moves are invalid if one draws into check)
-                draws = !(draws?.Count() > 0 && new ChessDrawSimulator().IsDrawIntoCheck(board, draws.First())) ? draws : new List<ChessDraw>();
+                // remove draws that would draw into a check situation
+                draws = draws.Where(x => !new ChessDrawSimulator().IsDrawIntoCheck(board, x));
             }
             
             return draws;

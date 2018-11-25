@@ -18,7 +18,7 @@ namespace Chess.Lib
         #region Methods
 
         /// <summary>
-        /// Simulate the given chess draw on the given chess board and checks if it draws into an allied check situation.
+        /// Simulate the given chess draw on the given chess board and determine whether it draws into an allied check situation.
         /// </summary>
         /// <param name="board">The chess board with the game situation to evaluate</param>
         /// <param name="draw">The chess draw to be evaluated</param>
@@ -33,7 +33,7 @@ namespace Chess.Lib
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
-            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, draw, false));
+            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(simulatedBoard, x.Position, draw, false));
 
             // find out if the allied king could be taken by at least one enemy answer
             var alliedKing = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.WhiteKing : simulatedBoard.BlackKing;
@@ -51,18 +51,17 @@ namespace Chess.Lib
         public CheckGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
         {
             // find out if any allied chess piece can draw
-            var alliedPieces = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.BlackPieces : board.WhitePieces;
-            bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
+            var alliedSide = (precedingEnemyDraw.DrawingSide == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+            var alliedPieces = (alliedSide == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            //bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
+
+            var alliedDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true));
+            bool canAllyDraw = alliedDraws.Count() > 0;
 
             // find out whether the allied king is checked
-            var alliedKing = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.BlackKing : board.WhiteKing;
-            var enemyPieces = precedingEnemyDraw.DrawingSide == ChessColor.White ? board.WhitePieces : board.BlackPieces;
-            
-            bool isAlliedKingChecked = 
-                enemyPieces.Any(piece => 
-                    new ChessDrawGenerator().GetDraws(board, piece.Position, null, false)
-                    .Any(y => y.NewPosition == alliedKing.Position)
-                );
+            var alliedKing = (alliedSide == ChessColor.White) ? board.WhiteKing : board.BlackKing;
+            var enemyPieces = (alliedSide == ChessColor.White) ? board.BlackPieces : board.WhitePieces;
+            bool isAlliedKingChecked = enemyPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, null, false).Any(y => y.NewPosition == alliedKing.Position));
             
             // none:      ally can draw and is not checked
             // check:     ally is checked, but can at least draw

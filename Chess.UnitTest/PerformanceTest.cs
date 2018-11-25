@@ -20,7 +20,7 @@ namespace Chess.UnitTest
 
         private static readonly Random _random = new Random();
 
-        [Fact]
+        [Fact(Skip = "test would take too long")]
         public void PlaymakingTest()
         {
             bool failed = false;
