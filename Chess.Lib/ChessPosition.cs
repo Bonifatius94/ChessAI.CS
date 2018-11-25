@@ -71,6 +71,11 @@ namespace Chess.Lib
         /// Generates the chess field name out of Row and Column property (e.g. 'A1', 'H8').
         /// </summary>
         public string FieldName { get { return $"{ (char)('A' + Column) }{ (char)('1' + Row) }"; } }
+
+        /// <summary>
+        /// Generates the color of the chess field at the given position on the chess board.
+        /// </summary>
+        public ChessColor ColorOfField { get { return (((Row + Column) % 2) == 1) ? ChessColor.White : ChessColor.Black; } }
         
         #endregion Members
 

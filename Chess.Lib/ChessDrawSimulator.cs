@@ -10,7 +10,8 @@ namespace Chess.Lib
         None,
         Check,
         Checkmate,
-        Stalemate
+        Stalemate,
+        UnsufficientPieces
     }
 
     public class ChessDrawSimulator
@@ -50,13 +51,19 @@ namespace Chess.Lib
         /// <returns>a chess status</returns>
         public CheckGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
         {
-            // find out if any allied chess piece can draw
             var alliedSide = (precedingEnemyDraw.DrawingSide == ChessColor.White) ? ChessColor.Black : ChessColor.White;
-            var alliedPieces = (alliedSide == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
-            //bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
+            var enemySide = precedingEnemyDraw.DrawingSide;
 
-            var alliedDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true));
-            bool canAllyDraw = alliedDraws.Count() > 0;
+            // analyze the chess piece types on the board => determine whether any player can even achieve a checkmate with his remaining pieces
+            bool canAllyCheckmate = canAchieveCheckmate(board, alliedSide);
+            bool canEnemyCheckmate = canAchieveCheckmate(board, enemySide);
+
+            // quit game status analysis if ally has lost due to unsufficient pieces
+            if (!canAllyCheckmate && canEnemyCheckmate) { return CheckGameStatus.UnsufficientPieces; }
+
+            // find out if any allied chess piece can draw
+            var alliedPieces = (alliedSide == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
 
             // find out whether the allied king is checked
             var alliedKing = (alliedSide == ChessColor.White) ? board.WhiteKing : board.BlackKing;
@@ -74,6 +81,54 @@ namespace Chess.Lib
                     : (isAlliedKingChecked ? CheckGameStatus.Checkmate : CheckGameStatus.Stalemate);
             
             return status;
+        }
+        
+        private bool canAchieveCheckmate(ChessBoard board, ChessColor side)
+        {
+            // TODO: validate this logic
+
+            // minimal pieces required for checkmate: 
+            // ======================================
+            //  (1) king + queen
+            //  (2) king + rook
+            //  (3) king + 2 bishops (onto different chess field colors)
+            //  (4) king + bishop + knight
+            //  (5) king + 3 knights
+            //  (6) king + peasant (with promotion)
+            //
+            // source: http://www.eudesign.com/chessops/basics/cpr-mate.htm
+            
+            // get all allied pieces
+            var alliedPieces = (side == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            
+            // determine whether the allied side can still achieve a checkmate
+            bool ret = (
+                // check if ally at least has his king + another piece (precondition for all options)
+                alliedPieces.Count() >= 2 && alliedPieces.Any(x => x.Piece.Type == ChessPieceType.King)
+                && 
+                (
+                    // check for options 1, 2, 6
+                    alliedPieces.Any(x => x.Piece.Type == ChessPieceType.Queen || x.Piece.Type == ChessPieceType.Rook || x.Piece.Type == ChessPieceType.Peasant)
+                    ||
+                    // check for options 3, 4, 5
+                    (
+                        // check precondition of options 3, 4, 5
+                        alliedPieces.Count() >= 3
+                        && (
+                            // check for option 3
+                            alliedPieces.Where(x => x.Piece.Type == ChessPieceType.Bishop).Select(x => x.Position.ColorOfField)?.Distinct().Count() == 2
+                            ||
+                            // check for option 4
+                            alliedPieces.Any(x => x.Piece.Type == ChessPieceType.Bishop) && alliedPieces.Any(x => x.Piece.Type == ChessPieceType.Knight)
+                            ||
+                            // check for option 5
+                            alliedPieces.Where(x => x.Piece.Type == ChessPieceType.Knight).Count() >= 3
+                        )
+                    )
+                )
+            );
+
+            return ret;
         }
 
         #endregion Methods

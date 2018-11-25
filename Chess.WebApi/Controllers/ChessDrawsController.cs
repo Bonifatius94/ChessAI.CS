@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Chess.Lib;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chess.WebApi.Controllers
@@ -10,6 +11,8 @@ namespace Chess.WebApi.Controllers
     [ApiController]
     public class ChessDrawsController : ControllerBase
     {
+        private static Dictionary<int, ChessGame> _games = new Dictionary<int, ChessGame>();
+
         // GET api/values
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()

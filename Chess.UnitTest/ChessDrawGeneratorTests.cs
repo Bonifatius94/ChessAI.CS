@@ -435,20 +435,42 @@ namespace Chess.UnitTest
                     for (int allyCol = 0; allyCol < ChessBoard.CHESS_BOARD_DIMENSION; allyCol++)
                     {
                         var oldPos = new ChessPosition(allyRow, allyCol);
-                        int leftCatchCol  = allyCol - 1;
-                        int rightCatchCol = allyCol + 1;
 
                         for (int targetColMiddle = 1; targetColMiddle < 7; targetColMiddle++)
                         {
                             var targetPosLeft  = new ChessPosition(nextRow, targetColMiddle - 1);
                             var targetPosRight = new ChessPosition(nextRow, targetColMiddle + 1);
-                            
-                            // investigate left catch if valid
-                            if (ChessPosition.AreCoordsValid(leftCatchCol, nextRow))
-                            {
-                                var lcNewPos = new ChessPosition(nextRow, leftCatchCol);
 
-                                // TODO: implement test
+                            var allyPeasant = new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor, WasMoved = true };
+                            var enemyPeasant = new ChessPiece() { Type = ChessPieceType.Peasant, Color = targetColor, WasMoved = true };
+                            int kingsRow = (allyColor == ChessColor.White) ? 0 : 7;
+
+                            var pieces = new List<ChessPieceAtPos>()
+                            {
+                                new ChessPieceAtPos(oldPos, allyPeasant),
+                                new ChessPieceAtPos(targetPosLeft, enemyPeasant),
+                                new ChessPieceAtPos(targetPosRight, enemyPeasant),
+                                new ChessPieceAtPos(new ChessPosition(kingsRow, 0), new ChessPiece() { Type = ChessPieceType.King, Color = ChessColor.White }),
+                                new ChessPieceAtPos(new ChessPosition(kingsRow, 7), new ChessPiece() { Type = ChessPieceType.King, Color = ChessColor.Black }),
+                            };
+
+                            //output.WriteLine($"current constellation: allyColor={allyColor}, targetColor={targetColor}, allyRow={allyRow}, allyCol={allyCol}, targetColMiddle={targetColMiddle}");
+
+                            var board = new ChessBoard(pieces);
+                            var catchDraws = new ChessDrawGenerator().GetDraws(board, oldPos, null, true).Where(x => x.OldPosition.Column != x.NewPosition.Column);
+
+                            int expectedCatchDrawsCount = (targetColor == allyColor) ? 0 : (targetColMiddle == allyCol) ? 2 : ((Math.Abs(targetColMiddle - allyCol) == 2) ? 1 : 0);
+                            expectedCatchDrawsCount = ((rowDiff == 5) ? 4 : 1) * expectedCatchDrawsCount;
+
+                            Assert.True(catchDraws.Count() == expectedCatchDrawsCount);
+
+                            // check if the draws are correctly applied to the chess board
+                            foreach (var draw in catchDraws)
+                            {
+                                board = new ChessBoard(pieces);
+                                board.ApplyDraw(draw);
+                                var pieceCmp = new ChessPiece() { Type = ChessPieceType.Peasant, Color = allyColor, WasMoved = true };
+                                Assert.True(board.GetPieceAt(draw.OldPosition) == null && (board.GetPieceAt(draw.NewPosition).Value == pieceCmp || (rowDiff == 5)));
                             }
                         }
                     }
