@@ -29,9 +29,7 @@ namespace Chess.UnitTest
             {
                 try
                 {
-                    output.WriteLine($"starting game { i + 1 }:");
-                    output.WriteLine("==================");
-                    playGame();
+                    playGame(i + 1);
                 }
                 catch (Exception ex)
                 {
@@ -44,56 +42,48 @@ namespace Chess.UnitTest
             Assert.True(!failed);
         }
 
-        private List<ChessDraw> playGame()
+        private void playGame(int id)
         {
             // init new game
             var game = new ChessGame();
-            var draw = new ChessDraw();
-            var allDraws = new List<ChessDraw>();
             var gameStatus = CheckGameStatus.None;
-            bool abort = false;
-
+            
             try
             {
+                var draw = new ChessDraw();
+                bool abort = false;
+
                 do
                 {
-                    var alliedPieces = (game.SideToDraw == ChessColor.White ? game.Board.WhitePieces : game.Board.BlackPieces);
-
-                    // stop if a player only has his king left
-                    if (alliedPieces.Count() == 1)
-                    {
-                        gameStatus = CheckGameStatus.Stalemate;
-                        break;
-                    }
-
                     // get all possible draws
+                    var alliedPieces = (game.SideToDraw == ChessColor.White) ? game.Board.WhitePieces : game.Board.BlackPieces;
                     var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, draw, true));
-
+                    
                     // select one of the possible draws (randomly)
                     int index = _random.Next(0, possibleDraws.Count());
                     draw = possibleDraws.ElementAt(index);
 
                     // apply the draw to the chess board
                     game.ApplyDraw(draw);
-                    allDraws.Add(draw);
 
+                    // check if the game is over (and exit in case)
                     gameStatus = new ChessDrawSimulator().GetCheckGameStatus(game.Board, draw);
-                    abort = gameStatus == CheckGameStatus.Checkmate || gameStatus == CheckGameStatus.Stalemate || gameStatus == CheckGameStatus.UnsufficientPieces;
+                    abort = (gameStatus != CheckGameStatus.Check && gameStatus != CheckGameStatus.None);
                 }
                 while (!abort);
             }
             finally
             {
                 // print draws and result of game
-                allDraws.ForEach(x => output.WriteLine(x.ToString()));
-                output.WriteLine("==================");
+                output.WriteLine($"starting game { id }:");
+                output.WriteLine("======================");
+                game.AllDraws.ForEach(x => output.WriteLine(x.ToString()));
+                output.WriteLine("======================");
                 output.WriteLine(game.Board.ToString());
-                output.WriteLine("==================");
+                output.WriteLine("======================");
                 output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.ToString().ToLower() } wins") }.");
-                output.WriteLine("==================");
+                output.WriteLine("======================");
             }
-            
-            return allDraws;
         }
 
         #endregion Tests

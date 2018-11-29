@@ -97,9 +97,9 @@ namespace Chess.Lib
             {
                 var pieces = new List<ChessPieceAtPos>();
 
-                for (int posIndex = 0; posIndex < CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION; posIndex++)
+                for (byte posIndex = 0; posIndex < CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION; posIndex++)
                 {
-                    var position = new ChessPosition((byte)posIndex);
+                    var position = new ChessPosition(posIndex);
 
                     if (IsCapturedAt(position))
                     {

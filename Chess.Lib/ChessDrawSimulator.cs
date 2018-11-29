@@ -11,7 +11,8 @@ namespace Chess.Lib
         Check,
         Checkmate,
         Stalemate,
-        UnsufficientPieces
+        UnsufficientPieces,
+        Tie
     }
 
     public class ChessDrawSimulator
@@ -34,8 +35,8 @@ namespace Chess.Lib
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
-            var possibleEnemyAnswers = enemyPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(simulatedBoard, x.Position, draw, false));
-
+            var possibleEnemyAnswers = enemyPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(simulatedBoard, piece.Position, draw, false));
+            
             // find out if the allied king could be taken by at least one enemy answer
             var alliedKing = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.WhiteKing : simulatedBoard.BlackKing;
             bool ret = possibleEnemyAnswers.Any(x => x.NewPosition == alliedKing.Position);
@@ -44,7 +45,7 @@ namespace Chess.Lib
         }
 
         /// <summary>
-        /// Check whether the game situation on the given chess board is a simple check, check-mate or patt situation.
+        /// Check whether the game situation on the given chess board is a simple check, checkmate or tie situation.
         /// </summary>
         /// <param name="board"></param>
         /// <param name="precedingEnemyDraw"></param>
@@ -60,6 +61,9 @@ namespace Chess.Lib
 
             // quit game status analysis if ally has lost due to unsufficient pieces
             if (!canAllyCheckmate && canEnemyCheckmate) { return CheckGameStatus.UnsufficientPieces; }
+
+            // TODO: check if this is even possible
+            if (!canAllyCheckmate && !canEnemyCheckmate) { return CheckGameStatus.Tie; }
 
             // find out if any allied chess piece can draw
             var alliedPieces = (alliedSide == ChessColor.White) ? board.WhitePieces : board.BlackPieces;

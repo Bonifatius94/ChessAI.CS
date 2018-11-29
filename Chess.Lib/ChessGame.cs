@@ -51,6 +51,11 @@ namespace Chess.Lib
         /// </summary>
         public ChessDraw LastDraw { get { return _drawHistory.Peek(); } }
 
+        /// <summary>
+        /// A list of all chess draws starting with the first and ending with the last draw that has been made. (computed)
+        /// </summary>
+        public List<ChessDraw> AllDraws { get { return _drawHistory.Reverse().ToList(); } }
+
         #endregion Members
 
         #region Methods
@@ -97,7 +102,6 @@ namespace Chess.Lib
             // create a new chess board and apply all previous chess draws (-> this results in the situation before the last chess draw was applied)
             var board = new ChessBoard();
             _drawHistory.Reverse().ToList().ForEach(x => board.ApplyDraw(x));
-            // TODO: test if Reverse() brings the correct behaviour
             
             // change the side that has to draw
             SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
