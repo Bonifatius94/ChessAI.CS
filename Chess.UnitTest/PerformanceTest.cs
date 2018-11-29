@@ -25,16 +25,19 @@ namespace Chess.UnitTest
         {
             bool failed = false;
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 try
                 {
+                    output.WriteLine($"starting game { i + 1 }:");
+                    output.WriteLine("==================");
                     playGame();
                 }
                 catch (Exception ex)
                 {
                     failed = true;
                     output.WriteLine(ex.ToString());
+                    break;
                 }
             }
 
@@ -49,48 +52,47 @@ namespace Chess.UnitTest
             var allDraws = new List<ChessDraw>();
             var gameStatus = CheckGameStatus.None;
             bool abort = false;
-            
-            do
+
+            try
             {
-                var alliedPieces = (game.SideToDraw == ChessColor.White ? game.Board.WhitePieces : game.Board.BlackPieces);
-
-                // stop if a player only has his king left
-                if (alliedPieces.Count() == 1)
+                do
                 {
-                    gameStatus = CheckGameStatus.Stalemate;
-                    break;
+                    var alliedPieces = (game.SideToDraw == ChessColor.White ? game.Board.WhitePieces : game.Board.BlackPieces);
+
+                    // stop if a player only has his king left
+                    if (alliedPieces.Count() == 1)
+                    {
+                        gameStatus = CheckGameStatus.Stalemate;
+                        break;
+                    }
+
+                    // get all possible draws
+                    var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, draw, true));
+
+                    // select one of the possible draws (randomly)
+                    int index = _random.Next(0, possibleDraws.Count());
+                    draw = possibleDraws.ElementAt(index);
+
+                    // apply the draw to the chess board
+                    game.ApplyDraw(draw);
+                    allDraws.Add(draw);
+
+                    gameStatus = new ChessDrawSimulator().GetCheckGameStatus(game.Board, draw);
+                    abort = gameStatus == CheckGameStatus.Checkmate || gameStatus == CheckGameStatus.Stalemate || gameStatus == CheckGameStatus.UnsufficientPieces;
                 }
-
-                // get all possible draws
-                var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, draw, true));
-                
-                // select one of the possible draws (randomly)
-                int index = _random.Next(0, possibleDraws.Count());
-                draw = possibleDraws.ElementAt(index);
-
-                //// check if the enemy king would get taken (-> checkmate) => GetCheckGameStatus() is not working correctly 
-                //if (game.Board.IsCapturedAt(draw.NewPosition) && game.Board.GetPieceAt(draw.NewPosition).Value.Type == ChessPieceType.King)
-                //{
-                //    gameStatus = CheckGameStatus.Checkmate;
-                //    break;
-                //}
-                
-                // apply the draw to the chess board
-                game.ApplyDraw(draw);
-                allDraws.Add(draw);
-                
-                gameStatus = new ChessDrawSimulator().GetCheckGameStatus(game.Board, draw);
-                abort = gameStatus == CheckGameStatus.Checkmate || gameStatus == CheckGameStatus.Stalemate || gameStatus == CheckGameStatus.UnsufficientPieces;
+                while (!abort);
             }
-            while (!abort);
-
-            // print draws and result of game
-            output.WriteLine("starting game:");
-            output.WriteLine("==============");
-            allDraws.ForEach(x => output.WriteLine(x.ToString()));
-            output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.ToString().ToLower() } wins") }.");
-            output.WriteLine("=========================================");
-
+            finally
+            {
+                // print draws and result of game
+                allDraws.ForEach(x => output.WriteLine(x.ToString()));
+                output.WriteLine("==================");
+                output.WriteLine(game.Board.ToString());
+                output.WriteLine("==================");
+                output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.ToString().ToLower() } wins") }.");
+                output.WriteLine("==================");
+            }
+            
             return allDraws;
         }
 

@@ -213,22 +213,23 @@ namespace Chess.Lib
         {
             string ret;
             string color = DrawingSide.ToString().ToLower();
-            string drawingPiece = DrawingPieceType.ToString().ToLower();
+            string drawingPiece = DrawingPieceType.ToString().ToLower().PadRight(7, ' ');
+            string drawNameBase = $"{ color } { drawingPiece } { OldPosition.FieldName }-{ NewPosition.FieldName }";
 
             switch (Type)
             {
                 case ChessDrawType.Standard:
-                    ret = $"{ color } { drawingPiece } { OldPosition.ToString() }-{ NewPosition.ToString() }";
+                    ret = drawNameBase;
                     break;
                 case ChessDrawType.Rochade:
                     bool isLeftSide = (NewPosition.Column == 2 && DrawingSide == ChessColor.White) || (OldPosition.Column == 6 && DrawingSide == ChessColor.Black);
-                    ret = $"{ color } { (isLeftSide ? "left" : "right") }-side rochade";
+                    ret = $"{ drawNameBase } ({ (isLeftSide ? "left" : "right") }-side rochade)";
                     break;
                 case ChessDrawType.EnPassant:
-                    ret = $"{ color } { drawingPiece } { OldPosition.FieldName }-{ NewPosition.FieldName } (en-passant)";
+                    ret = $"{ drawNameBase } (en-passant)";
                     break;
                 case ChessDrawType.PeasantPromotion:
-                    ret = $"{ color } peasant promotion on { NewPosition.FieldName } ({ PeasantPromotionPieceType.ToString().ToLower() })";
+                    ret = $"{ drawNameBase } ({ PeasantPromotionPieceType.ToString().ToLower() })";
                     break;
                 default:
                     throw new ArgumentException("Unsupported chess draw type detected!");

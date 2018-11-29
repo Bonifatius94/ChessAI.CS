@@ -440,30 +440,30 @@ namespace Chess.Lib
 
             IEnumerable<ChessDraw> draws = new List<ChessDraw>();
 
+            // get positions next to the current position of the king (all permutations of { -1, 0, +1 }^2 except (0, 0))
+            var coords = new List<Tuple<int, int>>()
+            {
+                new Tuple<int, int>(drawingPiecePosition.Row - 2, drawingPiecePosition.Column - 1),
+                new Tuple<int, int>(drawingPiecePosition.Row - 2, drawingPiecePosition.Column + 1),
+                new Tuple<int, int>(drawingPiecePosition.Row - 1, drawingPiecePosition.Column - 2),
+                new Tuple<int, int>(drawingPiecePosition.Row - 1, drawingPiecePosition.Column + 2),
+                new Tuple<int, int>(drawingPiecePosition.Row + 1, drawingPiecePosition.Column - 2),
+                new Tuple<int, int>(drawingPiecePosition.Row + 1, drawingPiecePosition.Column + 2),
+                new Tuple<int, int>(drawingPiecePosition.Row + 2, drawingPiecePosition.Column - 1),
+                new Tuple<int, int>(drawingPiecePosition.Row + 2, drawingPiecePosition.Column + 1),
+            };
+
+            // only retrieve positions that are actually onto the chess board (and not off scale)
+            var positions = coords.Where(x => ChessPosition.AreCoordsValid(x)).Select(x => new ChessPosition(x));
+
+            // do not draw into positions captured by allied chess pieces
+            positions = positions.Where(x => !board.IsCapturedAt(x) || board.GetPieceAt(x).Value.Color != piece.Color);
+
+            // transform positions to chess draws
+            draws = positions.Select(newPos => new ChessDraw(board, drawingPiecePosition, newPos));
+
             if (analyzeDrawIntoCheck)
             {
-                // get positions next to the current position of the king (all permutations of { -1, 0, +1 }^2 except (0, 0))
-                var coords = new List<Tuple<int, int>>()
-                {
-                    new Tuple<int, int>(drawingPiecePosition.Row - 2, drawingPiecePosition.Column - 1),
-                    new Tuple<int, int>(drawingPiecePosition.Row - 2, drawingPiecePosition.Column + 1),
-                    new Tuple<int, int>(drawingPiecePosition.Row - 1, drawingPiecePosition.Column - 2),
-                    new Tuple<int, int>(drawingPiecePosition.Row - 1, drawingPiecePosition.Column + 2),
-                    new Tuple<int, int>(drawingPiecePosition.Row + 1, drawingPiecePosition.Column - 2),
-                    new Tuple<int, int>(drawingPiecePosition.Row + 1, drawingPiecePosition.Column + 2),
-                    new Tuple<int, int>(drawingPiecePosition.Row + 2, drawingPiecePosition.Column - 1),
-                    new Tuple<int, int>(drawingPiecePosition.Row + 2, drawingPiecePosition.Column + 1),
-                };
-
-                // only retrieve positions that are actually onto the chess board (and not off scale)
-                var positions = coords.Where(x => ChessPosition.AreCoordsValid(x)).Select(x => new ChessPosition(x));
-
-                // do not draw into positions captured by allied chess pieces
-                positions = positions.Where(x => !board.IsCapturedAt(x) || board.GetPieceAt(x).Value.Color != piece.Color);
-
-                // transform positions to chess draws
-                draws = positions.Select(newPos => new ChessDraw(board, drawingPiecePosition, newPos));
-
                 // remove draws that would draw into a check situation
                 draws = draws.Where(x => !new ChessDrawSimulator().IsDrawIntoCheck(board, x));
             }
