@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Chess.AI\Chess.AI.csproj" />
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
   </ItemGroup>
 
