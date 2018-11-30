@@ -52,6 +52,11 @@ namespace Chess.Lib
         public ChessDraw LastDraw { get { return _drawHistory.Peek(); } }
 
         /// <summary>
+        /// The last chess draw that was made. (null if no draw has been applied yet)
+        /// </summary>
+        public ChessDraw? LastDrawOrDefault { get { return (_drawHistory.Count > 0) ? (ChessDraw?)_drawHistory.Peek() : null; } }
+
+        /// <summary>
         /// A list of all chess draws starting with the first and ending with the last draw that has been made. (computed)
         /// </summary>
         public List<ChessDraw> AllDraws { get { return _drawHistory.Reverse().ToList(); } }
@@ -82,7 +87,7 @@ namespace Chess.Lib
                 _drawHistory.Push(draw);
 
                 // change the side that has to draw
-                SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
+                SideToDraw = SideToDraw.Opponent();
             }
 
             return isDrawValid;
@@ -104,7 +109,20 @@ namespace Chess.Lib
             _drawHistory.Reverse().ToList().ForEach(x => board.ApplyDraw(x));
             
             // change the side that has to draw
-            SideToDraw = SideToDraw == ChessColor.White ? ChessColor.Black : ChessColor.White;
+            SideToDraw = SideToDraw.Opponent();
+        }
+
+        /// <summary>
+        /// Retrieve all chess draws that the drawing side can make.
+        /// </summary>
+        /// <param name="analyzeDrawIntoCheck">indicates whether draw into check is analyzed (default: true)</param>
+        /// <returns>a list of all possible chess draws for the drawing side</returns>
+        public IEnumerable<ChessDraw> GetDraws(bool analyzeDrawIntoCheck = true)
+        {
+            var alliedPieces = Board.GetPiecesOfColor(SideToDraw);
+            var draws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(Board, piece.Position, LastDrawOrDefault, analyzeDrawIntoCheck));
+
+            return draws;
         }
 
         #endregion Methods

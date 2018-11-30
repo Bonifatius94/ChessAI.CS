@@ -25,7 +25,7 @@ namespace Chess.UnitTest
             for (int colorValue = 0; colorValue < 2; colorValue++)
             {
                 var allyColor = (ChessColor)colorValue;
-                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var enemyColor = allyColor.Opponent();
 
                 var newPos = new Dictionary<ChessPieceType, ChessPosition>()
                 {
@@ -462,7 +462,7 @@ namespace Chess.UnitTest
             Assert.True(new ChessDrawSimulator().GetCheckGameStatus(game.Board, lastDraw) == CheckGameStatus.Check);
 
             // test whether the black player recognizes he is checked and needs to save his king
-            var alliedPieces = (lastDraw.DrawingSide == ChessColor.White) ? game.Board.BlackPieces : game.Board.WhitePieces;
+            var alliedPieces = game.Board.GetPiecesOfColor(lastDraw.DrawingSide.Opponent());
             var draws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, lastDraw, true));
 
             // check whether the king is safe after each of the draws
@@ -476,7 +476,7 @@ namespace Chess.UnitTest
         public void DrawsBugTest()
         {
             var game = prepareGame(_moves4);
-            var alliedPieces = (game.SideToDraw == ChessColor.White) ? game.Board.WhitePieces : game.Board.BlackPieces;
+            var alliedPieces = game.Board.GetPiecesOfColor(game.SideToDraw);
 
             try
             {

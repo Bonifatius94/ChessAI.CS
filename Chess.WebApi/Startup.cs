@@ -15,12 +15,22 @@ namespace Chess.WebApi
 {
     public class Startup
     {
+        #region Constructor
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        #endregion Constructor
+
+        #region Members
+
         public IConfiguration Configuration { get; }
+
+        #endregion Members
+
+        #region Methods
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -43,5 +53,7 @@ namespace Chess.WebApi
             app.UseHttpsRedirection();
             app.UseMvc();
         }
+
+        #endregion Methods
     }
 }

@@ -176,6 +176,11 @@ namespace Chess.Lib
 
     public static class ChessPieceTypeAsChar
     {
+        /// <summary>
+        /// Retrieve the character representing the given chess piece type.
+        /// </summary>
+        /// <param name="color">The chess color to be represented</param>
+        /// <returns>a character representing the given chess piece type</returns>
         public static char ToChar(this ChessPieceType type)
         {
             switch (type)
@@ -193,14 +198,32 @@ namespace Chess.Lib
 
     public static class ChessPieceColorAsChar
     {
-        public static char ToChar(this ChessColor type)
+        /// <summary>
+        /// Retrieve the character representing the given chess color.
+        /// </summary>
+        /// <param name="color">The chess color to be represented</param>
+        /// <returns>a character representing the given chess color</returns>
+        public static char ToChar(this ChessColor color)
         {
-            switch (type)
+            switch (color)
             {
                 case ChessColor.White: return 'W';
                 case ChessColor.Black: return 'B';
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
+        }
+    }
+
+    public static class ChessPieceColorOpponent
+    {
+        /// <summary>
+        /// Retrieve the opponent's chess color according to the given allied chess color. (complementary)
+        /// </summary>
+        /// <param name="color">The allied chess color</param>
+        /// <returns>the opponent's chess color</returns>
+        public static ChessColor Opponent(this ChessColor color)
+        {
+            return (color == ChessColor.White) ? ChessColor.Black : ChessColor.White;
         }
     }
 }

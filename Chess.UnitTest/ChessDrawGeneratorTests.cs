@@ -82,7 +82,7 @@ namespace Chess.UnitTest
 
                 // determine the side performing a rochade
                 var allyColor = (rookRow == 0) ? ChessColor.White : ChessColor.Black;
-                var enemyColor = (rookRow == 0) ? ChessColor.Black : ChessColor.White;
+                var enemyColor = allyColor.Opponent();
 
                 // go through all 4 tuples bool x bool; only (false, false) should enable a rochade
                 for (int wasMovedValue = 0; wasMovedValue < 4; wasMovedValue++)
@@ -147,7 +147,7 @@ namespace Chess.UnitTest
                 for (int colorValue = 0; colorValue < 2; colorValue++)
                 {
                     var allyColor = (ChessColor)colorValue;
-                    var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                    var enemyColor = allyColor.Opponent();
 
                     var pieces = new List<ChessPieceAtPos>()
                     {
@@ -194,7 +194,7 @@ namespace Chess.UnitTest
                 for (int colorValue = 0; colorValue < 2; colorValue++)
                 {
                     var allyColor = (ChessColor)colorValue;
-                    var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                    var enemyColor = allyColor.Opponent();
 
                     var pieces = new List<ChessPieceAtPos>()
                     {
@@ -235,7 +235,7 @@ namespace Chess.UnitTest
             for (int colorValue = 0; colorValue < 2; colorValue++)
             {
                 var allyColor = (ChessColor)colorValue;
-                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var enemyColor = allyColor.Opponent();
                 var bishopPos = new ChessPosition(4, 4);
 
                 var pieces = new List<ChessPieceAtPos>()
@@ -275,7 +275,7 @@ namespace Chess.UnitTest
             for (int colorValue = 0; colorValue < 2; colorValue++)
             {
                 var allyColor = (ChessColor)colorValue;
-                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var enemyColor = allyColor.Opponent();
 
                 var knightPositions = new List<ChessPosition>()
                 {
@@ -484,7 +484,7 @@ namespace Chess.UnitTest
             for (int dfwColorValue = 0; dfwColorValue < 2; dfwColorValue++)
             {
                 var dfwColor = (ChessColor)dfwColorValue;
-                var epColor = (dfwColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var epColor = dfwColor.Opponent();
 
                 // get the column where the peasant is moving foreward
                 for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
@@ -539,7 +539,7 @@ namespace Chess.UnitTest
             for (int colorValue = 0; colorValue < 2; colorValue++)
             {
                 var allyColor = (ChessColor)colorValue;
-                var enemyColor = (allyColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+                var enemyColor = allyColor.Opponent();
                 
                 // go through all columns where the promoting peasant is moving foreward
                 for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)

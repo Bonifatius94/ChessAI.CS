@@ -56,8 +56,7 @@ namespace Chess.UnitTest
                 do
                 {
                     // get all possible draws
-                    var alliedPieces = (game.SideToDraw == ChessColor.White) ? game.Board.WhitePieces : game.Board.BlackPieces;
-                    var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, draw, true));
+                    var possibleDraws = game.GetDraws();
                     
                     // select one of the possible draws (randomly)
                     int index = _random.Next(0, possibleDraws.Count());

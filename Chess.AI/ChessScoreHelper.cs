@@ -10,11 +10,12 @@ namespace Chess.AI
     {
         #region Constants
 
-        private double BASE_SCORE_PEASANT = 1.00;
-        private double BASE_SCORE_KNIGHT  = 3.20;
-        private double BASE_SCORE_BISHOP  = 3.33;
-        private double BASE_SCORE_ROOK    = 5.10;
-        private double BASE_SCORE_QUEEN   = 8.80;
+        private double BASE_SCORE_PEASANT =   1.00;
+        private double BASE_SCORE_KNIGHT  =   3.20;
+        private double BASE_SCORE_BISHOP  =   3.33;
+        private double BASE_SCORE_ROOK    =   5.10;
+        private double BASE_SCORE_QUEEN   =   8.80;
+        private double BASE_SCORE_KING    = 100.00;
 
         #endregion Constants
 
@@ -29,57 +30,66 @@ namespace Chess.AI
         public double GetScore(ChessBoard board, ChessColor sideToDraw)
         {
             // get allied pieces and calculate the score
-            var alliedPieces = (sideToDraw == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
-            double score = alliedPieces.Select(x => getPieceScore(board, x.Position)).Sum();
+            double whiteScore = board.WhitePieces.Select(x => getPieceScore(board, x.Position)).Sum();
+            double blackScore = board.BlackPieces.Select(x => getPieceScore(board, x.Position)).Sum();
 
-            return score;
+            // calculate the relative score compared to the opponent
+            double diff = (sideToDraw == ChessColor.White) ? (whiteScore - blackScore) : (blackScore - whiteScore);
+            return diff;
         }
 
         private double getPieceScore(ChessBoard board, ChessPosition position)
         {
-            double score = 0;
+            double score;
             var piece = board.GetPieceAt(position).Value;
 
             switch (piece.Type)
             {
-                case ChessPieceType.King:                                              break;
+                case ChessPieceType.King:    score = getKingScore(board, position);    break;
                 case ChessPieceType.Queen:   score = getQueenScore(board, position);   break;
                 case ChessPieceType.Rook:    score = getRookScore(board, position);    break;
                 case ChessPieceType.Bishop:  score = getBishopScore(board, position);  break;
                 case ChessPieceType.Knight:  score = getKnightScore(board, position);  break;
                 case ChessPieceType.Peasant: score = getPeasantScore(board, position); break;
+                default: throw new ArgumentException("unknown chess piece type detected!");
             }
 
             return score;
         }
 
+        private double getKingScore(ChessBoard board, ChessPosition position)
+        {
+            // TODO: implement more precise score heuristic
+            return BASE_SCORE_KING;
+        }
+
         private double getQueenScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise scores
+            // TODO: implement more precise score heuristic
             return BASE_SCORE_QUEEN;
         }
 
         private double getRookScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise scores
+            // TODO: implement more precise score heuristic
             return BASE_SCORE_ROOK;
         }
 
         private double getBishopScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise scores
+            // TODO: implement more precise score heuristic
             return BASE_SCORE_BISHOP;
         }
 
         private double getKnightScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise scores
+            // TODO: implement more precise score heuristic
             return BASE_SCORE_KNIGHT;
         }
 
         private double getPeasantScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise scores
+            // TODO: implement more precise score heuristic
             return BASE_SCORE_PEASANT;
         }
 

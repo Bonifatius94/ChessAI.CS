@@ -34,7 +34,7 @@ namespace Chess.Lib
             simulatedBoard.ApplyDraw(draw);
 
             // get all enemy chess pieces and their possible answers
-            var enemyPieces = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.BlackPieces : simulatedBoard.WhitePieces;
+            var enemyPieces = simulatedBoard.GetPiecesOfColor(draw.DrawingSide.Opponent());
             var possibleEnemyAnswers = enemyPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(simulatedBoard, piece.Position, draw, false));
             
             // find out if the allied king could be taken by at least one enemy answer
@@ -66,12 +66,12 @@ namespace Chess.Lib
             if (!canAllyCheckmate && !canEnemyCheckmate) { return CheckGameStatus.Tie; }
 
             // find out if any allied chess piece can draw
-            var alliedPieces = (alliedSide == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            var alliedPieces = board.GetPiecesOfColor(alliedSide);
             bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
 
             // find out whether the allied king is checked
             var alliedKing = (alliedSide == ChessColor.White) ? board.WhiteKing : board.BlackKing;
-            var enemyPieces = (alliedSide == ChessColor.White) ? board.BlackPieces : board.WhitePieces;
+            var enemyPieces = board.GetPiecesOfColor(alliedSide.Opponent());
             bool isAlliedKingChecked = enemyPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, null, false).Any(y => y.NewPosition == alliedKing.Position));
             
             // none:      ally can draw and is not checked
@@ -103,7 +103,7 @@ namespace Chess.Lib
             // source: http://www.eudesign.com/chessops/basics/cpr-mate.htm
             
             // get all allied pieces
-            var alliedPieces = (side == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            var alliedPieces = board.GetPiecesOfColor(side);
             
             // determine whether the allied side can still achieve a checkmate
             bool ret = (

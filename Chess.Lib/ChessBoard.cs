@@ -114,12 +114,12 @@ namespace Chess.Lib
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> WhitePieces { get { return Pieces.Where(x => x.Piece.Color == ChessColor.White); } }
+        public IEnumerable<ChessPieceAtPos> WhitePieces { get { return GetPiecesOfColor(ChessColor.White); } }
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> BlackPieces { get { return Pieces.Where(x => x.Piece.Color == ChessColor.Black); } }
+        public IEnumerable<ChessPieceAtPos> BlackPieces { get { return GetPiecesOfColor(ChessColor.Black); } }
 
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
@@ -160,9 +160,19 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece to be updated</param>
         /// <param name="newPiece">The new chess piece data</param>
-        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece)
+        private void updatePieceAt(ChessPosition position, ChessPiece? newPiece)
         {
             _pieces[position.GetHashCode()] = newPiece;
+        }
+
+        /// <summary>
+        /// Retrieve all chess pieces of the given player's side.
+        /// </summary>
+        /// <param name="side">The player's side</param>
+        /// <returns>a list of all chess pieces of the given player's side</returns>
+        public IEnumerable<ChessPieceAtPos> GetPiecesOfColor(ChessColor side)
+        {
+            return Pieces.Where(x => x.Piece.Color == side);
         }
 
         /// <summary>
@@ -193,8 +203,8 @@ namespace Chess.Lib
                 var drawingRook = GetPieceAt(oldRookPosition).Value;
 
                 // move the tower
-                UpdatePieceAt(oldRookPosition, null);
-                UpdatePieceAt(newRookPosition, drawingRook);
+                updatePieceAt(oldRookPosition, null);
+                updatePieceAt(newRookPosition, drawingRook);
             }
 
             // handle en-passant
@@ -202,12 +212,12 @@ namespace Chess.Lib
             {
                 // get position of the taken enemy peasant and remove it
                 var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
-                UpdatePieceAt(takenPeasantPosition, null);
+                updatePieceAt(takenPeasantPosition, null);
             }
 
             // apply data to the chess board
-            UpdatePieceAt(draw.OldPosition, null);
-            UpdatePieceAt(draw.NewPosition, drawingPiece);
+            updatePieceAt(draw.OldPosition, null);
+            updatePieceAt(draw.NewPosition, drawingPiece);
         }
         
         /// <summary>

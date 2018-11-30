@@ -51,7 +51,7 @@ namespace Chess.Lib
             
             return draws;
         }
-
+        
         #endregion Methods
     }
 
@@ -78,7 +78,7 @@ namespace Chess.Lib
             var positions = getStandardDrawPositions(drawingPiecePosition);
 
             // only retrieve positions that are not captured by an allied chess piece
-            var alliedPieces = (piece.Color == ChessColor.White) ? board.WhitePieces : board.BlackPieces;
+            var alliedPieces = board.GetPiecesOfColor(piece.Color);
             positions = positions.Except(alliedPieces.Select(x => x.Position));
 
             // only retrieve positions that cannot be captured by the enemy king (-> avoid draw into check)
@@ -130,7 +130,7 @@ namespace Chess.Lib
             // get enemy capturable positions
             var enemyKing = (drawingSide == ChessColor.White) ? board.BlackKing : board.WhiteKing;
             var enemyCapturablePositions =
-                ((drawingSide == ChessColor.White) ? board.BlackPieces : board.WhitePieces).Where(x => x.Piece.Type != ChessPieceType.King)
+                board.GetPiecesOfColor(drawingSide.Opponent()).Where(x => x.Piece.Type != ChessPieceType.King)
                 .SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, null, false)).Select(x => x.NewPosition)
                 .Concat(getStandardDrawPositions(enemyKing.Position));
 
