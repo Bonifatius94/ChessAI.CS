@@ -90,11 +90,11 @@ namespace Chess.AI
                     simBoard.ApplyDraw(simDraw);
 
                     // calculate the score of the simulated draw
-                    double scoreOfDraw = new ChessScoreHelper().GetScore(simBoard, drawingSide);
-                    double diff = score - scoreOfDraw;
+                    var maximizingSide = maximize ? drawingSide : drawingSide.Opponent();
+                    double scoreOfDraw = new ChessScoreHelper().GetScore(simBoard, maximizingSide);
 
                     // only enter recursion if the score stays at least somehow neutral
-                    if (diff >= -3)
+                    if (score - scoreOfDraw >= -3)
                     {
                         // update the minimax score of recursions
                         double minimaxScore = minimax(simBoard, simDraw, depth - 1, alpha, beta, !maximize);
@@ -106,6 +106,10 @@ namespace Chess.AI
 
                         // cut-off when alpha and beta overlap
                         if (alpha >= beta) { break; }
+                    }
+                    else if (!maximize)
+                    {
+
                     }
                 }
             }

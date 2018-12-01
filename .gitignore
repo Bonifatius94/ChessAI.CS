@@ -259,3 +259,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Chess.Doku/Help/Chess.Doku.chm
+/Chess.AI/Chess.AI.xml
+/Chess.CLI/Chess.CLI.xml
+/Chess.Lib/Chess.Lib.xml
+/Chess.WebApi/Chess.WebApi.xml

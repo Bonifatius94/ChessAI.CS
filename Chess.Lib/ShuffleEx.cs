@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace Chess.Lib
 {
+    /// <summary>
+    /// This is an extension class that provides linear, equal distributed shuffle and random selection of elements from a given list. 
+    /// Those operations can be used in by any enumerable.
+    /// </summary>
     public static class SuffleEx
     {
         #region Members

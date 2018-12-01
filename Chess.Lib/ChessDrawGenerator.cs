@@ -6,6 +6,9 @@ namespace Chess.Lib
 {
     // TODO: use multiple threads to calculate the possible draws (=> already tested, but was actually slower than the single-thread approach)
 
+    /// <summary>
+    /// An interface specifying operations for generating chess draws.
+    /// </summary>
     public interface IChessDrawGenerator
     {
         /// <summary>
@@ -19,6 +22,9 @@ namespace Chess.Lib
         IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false);
     }
 
+    /// <summary>
+    /// A generic chess draw generator that works for all chess piece types.
+    /// </summary>
     public class ChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -55,6 +61,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for king chess pieces.
+    /// </summary>
     public class KingChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -172,6 +181,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for queen chess pieces.
+    /// </summary>
     public class QueenChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -202,6 +214,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for rook chess pieces.
+    /// </summary>
     public class RookChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -291,6 +306,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for bishop chess pieces.
+    /// </summary>
     public class BishopChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -380,6 +398,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for knight chess pieces.
+    /// </summary>
     public class KnightChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods
@@ -433,6 +454,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// A chess draw generator for peasant chess pieces.
+    /// </summary>
     public class PeasantChessDrawGenerator : IChessDrawGenerator
     {
         #region Methods

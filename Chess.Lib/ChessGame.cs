@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// Offers basic functionality for modeling chess games and computing all possible draws.
+/// </summary>
 namespace Chess.Lib
 {
     /// <summary>

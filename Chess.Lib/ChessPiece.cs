@@ -3,34 +3,54 @@
 namespace Chess.Lib
 {
     /// <summary>
-    /// An enumeration of all chess piece types. The enumerations are represented by a character value:
-    /// 
-    ///  - King (K)
-    ///  - Queen (Q)
-    ///  - Rook (R)
-    ///  - Bishop (B)
-    ///  - Knight (H)
-    ///  - Peasant (P)
+    /// An enumeration of all chess piece types.
     /// </summary>
     public enum ChessPieceType
     {
-        King     = 0,
-        Queen    = 1,
-        Rook     = 2,
-        Bishop   = 3,
-        Knight   = 4,
-        Peasant  = 5
+        /// <summary>
+        /// Representing a king chess piece.
+        /// </summary>
+        King = 0,
+
+        /// <summary>
+        /// Representing a queen chess piece.
+        /// </summary>
+        Queen = 1,
+
+        /// <summary>
+        /// Representing a rook chess piece.
+        /// </summary>
+        Rook = 2,
+
+        /// <summary>
+        /// Representing a bishop chess piece.
+        /// </summary>
+        Bishop = 3,
+
+        /// <summary>
+        /// Representing a knigh chess piece.
+        /// </summary>
+        Knight = 4,
+
+        /// <summary>
+        /// Representing a peasant chess piece.
+        /// </summary>
+        Peasant = 5
     }
     
     /// <summary>
-    /// An enumeration of all chess piece colors. The enumerations are represented by a character value:
-    /// 
-    ///  - Black (B)
-    ///  - White (W)
+    /// An enumeration of all chess piece colors.
     /// </summary>
     public enum ChessColor
     {
+        /// <summary>
+        /// Representing black chess pieces, black chess fields, etc.
+        /// </summary>
         Black = 0,
+
+        /// <summary>
+        /// Representing white chess pieces, white chess fields, etc.
+        /// </summary>
         White = 1
     }
     
@@ -174,6 +194,9 @@ namespace Chess.Lib
         #endregion Methods
     }
 
+    /// <summary>
+    /// This is an extension class providing the conversion from a chess piece type enumeration to a character value.
+    /// </summary>
     public static class ChessPieceTypeAsChar
     {
         /// <summary>
@@ -196,6 +219,9 @@ namespace Chess.Lib
         }
     }
 
+    /// <summary>
+    /// This is an extension class providing the conversion from a chess color enumeration to a character value.
+    /// </summary>
     public static class ChessPieceColorAsChar
     {
         /// <summary>
@@ -214,6 +240,9 @@ namespace Chess.Lib
         }
     }
 
+    /// <summary>
+    /// This is an extension class providing the conversion from a chess color enumeration to its' complementary color (white vs. black).
+    /// </summary>
     public static class ChessPieceColorOpponent
     {
         /// <summary>

@@ -85,7 +85,7 @@ namespace Chess.Lib
         /// Check whether the given coords are in bounds of the chess board.
         /// </summary>
         /// <param name="coords">The (row, column) tuple to be checked</param>
-        /// <returns></returns>
+        /// <returns>a boolean whether the coords are valid</returns>
         public static bool AreCoordsValid(Tuple<int, int> coords)
         {
             return AreCoordsValid(coords.Item1, coords.Item2);
@@ -96,16 +96,16 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="row">The row to be checked</param>
         /// <param name="column">The column to be checked</param>
-        /// <returns></returns>
+        /// <returns>a boolean whether the coords are valid</returns>
         public static bool AreCoordsValid(int row, int column)
         {
             return row >= 0 && row < ChessBoard.CHESS_BOARD_DIMENSION && column >= 0 && column < ChessBoard.CHESS_BOARD_DIMENSION;
         }
-        
+
         /// <summary>
         /// Retrieve a string representing this chess position.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>a string representing this chess position</returns>
         public override string ToString()
         {
             return FieldName;
@@ -115,7 +115,7 @@ namespace Chess.Lib
         /// Overrides Equals() method by evaluating the overloaded object type and comparing the row and column propoerty.
         /// </summary>
         /// <param name="obj">The object instance to be compared to 'this'</param>
-        /// <returns></returns>
+        /// <returns>a boolean indicating whether the positions are equal</returns>
         public override bool Equals(object obj)
         {
             return (obj.GetType() == typeof(ChessPosition)) && (((ChessPosition)obj).GetHashCode() == GetHashCode());

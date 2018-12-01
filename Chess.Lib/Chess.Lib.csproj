@@ -5,4 +5,8 @@
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\Chess.Lib\Chess.Lib.xml</DocumentationFile>
+  </PropertyGroup>
+
 </Project>
