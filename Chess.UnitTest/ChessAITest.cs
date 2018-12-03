@@ -23,7 +23,7 @@ namespace Chess.UnitTest
         {
             // TODO: test higher difficulties if 
 
-            for (int difficultyValue = 0; difficultyValue < 3; difficultyValue++)
+            for (int difficultyValue = 0; difficultyValue < 4; difficultyValue++)
             {
                 var difficulty = (ChessDifficultyLevel)difficultyValue;
 

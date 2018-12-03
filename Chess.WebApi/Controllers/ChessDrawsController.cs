@@ -1,124 +1,79 @@
-﻿using System;
+﻿using Chess.Lib;
+using Chess.WebApi.Server.Interface;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Chess.Lib;
-using Microsoft.AspNetCore.Mvc;
 
-namespace Chess.WebApi.Controllers
+namespace Chess.WebApi.Server.Controllers
 {
+    /// <summary>
+    /// Implements all HTTP operations of chess gameplay.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class ChessDrawsController : ControllerBase
     {
-        #region Members
-
-        private static int _maxId = 0;
-        private static Dictionary<int, ChessMatchmaker> _matchmaker = new Dictionary<int, ChessMatchmaker>();
-        
-        private static Semaphore _semaphoreMatchmaking = new Semaphore(0, 2);
-        private static Mutex _mutexGameCreation = new Mutex();
-        private static Mutex _mutexIdIncrement = new Mutex();
-        private static Barrier _barrierGameCreationSync = new Barrier(2);
-
-        #endregion Members
-
         #region Methods
 
         // GET api/chessdraws
+        /// <summary>
+        /// Triggered by a client for starting a new game. Therefore the controller waits for a second player requesting a new game and matches them.
+        /// </summary>
+        /// <returns>a resonse message containing the game id and whether the player owns white or black chess pieces</returns>
         [HttpGet]
-        public ActionResult<StartGameResponse> RequestNewGame()
+        public async Task<ActionResult<StartGameResponse>> RequestNewGame()
         {
+            // TODO: implement match-making according to difficulty level
+            ActionResult result;
+
             try
             {
-                ActionResult<StartGameResponse> result;
-
-                // make sure only 2 players enter the game creation
-                _semaphoreMatchmaking.WaitOne();
-
-                // determine the game id (same id for both players)
-                int gameId = _maxId + 1;
-
-                // wait until both players have set the game id (this makes sure they have the same id)
-                _barrierGameCreationSync.SignalAndWait();
-
-                // make sure only the first of the two players creates the game
-                _mutexGameCreation.WaitOne();
-                bool isFirst = !_matchmaker.ContainsKey(gameId);
-                
-                if (isFirst)
-                {
-                    // first player's part: create a new game 
-                    _matchmaker.Add(gameId, new ChessMatchmaker(gameId));
-                    _maxId++;
-
-                    // now that the game is created, let the second player enter the section
-                    _mutexGameCreation.ReleaseMutex();
-
-                    // send empty draw as response (this signals that the first player has to begin)
-                    result = Ok(new StartGameResponse() { GameId = gameId, IsFirst = true });
-                }
-                else
-                {
-                    // let the next 2 players enter the game creation section
-                    _mutexGameCreation.ReleaseMutex();
-                    _semaphoreMatchmaking.Release(2);
-                    
-                    // send a start game response as answer
-                    result = Ok(new StartGameResponse() { GameId = gameId, IsFirst = false });
-                }
-                
-                return result;
+                // find a game and return the response to start the game
+                var response = await Task.Run(() => new MatchmakingDispatcher().FindGame());
+                result = Ok(response);
             }
             catch (Exception /*ex*/)
             {
-                return BadRequest();
-            }
-        }
-
-        // PUT api/chessdraws/{id}
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ChessDraw?>> SubmitDraw(int id, [FromBody] ChessDraw draw)
-        {
-            // make sure the game with the given id exists
-            if (!_matchmaker.ContainsKey(id)) { throw new ArgumentException($"game with id { id } does not exist!"); }
-
-            // submit the draw and wait for an answer from the opponent
-            var matchmaker = _matchmaker[id];
-            var hasAnswer = await matchmaker.SubmitDrawAndTryWaitForAnswer(draw);
-            
-            ActionResult<ChessDraw?> result;
-
-            if (hasAnswer == true)
-            {
-                // send enemy draw as answer
-                var answer = matchmaker.GetLastDraw();
-                result = Ok(answer);
-            }
-            else if (hasAnswer == false)
-            {
-                // send reconnect request as answer
-                result =  Ok(null);
-            }
-            else
-            {
-                // send 'bad request' answer
                 result = BadRequest();
             }
 
             return result;
         }
 
-        // GET api/chessdraws/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ChessDraw?>> ReconnectGame(int id)
+        // PUT api/chessdraws/{id}
+        /// <summary>
+        /// Triggered by a client submitting his chess draw. 
+        /// Therefore the draw is validated and sent to the opponent (if valid). Otherwise the player is asked to submit another draw that is valid.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="draw"></param>
+        /// <returns>a HTTP response</returns>
+        [HttpPut("{id}")]
+        public ActionResult SubmitDraw(int id, [FromBody] ChessDraw draw)
         {
             // make sure the game with the given id exists
-            if (!_matchmaker.ContainsKey(id)) { throw new ArgumentException($"game with id { id } does not exist!"); }
+            if (!MatchmakingDispatcher.Matches.ContainsKey(id)) { throw new ArgumentException($"game with id { id } does not exist!"); }
+
+            // submit the ches draw if valid
+            var matchmaker = MatchmakingDispatcher.Matches[id];
+            bool isValid = matchmaker.TrySubmitDraw(draw);
+
+            // send a response whether the submitted draw could be applied
+            var result = isValid ? Ok() as ActionResult : BadRequest();
+            return result;
+        }
+
+        // GET api/chessdraws/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ChessDraw?>> RequestOpponentDraw(int id)
+        {
+            // make sure the game with the given id exists
+            if (!MatchmakingDispatcher.Matches.ContainsKey(id)) { throw new ArgumentException($"game with id { id } does not exist!"); }
 
             // wait for an answer from the opponent
-            var matchmaker = _matchmaker[id];
+            var matchmaker = MatchmakingDispatcher.Matches[id];
             var answer = await matchmaker.WaitForAnswer();
 
             // return the opponent's answer
@@ -129,21 +84,81 @@ namespace Chess.WebApi.Controllers
         #endregion Methods
     }
 
-    public class StartGameResponse
+    /// <summary>
+    /// Dispatch players looking to start a new game and store match data.
+    /// </summary>
+    public class MatchmakingDispatcher
     {
         #region Members
 
-        public int GameId { get; set; }
-        public bool IsFirst { get; set; }
+        // the game id counter
+        private static int _maxId = 0;
+
+        /// <summary>
+        /// A dictionary of all matches that have been played.
+        /// </summary>
+        public static Dictionary<int, ChessMatchSession> Matches { get; } = new Dictionary<int, ChessMatchSession>();
+
+        // some multi-threading synchronization tools
+        private static Semaphore _semaphoreMatchmaking = new Semaphore(0, 2);
+        private static Mutex _mutexGameCreation = new Mutex();
+        private static Mutex _mutexIdIncrement = new Mutex();
+        private static Barrier _barrierGameCreationSync = new Barrier(2);
 
         #endregion Members
-    }
 
-    public class ChessMatchmaker
+        #region Methods
+
+        /// <summary>
+        /// Try to find a game.
+        /// </summary>
+        /// <returns>required data for starting the game</returns>
+        public StartGameResponse FindGame()
+        {
+            StartGameResponse ret;
+
+            // make sure only 2 players enter the game creation
+            _semaphoreMatchmaking.WaitOne();
+
+            // determine the game id (same id for both players)
+            int gameId = _maxId + 1;
+
+            // wait until both players have set the game id (this makes sure they have the same id)
+            _barrierGameCreationSync.SignalAndWait();
+
+            // make sure only the first of the two players creates the game
+            _mutexGameCreation.WaitOne();
+            bool isFirst = !Matches.ContainsKey(gameId);
+
+            if (isFirst)
+            {
+                // first player's part: create a new game 
+                Matches.Add(gameId, new ChessMatchSession(gameId));
+                _maxId++;
+
+                // now that the game is created, let the second player enter the section
+                _mutexGameCreation.ReleaseMutex();
+            }
+            else
+            {
+                // let the next 2 players enter the game creation section
+                _mutexGameCreation.ReleaseMutex();
+                _semaphoreMatchmaking.Release(2);
+            }
+
+            // return the required response data
+            ret = new StartGameResponse() { GameId = gameId, IsFirst = isFirst };
+            return ret;
+        }
+
+        #endregion Methods
+    }
+    
+    public class ChessMatchSession
     {
         #region Constructor
 
-        public ChessMatchmaker(int gameId)
+        public ChessMatchSession(int gameId)
         {
             _gameId = gameId;
         }
@@ -182,35 +197,13 @@ namespace Chess.WebApi.Controllers
         }
 
         /// <summary>
-        /// Try to submit the a chess draw and wait for the opponent's answer.
+        /// Try to submit the a chess draw if it is valid.
         /// </summary>
         /// <param name="draw">The draw to be submitted</param>
-        /// <returns>
-        /// true:  The draw was successfully submitted; enemy answer can be retrieved by GetLastDraw().
-        /// false: The draw was successfully submitted; enemy answer request timed out.
-        /// null:  The Submitted draw is invalid. Send another draw that is valid.
-        /// </returns>
-        public async Task<bool?> SubmitDrawAndTryWaitForAnswer(ChessDraw draw)
+        /// <returns>a boolean indicating whether the submitted chess draw is valid</returns>
+        public bool TrySubmitDraw(ChessDraw draw)
         {
-            bool? ret = null;
-
-            try
-            {
-                // TODO: implement waiting with barrier
-
-                if (_game.ApplyDraw(draw, true))
-                {
-                    // make the opponent's waiting request thread continue
-                    await Task.Run(() => _semaporeWait.WaitOne(TIMEOUT));
-                    ret = true;
-                }
-            }
-            catch (Exception /*ex*/)
-            {
-                _semaporeWait.Release();
-            }
-
-            return ret;
+            return _game.ApplyDraw(draw, true);
         }
 
         /// <summary>

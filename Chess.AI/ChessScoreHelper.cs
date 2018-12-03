@@ -6,23 +6,31 @@ using System.Text;
 
 namespace Chess.AI
 {
+    /// <summary>
+    /// Provides operations for evaluating a player's score according to the current game situation.
+    /// </summary>
     public class ChessScoreHelper
     {
         #region Constants
 
-        private double BASE_SCORE_PEASANT =   1.00;
-        private double BASE_SCORE_KNIGHT  =   3.20;
-        private double BASE_SCORE_BISHOP  =   3.33;
-        private double BASE_SCORE_ROOK    =   5.10;
-        private double BASE_SCORE_QUEEN   =   8.80;
-        private double BASE_SCORE_KING    = 100.00;
+        // TODO: check if those numbers model the chess piece's value correctly
+        private const double BASE_SCORE_PEASANT =   1.00;
+        private const double BASE_SCORE_KNIGHT  =   3.20;
+        private const double BASE_SCORE_BISHOP  =   3.33;
+        private const double BASE_SCORE_ROOK    =   5.10;
+        private const double BASE_SCORE_QUEEN   =   8.80;
+        private const double BASE_SCORE_KING    = 100.00;
+
+        // TODO: add constants for evaluation according to the chess piece's position on the board
 
         #endregion Constants
 
         #region Methods
 
         /// <summary>
-        /// Measure the value of the chess pieces on the given chess board of the given player.
+        /// Measure the value of the chess pieces on the given chess board of the given player relative to his opponent's chess pieces.
+        /// Therefore both player's scores are measured and then subtracted from each other. 
+        /// A negative value means that the given player is behind in score and positive value obviously means that he is leading.
         /// </summary>
         /// <param name="board">The chess board to be evaluated</param>
         /// <param name="sideToDraw">The chess player to be evaluated</param>

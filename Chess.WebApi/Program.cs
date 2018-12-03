@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Chess.WebApi
+namespace Chess.WebApi.Server
 {
-    public class Program
+    class Program
     {
         #region Main
 
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();
         }

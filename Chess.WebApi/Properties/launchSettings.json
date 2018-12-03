@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Chess.WebApi": {
+    "Chess.WebApi.Server": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/values",

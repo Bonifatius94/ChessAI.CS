@@ -264,3 +264,5 @@ __pycache__/
 /Chess.CLI/Chess.CLI.xml
 /Chess.Lib/Chess.Lib.xml
 /Chess.WebApi/Chess.WebApi.xml
+/Chess.Doku/Help
+/Chess.WebApi.Server.Interface/Chess.WebApi.Server.Interface.xml

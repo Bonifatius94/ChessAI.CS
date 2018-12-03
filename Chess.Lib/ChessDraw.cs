@@ -4,23 +4,33 @@ using System.Linq;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This enumeration represents the chess draw types:
-    ///  
-    ///  - Rochade
-    ///  - En-Passant
-    ///  - Peasant Promotion
-    ///  - Standard (all other draws according to the drawing rules of the given chess piece)
+    /// An enumeration representing the chess draw types.
     /// </summary>
     public enum ChessDrawType
     {
-        Standard         = 0,
-        Rochade          = 1,
-        EnPassant        = 2,
+        /// <summary>
+        /// Representing a standard draw.
+        /// </summary>
+        Standard = 0,
+
+        /// <summary>
+        /// Representing a rochade / casteling draw.
+        /// </summary>
+        Rochade = 1,
+
+        /// <summary>
+        /// Representing a en-passant draw.
+        /// </summary>
+        EnPassant = 2,
+
+        /// <summary>
+        /// Representing a peasant promotion draw.
+        /// </summary>
         PeasantPromotion = 3
     }
 
     /// <summary>
-    /// This class represents a chess draw that is made by a chess player.
+    /// Represents a chess draw made by a chess player.
     /// </summary>
     public readonly struct ChessDraw
     {
@@ -242,7 +252,7 @@ namespace Chess.Lib
         /// Overrides Equals() method by evaluating the overloaded object type and comparing the properties.
         /// </summary>
         /// <param name="obj">The object instance to be compared to 'this'</param>
-        /// <returns></returns>
+        /// <returns>a boolean that indicates whether the objects are equal</returns>
         public override bool Equals(object obj)
         {
             return (obj.GetType() == typeof(ChessDraw)) && (((ChessDraw)obj).GetHashCode() == GetHashCode());

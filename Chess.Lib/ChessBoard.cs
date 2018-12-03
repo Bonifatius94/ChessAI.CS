@@ -160,7 +160,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece to be updated</param>
         /// <param name="newPiece">The new chess piece data</param>
-        private void updatePieceAt(ChessPosition position, ChessPiece? newPiece)
+        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece)
         {
             _pieces[position.GetHashCode()] = newPiece;
         }
@@ -203,8 +203,8 @@ namespace Chess.Lib
                 var drawingRook = GetPieceAt(oldRookPosition).Value;
 
                 // move the tower
-                updatePieceAt(oldRookPosition, null);
-                updatePieceAt(newRookPosition, drawingRook);
+                UpdatePieceAt(oldRookPosition, null);
+                UpdatePieceAt(newRookPosition, drawingRook);
             }
 
             // handle en-passant
@@ -212,12 +212,12 @@ namespace Chess.Lib
             {
                 // get position of the taken enemy peasant and remove it
                 var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
-                updatePieceAt(takenPeasantPosition, null);
+                UpdatePieceAt(takenPeasantPosition, null);
             }
 
             // apply data to the chess board
-            updatePieceAt(draw.OldPosition, null);
-            updatePieceAt(draw.NewPosition, drawingPiece);
+            UpdatePieceAt(draw.OldPosition, null);
+            UpdatePieceAt(draw.NewPosition, drawingPiece);
         }
         
         /// <summary>

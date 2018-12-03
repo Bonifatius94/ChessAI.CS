@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
+    <ProjectReference Include="..\Chess.WebApi.Server.Interface\Chess.WebApi.Server.Interface.csproj" />
   </ItemGroup>
 
 </Project>

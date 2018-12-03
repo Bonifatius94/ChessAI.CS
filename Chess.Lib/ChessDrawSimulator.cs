@@ -5,16 +5,45 @@ using System.Text;
 
 namespace Chess.Lib
 {
+    /// <summary>
+    /// An enumeration representing the possible chess game outcomes.
+    /// </summary>
     public enum CheckGameStatus
     {
+        /// <summary>
+        /// Nothing special. The drawing player is not checked and has options to draw.
+        /// </summary>
         None,
+
+        /// <summary>
+        /// The drawing player is checked.
+        /// </summary>
         Check,
+
+        /// <summary>
+        /// The drawing player is checkmate. (is checked and cannot defend the king)
+        /// </summary>
         Checkmate,
+
+        /// <summary>
+        /// The drawing player is not checked, but has also no draw options left.
+        /// </summary>
         Stalemate,
+
+        /// <summary>
+        /// The drawing player has not enough resources left to end the game with checkmate / stalemate.
+        /// </summary>
         UnsufficientPieces,
+
+        /// <summary>
+        /// Both players do not have enough resources left to end the game (similar to unsufficient pieces).
+        /// </summary>
         Tie
     }
 
+    /// <summary>
+    /// Helps simulating chess draws and their potential outcome.
+    /// </summary>
     public class ChessDrawSimulator
     {
         #region Methods
