@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.Lib", "Chess.Lib\Ches
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.AI", "Chess.AI\Chess.AI.csproj", "{CE977CCD-4E71-4562-ABCA-DD5374C6B3CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.WebApi.Server", "Chess.WebApi\Chess.WebApi.Server.csproj", "{BD17F114-7C24-4C5F-8C78-284B1E8DF522}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.WebApi.Server", "Chess.WebApi.Server\Chess.WebApi.Server.csproj", "{BD17F114-7C24-4C5F-8C78-284B1E8DF522}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.CLI", "Chess.CLI\Chess.CLI.csproj", "{7BA43F43-9B8A-4DB9-9081-063ABF64230B}"
 EndProject

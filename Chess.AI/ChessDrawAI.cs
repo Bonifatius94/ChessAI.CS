@@ -95,9 +95,10 @@ namespace Chess.AI
         }
 
         /*
-         * techniques to implement:
-         * =======================
+         * AI algorithm techniques:
+         * ========================
          * 
+         * minimax: https://en.wikipedia.org/wiki/Minimax
          * alpha-beta prune: https://www.chessprogramming.org/Alpha-Beta
          * iterative deepening: https://www.chessprogramming.org/Iterative_Deepening
          * aspiration windows: https://www.chessprogramming.org/Aspiration_Windows

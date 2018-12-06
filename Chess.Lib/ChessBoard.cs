@@ -176,10 +176,8 @@ namespace Chess.Lib
             }
 
             // set rest of array null
-            for (int i = piecesCount; i < 32; i++)
-            {
-                cache[i] = null;
-            }
+            int i = piecesCount;
+            while (i < 32 && cache[i] != null) { cache[i++] = null; }
         }
 
         /// <summary>

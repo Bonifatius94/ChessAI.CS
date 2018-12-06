@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Chess.AI
@@ -21,7 +22,7 @@ namespace Chess.AI
         private const double BASE_SCORE_ROOK    =   5.00;
         private const double BASE_SCORE_QUEEN   =   9.00;
         private const double BASE_SCORE_KING    = 200.00;
-        
+
         #endregion Constants
 
         #region Methods
@@ -44,6 +45,7 @@ namespace Chess.AI
             return allyScore - enemyScore;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getPieceScore(ChessBoard board, ChessPosition position)
         {
             double score;
@@ -63,21 +65,43 @@ namespace Chess.AI
             return score;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getKingScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
             double score = BASE_SCORE_KING;
-
-            // bonus for rochade (king should be already moved and positioned at the margin of the base row)
+            
             var king = board.GetPieceAt(position).Value;
             int baseRow = (king.Color == ChessColor.White) ? 0 : 7;
-            bool isKingSafe = king.WasMoved && (position.Column < 2 || position.Column > 5) && position.Row == baseRow;
-            if (isKingSafe) { score += 3; }
+            bool isKingAtOuterMarginOfBaseRow = king.WasMoved && (position.Column < 3 || position.Column > 5) && position.Row == baseRow;
+            bool isKingCovered = false;
+
+            if (isKingAtOuterMarginOfBaseRow)
+            {
+                int coveringPieces = 0;
+                int coveringRow = (king.Color == ChessColor.White) ? 1 : 6;
+
+                for (int i = -1; i < 2; i++)
+                {
+                    if (ChessPosition.AreCoordsValid(coveringRow, position.Column + i))
+                    {
+                        var coveringPosition = new ChessPosition(coveringRow, position.Column + i);
+                        var coveringPiece = board.GetPieceAt(coveringPosition);
+                        if (coveringPiece != null && coveringPiece.Value.Color == king.Color) { coveringPieces++; }
+                    }
+                }
+
+                isKingCovered = (coveringPieces >= 2);
+            }
+
+            // bonus for rochade (king should be already moved and positioned at the margin of the base row. moreover there should be at least 2 covering pieces in front of the king)
+            if (isKingAtOuterMarginOfBaseRow && isKingCovered) { score += 2; }
             
-            return BASE_SCORE_KING;
+            return score;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getQueenScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
@@ -86,6 +110,7 @@ namespace Chess.AI
             return BASE_SCORE_QUEEN /*+ (0.05 * drawsCount)*/;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getRookScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
@@ -95,13 +120,14 @@ namespace Chess.AI
 
             double score = BASE_SCORE_ROOK;
 
-            // bonus for developing piece
-            var piece = board.GetPieceAt(position).Value;
-            if (piece.WasMoved) { score += 0.2; }
+            //// bonus for developing piece
+            //var piece = board.GetPieceAt(position).Value;
+            //if (piece.WasMoved) { score += 0.2; }
 
             return score;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getBishopScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
@@ -118,6 +144,7 @@ namespace Chess.AI
             return score;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getKnightScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
@@ -131,9 +158,14 @@ namespace Chess.AI
             var piece = board.GetPieceAt(position).Value;
             if (piece.WasMoved) { score += 0.2; }
 
+            // malus for moving to the margin of the chess board
+            bool isAtMargin = position.Row == 0 || position.Row == 7 || position.Column == 0 || position.Column == 7;
+            if (isAtMargin) { score -= 0.3; }
+
             return score;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double getPeasantScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
@@ -143,14 +175,15 @@ namespace Chess.AI
             var piece = board.GetPieceAt(position).Value;
             
             // bonus the more the peasant advances (punish if peasant is not drawn)
-            int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 3) : (6 - position.Row);
-            score += advanceFactor * 0.05;
-
-            //var allPieces = board.Pieces.ToArray();
-
-            //// bonus for connected peasants / malus for an isolated peasant
-            //bool isConnected = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && Math.Abs(x.Position.Column - position.Column) == 1);
-            //score += (isConnected ? 1 : -1) * 0.05;
+            int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 4) : (5 - position.Row);
+            score += advanceFactor * 0.2;
+            
+            // bonus for connected peasants / malus for an isolated peasant
+            int protectedRow = (piece.Color == ChessColor.White) ? (position.Row + 1) : (position.Row - 1);
+            bool isConnected = 
+                   (ChessPosition.AreCoordsValid(protectedRow, position.Column - 1) && board.GetPieceAt(new ChessPosition(protectedRow, position.Column - 1))?.Color == piece.Color) 
+                || (ChessPosition.AreCoordsValid(protectedRow, position.Column + 1) && board.GetPieceAt(new ChessPosition(protectedRow, position.Column + 1))?.Color == piece.Color);
+            score += (isConnected ? 1 : -1) * 0.05;
 
             //// malus for doubled peasants
             //bool isDoubled = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && x.Position.Column == position.Column && x.Position.Row != position.Row);

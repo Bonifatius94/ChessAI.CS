@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Chess.WebApi.Server</name>
+    </assembly>
+    <members>
+        <member name="T:Chess.WebApi.Server.Controllers.ChessDrawsController">
+            <summary>
+            Implements all HTTP operations of chess gameplay.
+            </summary>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.ChessDrawsController.RequestNewGame">
+            <summary>
+            Triggered by a client for starting a new game. Therefore the controller waits for a second player requesting a new game and matches them.
+            </summary>
+            <returns>a resonse message containing the game id and whether the player owns white or black chess pieces</returns>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.ChessDrawsController.SubmitDraw(System.Int32,Chess.Lib.ChessDraw)">
+            <summary>
+            Triggered by a client submitting his chess draw. 
+            Therefore the draw is validated and sent to the opponent (if valid). Otherwise the player is asked to submit another draw that is valid.
+            </summary>
+            <param name="id"></param>
+            <param name="draw"></param>
+            <returns>a HTTP response</returns>
+        </member>
+        <member name="T:Chess.WebApi.Server.Controllers.MatchmakingDispatcher">
+            <summary>
+            Dispatch players looking to start a new game and store match data.
+            </summary>
+        </member>
+        <member name="P:Chess.WebApi.Server.Controllers.MatchmakingDispatcher.Matches">
+            <summary>
+            A dictionary of all matches that have been played.
+            </summary>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.MatchmakingDispatcher.FindGame">
+            <summary>
+            Try to find a game.
+            </summary>
+            <returns>required data for starting the game</returns>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.ChessMatchSession.TrySubmitDraw(Chess.Lib.ChessDraw)">
+            <summary>
+            Try to submit the a chess draw if it is valid.
+            </summary>
+            <param name="draw">The draw to be submitted</param>
+            <returns>a boolean indicating whether the submitted chess draw is valid</returns>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.ChessMatchSession.GetLastDraw">
+            <summary>
+            Retrieve the last draw that was made.
+            </summary>
+            <returns>the last draw that was made</returns>
+        </member>
+        <member name="M:Chess.WebApi.Server.Controllers.ChessMatchSession.IsWaiting">
+            <summary>
+            Indicates if there is a waiting thread by the opponent.
+            </summary>
+            <returns>boolean whether another thread is waiting</returns>
+        </member>
+    </members>
+</doc>

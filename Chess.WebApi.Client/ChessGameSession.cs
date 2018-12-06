@@ -1,9 +1,6 @@
 ﻿using Chess.Lib;
 using Chess.WebApi.Server.Interface;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chess.WebApi.Client
 {
