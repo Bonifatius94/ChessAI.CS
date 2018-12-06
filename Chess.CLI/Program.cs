@@ -39,8 +39,16 @@ namespace Chess.CLI
             }
             finally
             {
-                Console.WriteLine("======================");
-                Console.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.Opponent().ToString().ToLower() } wins") }.");
+                if (gameStatus.IsGameOver())
+                {
+                    Console.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.Opponent().ToString().ToLower() } wins") }.");
+                    Console.WriteLine("======================");
+                }
+                else if (game.ContainsLoop())
+                {
+                    Console.WriteLine($"loop encountered. game is undecided.");
+                    Console.WriteLine("======================");
+                }
             }
 
             // wait for exit

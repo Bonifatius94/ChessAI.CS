@@ -67,6 +67,14 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
+            double score = BASE_SCORE_KING;
+
+            // bonus for rochade (king should be already moved and positioned at the margin of the base row)
+            var king = board.GetPieceAt(position).Value;
+            int baseRow = (king.Color == ChessColor.White) ? 0 : 7;
+            bool isKingSafe = king.WasMoved && (position.Column < 2 || position.Column > 5) && position.Row == baseRow;
+            if (isKingSafe) { score += 3; }
+            
             return BASE_SCORE_KING;
         }
 
@@ -82,24 +90,48 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            return BASE_SCORE_ROOK + (0.05 * drawsCount);
+            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            //return BASE_SCORE_ROOK + (0.05 * drawsCount);
+
+            double score = BASE_SCORE_ROOK;
+
+            // bonus for developing piece
+            var piece = board.GetPieceAt(position).Value;
+            if (piece.WasMoved) { score += 0.2; }
+
+            return score;
         }
 
         private double getBishopScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            return BASE_SCORE_BISHOP + (0.05 * drawsCount);
+            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            //return BASE_SCORE_BISHOP + (0.1 * drawsCount);
+
+            double score = BASE_SCORE_BISHOP;
+
+            // bonus for developing piece
+            var piece = board.GetPieceAt(position).Value;
+            if (piece.WasMoved) { score += 0.2; }
+
+            return score;
         }
 
         private double getKnightScore(ChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            return BASE_SCORE_KNIGHT + (0.05 * drawsCount);
+            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            //return BASE_SCORE_KNIGHT + (0.1 * drawsCount);
+
+            double score = BASE_SCORE_KNIGHT;
+
+            // bonus for developing piece
+            var piece = board.GetPieceAt(position).Value;
+            if (piece.WasMoved) { score += 0.2; }
+
+            return score;
         }
 
         private double getPeasantScore(ChessBoard board, ChessPosition position)
@@ -109,11 +141,12 @@ namespace Chess.AI
 
             double score = BASE_SCORE_PEASANT;
             var piece = board.GetPieceAt(position).Value;
-            //var allPieces = board.Pieces.ToArray();
-
+            
             // bonus the more the peasant advances (punish if peasant is not drawn)
-            int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 4) : (5 - position.Row);
-            score += advanceFactor * 0.1;
+            int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 3) : (6 - position.Row);
+            score += advanceFactor * 0.05;
+
+            //var allPieces = board.Pieces.ToArray();
 
             //// bonus for connected peasants / malus for an isolated peasant
             //bool isConnected = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && Math.Abs(x.Position.Column - position.Column) == 1);
