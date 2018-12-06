@@ -80,6 +80,11 @@ namespace Chess.UnitTest
                     output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.Opponent().ToString().ToLower() } wins") }.");
                     output.WriteLine("======================");
                 }
+                else if (game.ContainsLoop())
+                {
+                    output.WriteLine($"loop encountered. game is undecided.");
+                    output.WriteLine("======================");
+                }
             }
         }
 
