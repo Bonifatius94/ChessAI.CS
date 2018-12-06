@@ -99,7 +99,7 @@ namespace Chess.Lib
         /// <returns>a boolean whether the coords are valid</returns>
         public static bool AreCoordsValid(int row, int column)
         {
-            return row >= 0 && row < ChessBoard.CHESS_BOARD_DIMENSION && column >= 0 && column < ChessBoard.CHESS_BOARD_DIMENSION;
+            return row >= 0 && row < 8 && column >= 0 && column < 8;
         }
 
         /// <summary>

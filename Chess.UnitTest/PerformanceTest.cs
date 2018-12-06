@@ -1,4 +1,5 @@
-﻿using Chess.Lib;
+﻿using Chess.AI;
+using Chess.Lib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace Chess.UnitTest
         {
             bool failed = false;
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 100; i++)
             {
                 try
                 {
@@ -47,41 +48,38 @@ namespace Chess.UnitTest
             // init new game
             var game = new ChessGame();
             var gameStatus = CheckGameStatus.None;
+            var draws = new List<Tuple<ChessDraw, CheckGameStatus>>();
             
             try
             {
-                var draw = new ChessDraw();
-                bool abort = false;
-
                 do
                 {
-                    // get all possible draws
-                    var possibleDraws = game.GetDraws();
-                    
-                    // select one of the possible draws (randomly)
-                    int index = _random.Next(0, possibleDraws.Count());
-                    draw = possibleDraws.ElementAt(index);
+                    // select the best draw considering the next couple of draws
+                    var draw = new ChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
 
-                    // apply the draw to the chess board
+                    // apply the draw to the chess board and check if the game is over
                     game.ApplyDraw(draw);
-
-                    // check if the game is over (and exit in case)
                     gameStatus = new ChessDrawSimulator().GetCheckGameStatus(game.Board, draw);
-                    abort = (gameStatus != CheckGameStatus.Check && gameStatus != CheckGameStatus.None);
+
+                    draws.Add(new Tuple<ChessDraw, CheckGameStatus>(game.LastDraw, gameStatus));
                 }
-                while (!abort);
+                while (!gameStatus.IsGameOver() && !game.ContainsLoop());
             }
             finally
             {
                 // print draws and result of game
                 output.WriteLine($"starting game { id }:");
                 output.WriteLine("======================");
-                game.AllDraws.ForEach(x => output.WriteLine(x.ToString()));
+                draws.ForEach(x => output.WriteLine($"{ x.Item1 }{ (x.Item2 == CheckGameStatus.None ? string.Empty : " " + x.Item2.ToString().ToLower()) }"));
                 output.WriteLine("======================");
                 output.WriteLine(game.Board.ToString());
                 output.WriteLine("======================");
-                output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.ToString().ToLower() } wins") }.");
-                output.WriteLine("======================");
+
+                if (gameStatus.IsGameOver())
+                {
+                    output.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.Opponent().ToString().ToLower() } wins") }.");
+                    output.WriteLine("======================");
+                }
             }
         }
 

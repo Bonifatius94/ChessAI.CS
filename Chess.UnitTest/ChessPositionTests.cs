@@ -19,13 +19,13 @@ namespace Chess.UnitTest
         public void ConstructorTest()
         {
             // test if all valid chess positions can be created and have the correct features
-            for (int row = 0; row < ChessBoard.CHESS_BOARD_DIMENSION; row++)
+            for (int row = 0; row < 8; row++)
             {
-                for (int column = 0; column < ChessBoard.CHESS_BOARD_DIMENSION; column++)
+                for (int column = 0; column < 8; column++)
                 {
                     ChessPosition position;
                     string fieldName = $"{ (char)(column + 'A') }{ (char)(row + '1') }";
-                    byte hashCode = (byte)(row * ChessBoard.CHESS_BOARD_DIMENSION + column);
+                    byte hashCode = (byte)(row * 8 + column);
                     
                     // create a new chess position instance and check if the row, column and hash code values are set as expected
                     position = new ChessPosition(fieldName);

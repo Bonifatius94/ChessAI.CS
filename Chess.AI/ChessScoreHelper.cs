@@ -13,16 +13,15 @@ namespace Chess.AI
     {
         #region Constants
 
-        // TODO: check if those numbers model the chess piece's value correctly
+        // Shannon's chess piece evaluation
+        // source: https://en.wikipedia.org/wiki/Chess_piece_relative_value
         private const double BASE_SCORE_PEASANT =   1.00;
-        private const double BASE_SCORE_KNIGHT  =   3.20;
-        private const double BASE_SCORE_BISHOP  =   3.33;
-        private const double BASE_SCORE_ROOK    =   5.10;
-        private const double BASE_SCORE_QUEEN   =   8.80;
-        private const double BASE_SCORE_KING    = 100.00;
-
-        // TODO: add constants for evaluation according to the chess piece's position on the board
-
+        private const double BASE_SCORE_KNIGHT  =   3.00;
+        private const double BASE_SCORE_BISHOP  =   3.00;
+        private const double BASE_SCORE_ROOK    =   5.00;
+        private const double BASE_SCORE_QUEEN   =   9.00;
+        private const double BASE_SCORE_KING    = 200.00;
+        
         #endregion Constants
 
         #region Methods
@@ -38,12 +37,11 @@ namespace Chess.AI
         public double GetScore(ChessBoard board, ChessColor sideToDraw)
         {
             // get allied pieces and calculate the score
-            double whiteScore = board.WhitePieces.Select(x => getPieceScore(board, x.Position)).Sum();
-            double blackScore = board.BlackPieces.Select(x => getPieceScore(board, x.Position)).Sum();
+            double allyScore = board.GetPiecesOfColor(sideToDraw).Select(x => getPieceScore(board, x.Position)).Sum();
+            double enemyScore = board.GetPiecesOfColor(sideToDraw.Opponent()).Select(x => getPieceScore(board, x.Position)).Sum();
 
             // calculate the relative score compared to the opponent
-            double diff = (sideToDraw == ChessColor.White) ? (whiteScore - blackScore) : (blackScore - whiteScore);
-            return diff;
+            return allyScore - enemyScore;
         }
 
         private double getPieceScore(ChessBoard board, ChessPosition position)
@@ -67,38 +65,72 @@ namespace Chess.AI
 
         private double getKingScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
             return BASE_SCORE_KING;
         }
 
         private double getQueenScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
-            return BASE_SCORE_QUEEN;
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
+            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            return BASE_SCORE_QUEEN /*+ (0.05 * drawsCount)*/;
         }
 
         private double getRookScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
-            return BASE_SCORE_ROOK;
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
+            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            return BASE_SCORE_ROOK + (0.05 * drawsCount);
         }
 
         private double getBishopScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
-            return BASE_SCORE_BISHOP;
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
+            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            return BASE_SCORE_BISHOP + (0.05 * drawsCount);
         }
 
         private double getKnightScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
-            return BASE_SCORE_KNIGHT;
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
+            int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
+            return BASE_SCORE_KNIGHT + (0.05 * drawsCount);
         }
 
         private double getPeasantScore(ChessBoard board, ChessPosition position)
         {
-            // TODO: implement more precise score heuristic
-            return BASE_SCORE_PEASANT;
+            // Shannon's chess piece evaluation
+            // TODO: check this heuristic
+
+            double score = BASE_SCORE_PEASANT;
+            var piece = board.GetPieceAt(position).Value;
+            //var allPieces = board.Pieces.ToArray();
+
+            // bonus the more the peasant advances (punish if peasant is not drawn)
+            int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 4) : (5 - position.Row);
+            score += advanceFactor * 0.1;
+
+            //// bonus for connected peasants / malus for an isolated peasant
+            //bool isConnected = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && Math.Abs(x.Position.Column - position.Column) == 1);
+            //score += (isConnected ? 1 : -1) * 0.05;
+
+            //// malus for doubled peasants
+            //bool isDoubled = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && x.Position.Column == position.Column && x.Position.Row != position.Row);
+            //if (isConnected) { score -= 0.1; }
+
+            //// malus if peasant was passed by an enemy peasant
+            //bool isPassed = allPieces.Any(x => x.Piece.Color == piece.Color.Opponent()
+            //    && x.Piece.Type == ChessPieceType.Peasant && Math.Abs(x.Position.Column - position.Column) == 1 
+            //    && ((x.Position.Row < position.Row && x.Piece.Color == ChessColor.White) || (x.Position.Row > position.Row && x.Piece.Color == ChessColor.Black))
+            //);
+            //if (isPassed) { score -= 0.1; }
+
+            return score;
         }
 
         #endregion Methods

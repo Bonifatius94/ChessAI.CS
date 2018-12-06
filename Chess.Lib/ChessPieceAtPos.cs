@@ -49,8 +49,48 @@ namespace Chess.Lib
             return $"{ Piece.ToString() } ({ Position.ToString() })";
         }
 
-        // TODO: implement other overrides Equals(), GetHashCode(), ==(ChessPieceAtPos, ChessPieceAtPos), ...
+        /// <summary>
+        /// Check whether the two objects are equal.
+        /// </summary>
+        /// <param name="obj">the instance to be compared to 'this'</param>
+        /// <returns>a boolean indicating whether the objects are equal</returns>
+        public override bool Equals(object obj)
+        {
+            return (obj != null && obj.GetType() == typeof(ChessPieceAtPos)) && (((ChessPieceAtPos)obj).GetHashCode() == GetHashCode());
+        }
 
+        /// <summary>
+        /// Retrieve a unique hash code representing a chess piece and its position.
+        /// </summary>
+        /// <returns>a unique hash code representing a chess piece and its position</returns>
+        public override int GetHashCode()
+        {
+            // combine unique hash codes of chess piece (5 bits) and chess position (6 bits)
+            return (Piece.GetHashCode() << 6) | Position.GetHashCode();
+        }
+
+        /// <summary>
+        /// Implements the '==' operator for comparing chess pieces.
+        /// </summary>
+        /// <param name="c1">The first chess piece to compare</param>
+        /// <param name="c2">The second chess piece to compare</param>
+        /// <returns>a boolean that indicates whether the chess pieces are equal</returns>
+        public static bool operator ==(ChessPieceAtPos c1, ChessPieceAtPos c2)
+        {
+            return c1.GetHashCode() == c2.GetHashCode();
+        }
+
+        /// <summary>
+        /// Implements the '!=' operator for comparing chess pieces.
+        /// </summary>
+        /// <param name="c1">The first chess piece to compare</param>
+        /// <param name="c2">The second chess piece to compare</param>
+        /// <returns>a boolean that indicates whether the chess pieces are not equal</returns>
+        public static bool operator !=(ChessPieceAtPos c1, ChessPieceAtPos c2)
+        {
+            return c1.GetHashCode() != c2.GetHashCode();
+        }
+        
         #endregion Methods
     }
 }

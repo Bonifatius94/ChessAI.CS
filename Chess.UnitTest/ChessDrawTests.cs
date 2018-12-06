@@ -37,11 +37,11 @@ namespace Chess.UnitTest
                         {
                             var promotionPieceType = (promotionPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
 
-                            for (int oldPosHash = 0; oldPosHash < ChessBoard.CHESS_BOARD_DIMENSION * ChessBoard.CHESS_BOARD_DIMENSION; oldPosHash++)
+                            for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
                             {
                                 var oldPos = new ChessPosition((byte)oldPosHash);
 
-                                for (int newPosHash = 0; newPosHash < ChessBoard.CHESS_BOARD_DIMENSION * ChessBoard.CHESS_BOARD_DIMENSION; newPosHash++)
+                                for (int newPosHash = 0; newPosHash < 64; newPosHash++)
                                 {
                                     var newPos = new ChessPosition((byte)newPosHash);
 

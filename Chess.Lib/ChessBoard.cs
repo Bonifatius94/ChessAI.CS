@@ -12,12 +12,12 @@ namespace Chess.Lib
     {
         #region Constants
 
-        /// <summary>
-        /// The dimension of the chess board (width / length) which is usually 8.
-        /// </summary>
-        public const int CHESS_BOARD_DIMENSION = 8;
+        ///// <summary>
+        ///// The dimension of the chess board (width / length) which is usually 8.
+        ///// </summary>
+        //public const int CHESS_BOARD_DIMENSION = 8;
 
-        private static readonly List<ChessPieceAtPos> START_FORMATION = new List<ChessPieceAtPos>()
+        private static readonly ChessPieceAtPos[] START_FORMATION = new ChessPieceAtPos[]
         {
             new ChessPieceAtPos(new ChessPosition("A1"), new ChessPiece() { Type = ChessPieceType.Rook   , Color = ChessColor.White, WasMoved = false }),
             new ChessPieceAtPos(new ChessPosition("B1"), new ChessPiece() { Type = ChessPieceType.Knight , Color = ChessColor.White, WasMoved = false }),
@@ -66,12 +66,15 @@ namespace Chess.Lib
         /// <param name="piecesAtPos">The chess pieces to be applied to the chess board</param>
         public ChessBoard(IEnumerable<ChessPieceAtPos> piecesAtPos)
         {
-            _pieces = new ChessPiece?[CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION];
+            _pieces = new ChessPiece?[64];
             
             foreach (var pieceAtPos in piecesAtPos)
             {
                 _pieces[pieceAtPos.Position.GetHashCode()] = pieceAtPos.Piece;
             }
+            
+            _piecesCache = new ChessPieceAtPos?[32];
+            updatePiecesCache(_pieces, ref _piecesCache);
         }
 
         #endregion Constructor
@@ -82,34 +85,21 @@ namespace Chess.Lib
         /// An array of all chess pieces at the index of their position's hash code. (value is null if there is no chess piece at the position)
         /// </summary>
         private ChessPiece?[] _pieces;
-
+        
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
         /// </summary>
         public static ChessBoard StartFormation { get { return new ChessBoard(START_FORMATION); } }
+        
+        /// <summary>
+        /// A cache for chess pieces list containing tuples of (chess piece, chess position).
+        /// </summary>
+        private ChessPieceAtPos?[] _piecesCache;
 
         /// <summary>
-        /// A list of all chess pieces that are currently on the chess board.
+        /// A list of all chess pieces (and their position) that are currently on the chess board.
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> Pieces
-        {
-            get
-            {
-                var pieces = new List<ChessPieceAtPos>();
-
-                for (byte posIndex = 0; posIndex < CHESS_BOARD_DIMENSION * CHESS_BOARD_DIMENSION; posIndex++)
-                {
-                    var position = new ChessPosition(posIndex);
-
-                    if (IsCapturedAt(position))
-                    {
-                        pieces.Add(new ChessPieceAtPos(position, _pieces[posIndex].Value));
-                    }
-                }
-
-                return pieces;
-            }
-        }
+        public IEnumerable<ChessPieceAtPos> Pieces { get { return _piecesCache.Where(x => x.HasValue).Select(x => x.Value); } }
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
@@ -160,9 +150,36 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece to be updated</param>
         /// <param name="newPiece">The new chess piece data</param>
-        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece)
+        /// <param name="updateCache">Indicates whether the cached pieces list should be updated</param>
+        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece, bool updateCache = true)
         {
+            // update main pieces list
             _pieces[position.GetHashCode()] = newPiece;
+
+            // update pieces cache (if desired)
+            if (updateCache) { updatePiecesCache(_pieces, ref _piecesCache); }
+        }
+        
+        private static void updatePiecesCache(ChessPiece?[] pieces, ref ChessPieceAtPos?[] cache)
+        {
+            byte piecesCount = 0;
+
+            // write all existing chess pieces
+            for (byte posIndex = 0; posIndex < 64; posIndex++)
+            {
+                var position = new ChessPosition(posIndex);
+
+                if (pieces[posIndex] != null)
+                {
+                    cache[piecesCount++] = new ChessPieceAtPos(position, pieces[posIndex].Value);
+                }
+            }
+
+            // set rest of array null
+            for (int i = piecesCount; i < 32; i++)
+            {
+                cache[i] = null;
+            }
         }
 
         /// <summary>
@@ -203,8 +220,8 @@ namespace Chess.Lib
                 var drawingRook = GetPieceAt(oldRookPosition).Value;
 
                 // move the tower
-                UpdatePieceAt(oldRookPosition, null);
-                UpdatePieceAt(newRookPosition, drawingRook);
+                UpdatePieceAt(oldRookPosition, null, false);
+                UpdatePieceAt(newRookPosition, drawingRook, false);
             }
 
             // handle en-passant
@@ -212,12 +229,12 @@ namespace Chess.Lib
             {
                 // get position of the taken enemy peasant and remove it
                 var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
-                UpdatePieceAt(takenPeasantPosition, null);
+                UpdatePieceAt(takenPeasantPosition, null, false);
             }
 
             // apply data to the chess board
-            UpdatePieceAt(draw.OldPosition, null);
-            UpdatePieceAt(draw.NewPosition, drawingPiece);
+            UpdatePieceAt(draw.OldPosition, null, false);
+            UpdatePieceAt(draw.NewPosition, drawingPiece, true);
         }
         
         /// <summary>
@@ -250,11 +267,11 @@ namespace Chess.Lib
             const string SEPARATING_LINE = "   -----------------------------------------";
             var builder = new StringBuilder(SEPARATING_LINE).AppendLine();
 
-            for (int row = CHESS_BOARD_DIMENSION - 1; row >= 0; row--)
+            for (int row = 7; row >= 0; row--)
             {
                 builder.Append($" { row + 1 } |");
 
-                for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
+                for (int column = 0; column < 8; column++)
                 {
                     var position = new ChessPosition(row, column);
                     var piece = GetPieceAt(position);
@@ -271,7 +288,7 @@ namespace Chess.Lib
 
             builder.Append(" ");
 
-            for (int column = 0; column < CHESS_BOARD_DIMENSION; column++)
+            for (int column = 0; column < 8; column++)
             {
                 builder.Append($"    { (char)('A' + column) }");
             }

@@ -49,9 +49,9 @@ namespace Chess.UnitTest
             var board = new ChessBoard(pieces);
 
             // go through every chess position on the chess board and check if the chess piece is set correctly
-            for (int row = 0; row < ChessBoard.CHESS_BOARD_DIMENSION; row++)
+            for (int row = 0; row < 8; row++)
             {
-                for (int column = 0; column < ChessBoard.CHESS_BOARD_DIMENSION; column++)
+                for (int column = 0; column < 8; column++)
                 {
                     var position = new ChessPosition(row, column);
                     var pieceAtPos = board.GetPieceAt(position);

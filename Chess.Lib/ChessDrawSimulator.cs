@@ -76,9 +76,9 @@ namespace Chess.Lib
         /// <summary>
         /// Check whether the game situation on the given chess board is a simple check, checkmate or tie situation.
         /// </summary>
-        /// <param name="board"></param>
-        /// <param name="precedingEnemyDraw"></param>
-        /// <returns>a chess status</returns>
+        /// <param name="board">the chess board to be evaluated</param>
+        /// <param name="precedingEnemyDraw">the preceding opponent chess draw</param>
+        /// <returns>a check game status</returns>
         public CheckGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
         {
             var alliedSide = (precedingEnemyDraw.DrawingSide == ChessColor.White) ? ChessColor.Black : ChessColor.White;
@@ -90,8 +90,6 @@ namespace Chess.Lib
 
             // quit game status analysis if ally has lost due to unsufficient pieces
             if (!canAllyCheckmate && canEnemyCheckmate) { return CheckGameStatus.UnsufficientPieces; }
-
-            // TODO: check if this is even possible
             if (!canAllyCheckmate && !canEnemyCheckmate) { return CheckGameStatus.Tie; }
 
             // find out if any allied chess piece can draw
@@ -118,8 +116,6 @@ namespace Chess.Lib
         
         private bool canAchieveCheckmate(ChessBoard board, ChessColor side)
         {
-            // TODO: validate this logic
-
             // minimal pieces required for checkmate: 
             // ======================================
             //  (1) king + queen
@@ -162,6 +158,26 @@ namespace Chess.Lib
             );
 
             return ret;
+        }
+
+        #endregion Methods
+    }
+
+    /// <summary>
+    /// An extension evaluating whether the check game status indicates that the chess game is over.
+    /// </summary>
+    public static class CheckGameStatusGameOverEx
+    {
+        #region Methods
+
+        /// <summary>
+        /// Evaluates whether the given check game status indicates that the game is over.
+        /// </summary>
+        /// <param name="status">the game status to be evaluated</param>
+        /// <returns>a boolean indicating whether the game is over</returns>
+        public static bool IsGameOver(this CheckGameStatus status)
+        {
+            return !(status == CheckGameStatus.None || status == CheckGameStatus.Check);
         }
 
         #endregion Methods

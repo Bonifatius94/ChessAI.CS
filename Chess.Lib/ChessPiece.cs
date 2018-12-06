@@ -154,10 +154,10 @@ namespace Chess.Lib
         /// Overrides Equals() method by evaluating the overloaded object type and comparing the properties.
         /// </summary>
         /// <param name="obj">The object instance to be compared to 'this'</param>
-        /// <returns></returns>
+        /// <returns>a boolean indicating whether the objects are equal</returns>
         public override bool Equals(object obj)
         {
-            return (obj.GetType() == typeof(ChessPiece)) && (((ChessPiece)obj).GetHashCode() == GetHashCode());
+            return (obj != null && obj.GetType() == typeof(ChessPiece)) && (((ChessPiece)obj).GetHashCode() == GetHashCode());
         }
 
         /// <summary>

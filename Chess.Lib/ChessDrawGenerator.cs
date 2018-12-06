@@ -150,8 +150,8 @@ namespace Chess.Lib
             var nearAlliedTower = board.GetPieceAt(new ChessPosition(row, 7));
 
             // define the fields that must not be capturable by the opponent
-            var bigRochadeKingPassagePositions = new List<ChessPosition>() { new ChessPosition(row, 2), new ChessPosition(row, 3), new ChessPosition(row, 4) };
-            var smallRochadeKingPassagePositions = new List<ChessPosition>() { new ChessPosition(row, 4), new ChessPosition(row, 5), new ChessPosition(row, 6) };
+            var bigRochadeKingPassagePositions = new ChessPosition[] { new ChessPosition(row, 2), new ChessPosition(row, 3), new ChessPosition(row, 4) };
+            var smallRochadeKingPassagePositions = new ChessPosition[] { new ChessPosition(row, 4), new ChessPosition(row, 5), new ChessPosition(row, 6) };
 
             // check for preconditions of big rochade
             if (farAlliedTower != null && !alliedKing.Piece.WasMoved && !farAlliedTower.Value.WasMoved 
@@ -239,7 +239,7 @@ namespace Chess.Lib
             var draws = new List<ChessDraw>();
             
             // get upper-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row + i, drawingPiecePosition.Column);
@@ -253,7 +253,7 @@ namespace Chess.Lib
             }
 
             // get lower-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row - i, drawingPiecePosition.Column);
@@ -267,7 +267,7 @@ namespace Chess.Lib
             }
 
             // get right-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row, drawingPiecePosition.Column + i);
@@ -281,7 +281,7 @@ namespace Chess.Lib
             }
 
             // get left-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row, drawingPiecePosition.Column - i);
@@ -331,7 +331,7 @@ namespace Chess.Lib
             var draws = new List<ChessDraw>();
 
             // get upper left-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row + i, drawingPiecePosition.Column - i);
@@ -345,7 +345,7 @@ namespace Chess.Lib
             }
 
             // get lower left-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row - i, drawingPiecePosition.Column - i);
@@ -359,7 +359,7 @@ namespace Chess.Lib
             }
 
             // get upper right-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row + i, drawingPiecePosition.Column + i);
@@ -373,7 +373,7 @@ namespace Chess.Lib
             }
 
             // get lower right-side draws
-            for (int i = 1; i < ChessBoard.CHESS_BOARD_DIMENSION; i++)
+            for (int i = 1; i < 8; i++)
             {
                 // get position and make sure it is valid (otherwise exit loop)
                 var coords = new Tuple<int, int>(drawingPiecePosition.Row - i, drawingPiecePosition.Column + i);

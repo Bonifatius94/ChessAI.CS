@@ -344,7 +344,7 @@ namespace Chess.UnitTest
                 var allyColor = (ChessColor)dfwColorValue;
 
                 // get the column where the peasant is moving foreward
-                for (int col = 0; col < ChessBoard.CHESS_BOARD_DIMENSION; col++)
+                for (int col = 0; col < 8; col++)
                 {
                     int oldRow    = (allyColor == ChessColor.White) ? 1 : 6;
                     int sfwNewRow = (allyColor == ChessColor.White) ? 2 : 5;
@@ -432,7 +432,7 @@ namespace Chess.UnitTest
                     int nextRow = (allyColor == ChessColor.White) ? (allyRow + 1) : (allyRow - 1);
 
                     // get the column where the peasant is moving foreward
-                    for (int allyCol = 0; allyCol < ChessBoard.CHESS_BOARD_DIMENSION; allyCol++)
+                    for (int allyCol = 0; allyCol < 8; allyCol++)
                     {
                         var oldPos = new ChessPosition(allyRow, allyCol);
 
@@ -487,7 +487,7 @@ namespace Chess.UnitTest
                 var epColor = dfwColor.Opponent();
 
                 // get the column where the peasant is moving foreward
-                for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+                for (int fwCol = 0; fwCol < 8; fwCol++)
                 {
                     int dfwRow = (dfwColor == ChessColor.White) ? 1 : 6;
                     int attRow = (dfwColor == ChessColor.White) ? 3 : 4;
@@ -495,7 +495,7 @@ namespace Chess.UnitTest
                     var dfwNewPos = new ChessPosition(attRow, fwCol);
 
                     // get the column where the en-passant peasant is placed
-                    for (int attCol = 0; attCol < ChessBoard.CHESS_BOARD_DIMENSION; attCol++)
+                    for (int attCol = 0; attCol < 8; attCol++)
                     {
                         if (fwCol != attCol)
                         {
@@ -542,7 +542,7 @@ namespace Chess.UnitTest
                 var enemyColor = allyColor.Opponent();
                 
                 // go through all columns where the promoting peasant is moving foreward
-                for (int fwCol = 0; fwCol < ChessBoard.CHESS_BOARD_DIMENSION; fwCol++)
+                for (int fwCol = 0; fwCol < 8; fwCol++)
                 {
                     int fwRow = (allyColor == ChessColor.White) ? 6 : 1;
                     var fwPos = new ChessPosition(fwRow, fwCol);

@@ -128,6 +128,41 @@ namespace Chess.Lib
             return draws;
         }
 
+        /// <summary>
+        /// Determines whether there are loops in the chess draws.
+        /// </summary>
+        /// <returns></returns>
+        public bool ContainsLoop()
+        {
+            int loopSize = 4;
+            var draws = _drawHistory.ToArray();
+
+            // search for all loops sizes ()
+            while (loopSize < draws.Length / 2)
+            {
+                // determine the loop subsequence and the draws to compare
+                var restDraws = draws.Reverse().Take(draws.Length - loopSize).ToArray();
+                var loopDraws = draws.Take(loopSize).Reverse().ToArray();
+
+                for (int diff = 0; diff <= restDraws.Length - loopDraws.Length; diff++)
+                {
+                    int i;
+                    
+                    for (i = 0; i < loopSize; i++)
+                    {
+                        if (restDraws[diff + i] != loopDraws[i]) { break; }
+                    }
+
+                    bool matchFound = (i == loopSize);
+                    if (matchFound) { return true; }
+                }
+
+                loopSize++;
+            }
+
+            return false;
+        }
+
         #endregion Methods
     }
 }
