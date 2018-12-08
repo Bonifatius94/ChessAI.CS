@@ -50,10 +50,10 @@ namespace Chess.AI
         /// <summary>
         /// Compute the next chess draw according to the given difficulty level.
         /// </summary>
-        /// <param name="board">the chess board representing the current game situation</param>
-        /// <param name="precedingEnemyDraw">the opponent's last draw (null on white-side's first draw)</param>
-        /// <param name="level">the difficulty level</param>
-        /// <returns>one possible chess draw</returns>
+        /// <param name="board">The chess board representing the current game situation</param>
+        /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
+        /// <param name="level">The difficulty level</param>
+        /// <returns>The 'best' possible chess draw</returns>
         ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, ChessDifficultyLevel level);
     }
 
@@ -171,7 +171,7 @@ namespace Chess.AI
                 // simulate draw
                 var simBoard = new ChessBoard(board.Pieces);
                 simBoard.ApplyDraw(simDraw);
-
+                
                 // compute minimax score (needs to be started as minimizing player)
                 double simScore = (depth <= 0)
                     ? new ChessScoreHelper().GetScore(simBoard, simDraw.DrawingSide)                    // no minimax algo required. just get the score after applying the draw.
@@ -193,16 +193,19 @@ namespace Chess.AI
         /// <param name="depth">The recursion depth (is decremented step-by-step, so the recursion stops eventually when it has reached depth=0)</param>
         /// <param name="alpha">The lower bound of the already computed game scores</param>
         /// <param name="beta">The upper bound of the already computed game scores</param>
-        /// <param name="isMaximizing">Iindicates whether the side to draw is maximizing or minimizing</param>
+        /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
         private double minimax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
+            // TODO: minimax needs to be passed the draw to analyze
+
             double score;
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
             // recursion anchor: depth == 0
             if (depth == 0)
             {
+                // TODO: apply the given draw to the chess board here ...
                 score = new ChessScoreHelper().GetScore(board, drawingSide);
             }
             // recursion call: depth > 0
@@ -218,6 +221,8 @@ namespace Chess.AI
                 // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
                 for (int i = 0; i < draws.Length; i++)
                 {
+                    // TODO: do not apply the chess draw here. Moreover pass the draw to the next instance, so it is simulated there
+
                     // simulate chess draw
                     var simDraw = draws[i];
                     var simBoard = new ChessBoard(board.Pieces);

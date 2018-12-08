@@ -13,17 +13,24 @@ namespace Chess.CLI
 
         static void Main(string[] args)
         {
+            var gameWatch = new Stopwatch();
+            gameWatch.Start();
+
             // init new game
             var game = new ChessGame();
             var gameStatus = CheckGameStatus.None;
             var draws = new List<Tuple<ChessDraw, CheckGameStatus>>();
-
+            
             try
             {
                 do
                 {
+                    var drawWatch = new Stopwatch();
+                    
                     // select the best draw considering the next couple of draws
+                    drawWatch.Start();
                     var draw = new ChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
+                    drawWatch.Stop();
 
                     // apply the draw to the chess board and  check if the game is over
                     game.ApplyDraw(draw);
@@ -33,6 +40,7 @@ namespace Chess.CLI
                     // print draw and board after draw was applied
                     Console.WriteLine();
                     Console.WriteLine($"{ draw }{ (gameStatus == CheckGameStatus.None ? string.Empty : " " + gameStatus.ToString().ToLower()) }");
+                    Console.WriteLine($"took { Math.Round(new TimeSpan(drawWatch.ElapsedTicks).TotalSeconds, 2) } seconds");
                     Console.WriteLine(game.Board.ToString());
                 }
                 while (!gameStatus.IsGameOver() && !game.ContainsLoop());
@@ -50,6 +58,10 @@ namespace Chess.CLI
                     Console.WriteLine("======================");
                 }
             }
+
+            gameWatch.Stop();
+            var gameTime = new TimeSpan(gameWatch.ElapsedTicks);
+            Console.WriteLine($"game took { Math.Round(gameTime.TotalMinutes, 2) } minutes");
 
             // wait for exit
             Console.WriteLine();
