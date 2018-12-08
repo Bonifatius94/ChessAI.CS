@@ -37,19 +37,21 @@ namespace Chess.Lib
         #region Constants
 
         // define the trailing bits after the data bits
-        private const int DRAWING_SIDE_TRAILING_BITS         = 20;
-        private const int DRAW_TYPE_TRAILING_BITS            = 18;
-        private const int DRAWING_PIECE_TYPE_TRAILING_BITS   = 15;
+        private const int DRAWING_SIDE_TRAILING_BITS         = 23;
+        private const int DRAW_TYPE_TRAILING_BITS            = 21;
+        private const int DRAWING_PIECE_TYPE_TRAILING_BITS   = 18;
+        private const int TAKEN_PIECE_TYPE_TRAILING_BITS     = 15;
         private const int PROMOTION_PIECE_TYPE_TRAILING_BITS = 12;
         private const int OLD_POSITION_TRAILING_BITS         =  6;
 
         // define which bits of the hash code store the data
-        private const int BITS_OF_DRAWING_SIDE         = 1048576; // bits: 10000 00000000 00000000
-        private const int BITS_OF_DRAW_TYPE            =  786432; // bits: 01100 00000000 00000000
-        private const int BITS_OF_DRAWING_PIECE_TYPE   =  229376; // bits: 00011 10000000 00000000
-        private const int BITS_OF_PROMOTION_PIECE_TYPE =   28672; // bits: 00000 01110000 00000000
-        private const int BITS_OF_OLD_POSITION         =    4032; // bits: 00000 00001111 11000000
-        private const int BITS_OF_NEW_POSITION         =      63; // bits: 00000 00000000 00111111
+        private const int BITS_OF_DRAWING_SIDE          = 0b_100000000000000000000000; // bits: 10000000 00000000 00000000
+        private const int BITS_OF_DRAW_TYPE             = 0b_011000000000000000000000; // bits: 01100000 00000000 00000000
+        private const int BITS_OF_DRAWING_PIECE_TYPE    = 0b_000111000000000000000000; // bits: 00011100 00000000 00000000
+        private const int BITS_OF_TAKEN_PIECE_TYPE      = 0b_000000111000000000000000; // bits: 00000011 10000000 00000000
+        private const int BITS_OF_PROMOTION_PIECE_TYPE  = 0b_000000000111000000000000; // bits: 00000000 01110000 00000000
+        private const int BITS_OF_OLD_POSITION          = 0b_000000000000111111000000; // bits: 00000000 00001111 11000000
+        private const int BITS_OF_NEW_POSITION          = 0b_000000000000000000111111; // bits: 00000000 00000000 00111111
 
         // define null value of chess piece type
         private const byte CHESS_PIECE_TYPE_NULL = 6;
@@ -74,9 +76,14 @@ namespace Chess.Lib
             var type = getDrawType(board, oldPos, newPos, peasantPromotionType);
             var drawingSide = piece.Color;
             var drawingPieceType = piece.Type;
-            
+
+            var takenPieceType = 
+                (type == ChessDrawType.EnPassant) 
+                    ? (ChessPieceType?)ChessPieceType.Peasant 
+                    : (board.IsCapturedAt(newPos) ? (ChessPieceType?)board.GetPieceAt(newPos).Value.Type : null);
+
             // transform property values to a hash code
-            _hashCode = toHashCode(type, drawingSide, drawingPieceType, peasantPromotionType, oldPos, newPos);
+            _hashCode = toHashCode(type, drawingSide, drawingPieceType, takenPieceType, peasantPromotionType, oldPos, newPos);
         }
 
         /// <summary>
@@ -86,7 +93,7 @@ namespace Chess.Lib
         public ChessDraw(int hashCode)
         {
             // make sure the hash code is within value range
-            if (hashCode < 0 || hashCode >= 2097152) { throw new ArgumentException("invalid hash code detected (expected value of set { 0, 1, ..., 2097151 })"); }
+            if (hashCode < 0 || hashCode >= 0b_1000000000000000000000000) { throw new ArgumentException("invalid hash code detected (expected value of set { 0, 1, ..., 2^24 - 1 })"); }
 
             _hashCode = hashCode;
         }
@@ -98,12 +105,12 @@ namespace Chess.Lib
         /// <summary>
         /// The binary representation containing the chess draw data.
         /// 
-        /// The code consists of 21 bits: 
-        /// 1 bit for drawing side, 2 bits for draw type, 3 bits for each drawing piece type and promotion piece type, 6 bits for each old and new position.
-        /// (promotion type uses 6 as null)
+        /// The code consists of 24 bits: 
+        /// 1 bit for drawing side, 2 bits for draw type, 3 bits for each drawing piece type, taken piece type and promotion piece type, 6 bits for each old and new position.
+        /// (taken piece type and promotion type use 6 as null)
         /// 
-        /// |    unused    | side | draw type | piece type | promotion type | old position | new position |
-        /// |  xxxxxxxxxxx |    x |        xx |        xxx |            xxx |       xxxxxx |       xxxxxx |
+        /// |   unused  | side | draw type | piece type | taken piece type | promotion type | old position | new position |
+        /// |  xxxxxxxx |    x |        xx |        xxx |              xxx |            xxx |       xxxxxx |       xxxxxx |
         /// </summary>
         private readonly int _hashCode;
         
@@ -123,14 +130,16 @@ namespace Chess.Lib
         public ChessPieceType DrawingPieceType { get { return (ChessPieceType)((_hashCode & BITS_OF_DRAWING_PIECE_TYPE) >> DRAWING_PIECE_TYPE_TRAILING_BITS); } }
         
         /// <summary>
-        /// The old position of the chess piece to be moved.
+        /// The chess piece type of the enemy chess piece being taken.
         /// </summary>
-        public ChessPosition OldPosition { get { return new ChessPosition((byte)((_hashCode & BITS_OF_OLD_POSITION) >> OLD_POSITION_TRAILING_BITS)); } }
-
-        /// <summary>
-        /// The new position of the chess piece to be moved.
-        /// </summary>
-        public ChessPosition NewPosition { get { return new ChessPosition((byte)(_hashCode & BITS_OF_NEW_POSITION)); } }
+        public ChessPieceType? TakenPieceType
+        {
+            get
+            {
+                int digits = (_hashCode & BITS_OF_TAKEN_PIECE_TYPE) >> TAKEN_PIECE_TYPE_TRAILING_BITS;
+                return (digits != CHESS_PIECE_TYPE_NULL) ? (ChessPieceType?)((ChessPieceType)digits) : null;
+            }
+        }
 
         /// <summary>
         /// The chess piece type that the peasant is promoting to.
@@ -143,24 +152,35 @@ namespace Chess.Lib
                 return (digits != CHESS_PIECE_TYPE_NULL) ? (ChessPieceType?)((ChessPieceType)digits) : null;
             }
         }
-        
+
+        /// <summary>
+        /// The old position of the chess piece to be moved.
+        /// </summary>
+        public ChessPosition OldPosition { get { return new ChessPosition((byte)((_hashCode & BITS_OF_OLD_POSITION) >> OLD_POSITION_TRAILING_BITS)); } }
+
+        /// <summary>
+        /// The new position of the chess piece to be moved.
+        /// </summary>
+        public ChessPosition NewPosition { get { return new ChessPosition((byte)(_hashCode & BITS_OF_NEW_POSITION)); } }
+
         #endregion Members
 
         #region Methods
 
-        private static int toHashCode(ChessDrawType drawType, ChessColor drawingSide, ChessPieceType drawingPieceType, 
+        private static int toHashCode(ChessDrawType drawType, ChessColor drawingSide, ChessPieceType drawingPieceType, ChessPieceType? takenPieceType,
             ChessPieceType? promotionPieceType, ChessPosition oldPosition, ChessPosition newPosition)
         {
             // shift the bits to the right position (preparation for bitwise OR)
             int drawTypeBits = ((int)drawType) << DRAW_TYPE_TRAILING_BITS;
             int drawingSideBits = ((int)drawingSide) << DRAWING_SIDE_TRAILING_BITS;
             int drawingPieceTypeBits = ((int)drawingPieceType) << DRAWING_PIECE_TYPE_TRAILING_BITS;
+            int takenPieceTypeBits = ((takenPieceType != null) ? (int)takenPieceType.Value : CHESS_PIECE_TYPE_NULL) << TAKEN_PIECE_TYPE_TRAILING_BITS;
             int promotionPieceTypeBits = ((promotionPieceType != null) ? (int)promotionPieceType.Value : CHESS_PIECE_TYPE_NULL) << PROMOTION_PIECE_TYPE_TRAILING_BITS;
             int oldPositionBits = oldPosition.GetHashCode() << OLD_POSITION_TRAILING_BITS;
             int newPositionBits = newPosition.GetHashCode();
 
             // fuse the shifted bits to the hash code (by bitwise OR)
-            int hashCode = (drawTypeBits | drawingSideBits | drawingPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
+            int hashCode = (drawTypeBits | drawingSideBits | drawingPieceTypeBits | takenPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
 
             return hashCode;
         }
@@ -232,7 +252,7 @@ namespace Chess.Lib
                     ret = drawNameBase;
                     break;
                 case ChessDrawType.Rochade:
-                    bool isLeftSide = (NewPosition.Column == 2 && DrawingSide == ChessColor.White) || (OldPosition.Column == 6 && DrawingSide == ChessColor.Black);
+                    bool isLeftSide = (NewPosition.Column == 2 && DrawingSide == ChessColor.White) || (NewPosition.Column == 6 && DrawingSide == ChessColor.Black);
                     ret = $"{ drawNameBase } ({ (isLeftSide ? "left" : "right") }-side rochade)";
                     break;
                 case ChessDrawType.EnPassant:

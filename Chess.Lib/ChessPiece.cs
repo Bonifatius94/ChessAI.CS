@@ -54,22 +54,41 @@ namespace Chess.Lib
         White = 1
     }
     
+    /// <summary>
+    /// Represents a chess piece by its color, chess piece type and whether it was already moved.
+    /// </summary>
     public struct ChessPiece : ICloneable
     {
         #region Constants
-        
+
         // define the trailing bits after the data bits
-        private const byte WAS_MOVED_TRAILING_BITS = 3;
         private const byte COLOR_TRAILING_BITS     = 4;
+        private const byte WAS_MOVED_TRAILING_BITS = 3;
         
         // define which bits of the hash code store the data
-        private const byte BITS_OF_COLOR          = 16;   // bits: 10000
-        private const byte BITS_OF_WAS_MOVED_FLAG =  8;   // bits: 01000
-        private const byte BITS_OF_TYPE           =  7;   // bits: 00111
+        private const byte BITS_OF_COLOR          = 0b_10000;   // bits: 10000
+        private const byte BITS_OF_WAS_MOVED_FLAG = 0b_01000;   // bits: 01000
+        private const byte BITS_OF_TYPE           = 0b_00111;   // bits: 00111
 
         #endregion Constants
 
         #region Constructor
+
+        /// <summary>
+        /// Creates a chess piece instance with the given parameters.
+        /// </summary>
+        /// <param name="type">The type of the chess piece</param>
+        /// <param name="color">The color of the chess piece</param>
+        /// <param name="wasMoved">Indicates whether the chess piece was already moved</param>
+        public ChessPiece(ChessPieceType type, ChessColor color, bool wasMoved)
+        {
+            byte colorBits = (byte)(((int)color) << COLOR_TRAILING_BITS);
+            byte wasMovedBits = (byte)((wasMoved ? 1 : 0) << WAS_MOVED_TRAILING_BITS);
+            byte typeBits = (byte)type;
+
+            // fuse the bit patterns to the hash code (with bitwise OR)
+            _hashCode = (byte)(colorBits | wasMovedBits | typeBits);
+        }
 
         /// <summary>
         /// Creates a chess piece instance from hash code.
@@ -78,7 +97,7 @@ namespace Chess.Lib
         public ChessPiece(byte hashCode)
         {
             // make sure the hash code is within the expected value range
-            if (hashCode < 0 || hashCode >= 32) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 31 })"); }
+            if (hashCode < 0 || hashCode >= 0b_100000) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 31 })"); }
 
             _hashCode = hashCode;
         }
@@ -202,7 +221,7 @@ namespace Chess.Lib
         /// <summary>
         /// Retrieve the character representing the given chess piece type.
         /// </summary>
-        /// <param name="color">The chess color to be represented</param>
+        /// <param name="type">The chess piece type to be represented</param>
         /// <returns>a character representing the given chess piece type</returns>
         public static char ToChar(this ChessPieceType type)
         {

@@ -11,49 +11,44 @@ namespace Chess.Lib
     public struct ChessBoard : ICloneable
     {
         #region Constants
-
-        ///// <summary>
-        ///// The dimension of the chess board (width / length) which is usually 8.
-        ///// </summary>
-        //public const int CHESS_BOARD_DIMENSION = 8;
-
+        
         private static readonly ChessPieceAtPos[] START_FORMATION = new ChessPieceAtPos[]
         {
-            new ChessPieceAtPos(new ChessPosition("A1"), new ChessPiece() { Type = ChessPieceType.Rook   , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("B1"), new ChessPiece() { Type = ChessPieceType.Knight , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("C1"), new ChessPiece() { Type = ChessPieceType.Bishop , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("D1"), new ChessPiece() { Type = ChessPieceType.Queen  , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("E1"), new ChessPiece() { Type = ChessPieceType.King   , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("F1"), new ChessPiece() { Type = ChessPieceType.Bishop , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("G1"), new ChessPiece() { Type = ChessPieceType.Knight , Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("H1"), new ChessPiece() { Type = ChessPieceType.Rook   , Color = ChessColor.White, WasMoved = false }),
+            new ChessPieceAtPos(new ChessPosition("A1"), new ChessPiece(ChessPieceType.Rook,    ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("B1"), new ChessPiece(ChessPieceType.Knight,  ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("C1"), new ChessPiece(ChessPieceType.Bishop,  ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("D1"), new ChessPiece(ChessPieceType.Queen,   ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("E1"), new ChessPiece(ChessPieceType.King,    ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("F1"), new ChessPiece(ChessPieceType.Bishop,  ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("G1"), new ChessPiece(ChessPieceType.Knight,  ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("H1"), new ChessPiece(ChessPieceType.Rook,    ChessColor.White, false)),
 
-            new ChessPieceAtPos(new ChessPosition("A2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("B2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("C2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("D2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("E2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("F2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("G2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("H2"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = false }),
+            new ChessPieceAtPos(new ChessPosition("A2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("B2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("C2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("D2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("E2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("F2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("G2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
+            new ChessPieceAtPos(new ChessPosition("H2"), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false)),
 
-            new ChessPieceAtPos(new ChessPosition("A7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("B7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("C7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("D7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("E7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("F7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("G7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("H7"), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.Black, WasMoved = false }),
+            new ChessPieceAtPos(new ChessPosition("A7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("B7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("C7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("D7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("E7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("F7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("G7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("H7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
 
-            new ChessPieceAtPos(new ChessPosition("A8"), new ChessPiece() { Type = ChessPieceType.Rook   , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("B8"), new ChessPiece() { Type = ChessPieceType.Knight , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("C8"), new ChessPiece() { Type = ChessPieceType.Bishop , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("D8"), new ChessPiece() { Type = ChessPieceType.Queen  , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("E8"), new ChessPiece() { Type = ChessPieceType.King   , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("F8"), new ChessPiece() { Type = ChessPieceType.Bishop , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("G8"), new ChessPiece() { Type = ChessPieceType.Knight , Color = ChessColor.Black, WasMoved = false }),
-            new ChessPieceAtPos(new ChessPosition("H8"), new ChessPiece() { Type = ChessPieceType.Rook   , Color = ChessColor.Black, WasMoved = false }),
+            new ChessPieceAtPos(new ChessPosition("A8"), new ChessPiece(ChessPieceType.Rook,    ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("B8"), new ChessPiece(ChessPieceType.Knight,  ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("C8"), new ChessPiece(ChessPieceType.Bishop,  ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("D8"), new ChessPiece(ChessPieceType.Queen,   ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("E8"), new ChessPiece(ChessPieceType.King,    ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("F8"), new ChessPiece(ChessPieceType.Bishop,  ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("G8"), new ChessPiece(ChessPieceType.Knight,  ChessColor.Black, false)),
+            new ChessPieceAtPos(new ChessPosition("H8"), new ChessPiece(ChessPieceType.Rook,    ChessColor.Black, false)),
         };
 
         #endregion Constants

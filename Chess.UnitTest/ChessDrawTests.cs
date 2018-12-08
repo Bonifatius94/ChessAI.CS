@@ -33,29 +33,34 @@ namespace Chess.UnitTest
                     {
                         var drawingPieceType = (ChessPieceType)drawingPieceTypeValue;
 
-                        for (int promotionPieceTypeValue = 0; promotionPieceTypeValue < 7; promotionPieceTypeValue++)
+                        for (int takenPieceTypeValue = 0; takenPieceTypeValue < 7; takenPieceTypeValue++)
                         {
-                            var promotionPieceType = (promotionPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
+                            var takenPieceType = (takenPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)takenPieceTypeValue) : null;
 
-                            for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
+                            for (int promotionPieceTypeValue = 0; promotionPieceTypeValue < 7; promotionPieceTypeValue++)
                             {
-                                var oldPos = new ChessPosition((byte)oldPosHash);
+                                var promotionPieceType = (promotionPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
 
-                                for (int newPosHash = 0; newPosHash < 64; newPosHash++)
+                                for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
                                 {
-                                    var newPos = new ChessPosition((byte)newPosHash);
+                                    var oldPos = new ChessPosition((byte)oldPosHash);
 
-                                    // get expected hash code
-                                    int hashCode = ((drawingSideValue << 20) | (drawTypeValue << 18) | (drawingPieceTypeValue << 15) | (promotionPieceTypeValue << 12) | (oldPosHash << 6) | (newPosHash));
+                                    for (int newPosHash = 0; newPosHash < 64; newPosHash++)
+                                    {
+                                        var newPos = new ChessPosition((byte)newPosHash);
 
-                                    // create a new chess draw instance and check if the getters work correctly
-                                    var draw = new ChessDraw(hashCode);
+                                        // get expected hash code
+                                        int hashCode = ((drawingSideValue << 23) | (drawTypeValue << 21) | (drawingPieceTypeValue << 18) | (takenPieceTypeValue << 15) | (promotionPieceTypeValue << 12) | (oldPosHash << 6) | (newPosHash));
 
-                                    // check if the created chess draw has the correct features
-                                    Assert.True(
-                                        draw.DrawingSide == drawingSide && draw.Type == drawType && draw.DrawingPieceType == drawingPieceType 
-                                        && draw.PeasantPromotionPieceType == promotionPieceType && draw.OldPosition == oldPos && draw.NewPosition == newPos && draw.GetHashCode() == hashCode
-                                    );
+                                        // create a new chess draw instance and check if the getters work correctly
+                                        var draw = new ChessDraw(hashCode);
+
+                                        // check if the created chess draw has the correct features
+                                        Assert.True(
+                                            draw.DrawingSide == drawingSide && draw.Type == drawType && draw.DrawingPieceType == drawingPieceType && draw.TakenPieceType == takenPieceType
+                                            && draw.PeasantPromotionPieceType == promotionPieceType && draw.OldPosition == oldPos && draw.NewPosition == newPos && draw.GetHashCode() == hashCode
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -85,6 +90,10 @@ namespace Chess.UnitTest
         public void IsValidTest()
         {
             // TODO: implement test
+
+            // This test should be obsolete if the draws generator works fine. 
+            // The validation only makes sure that the draws generator creates the same draw for the given chess piece and chess board.
+            // Moreover the validation is hardly ever used due to performance savings when deactivating it.
         }
 
         #endregion Tests

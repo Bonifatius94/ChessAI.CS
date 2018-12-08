@@ -49,12 +49,12 @@ namespace Chess.UnitTest
 
                         var pieces = new List<ChessPieceAtPos>()
                         {
-                            new ChessPieceAtPos(oldPos,                  new ChessPiece() { Type = pieceType,             Color = allyColor,  WasMoved = true }),
-                            new ChessPieceAtPos(new ChessPosition(0, 7), new ChessPiece() { Type = ChessPieceType.King,   Color = allyColor,  WasMoved = true }),
-                            new ChessPieceAtPos(new ChessPosition(7, 5), new ChessPiece() { Type = ChessPieceType.King,   Color = enemyColor, WasMoved = true }),
+                            new ChessPieceAtPos(oldPos,                  new ChessPiece(pieceType,           allyColor,  true)),
+                            new ChessPieceAtPos(new ChessPosition(0, 7), new ChessPiece(ChessPieceType.King, allyColor,  true)),
+                            new ChessPieceAtPos(new ChessPosition(7, 5), new ChessPiece(ChessPieceType.King, enemyColor, true)),
                         };
 
-                        if (putAttacker) { pieces.Add(new ChessPieceAtPos(new ChessPosition(7, 0), new ChessPiece() { Type = ChessPieceType.Bishop, Color = enemyColor, WasMoved = true })); }
+                        if (putAttacker) { pieces.Add(new ChessPieceAtPos(new ChessPosition(7, 0), new ChessPiece(ChessPieceType.Bishop, enemyColor, true))); }
 
                         var board = new ChessBoard(pieces);
                         var draw = new ChessDraw(board, oldPos, newPos[pieceType]);
@@ -79,10 +79,10 @@ namespace Chess.UnitTest
             // test simple check
             var pieces = new List<ChessPieceAtPos>()
             {
-                new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(1, 5), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(7, 3), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.Black, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, WasMoved = true }),
+                new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece(ChessPieceType.King,    ChessColor.White, true)),
+                new ChessPieceAtPos(new ChessPosition(1, 5), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, true)),
+                new ChessPieceAtPos(new ChessPosition(7, 3), new ChessPiece(ChessPieceType.Queen,   ChessColor.Black, true)),
+                new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece(ChessPieceType.King,    ChessColor.Black, true)),
             };
             
             board = new ChessBoard(pieces);
@@ -95,16 +95,16 @@ namespace Chess.UnitTest
             {
                 pieces = new List<ChessPieceAtPos>()
                 {
-                    new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(6, 1), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(2, 3), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.Black, WasMoved = true }),
-                    new ChessPieceAtPos(new ChessPosition(2, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, WasMoved = true }),
+                    new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece(ChessPieceType.King,    ChessColor.White, true)),
+                    new ChessPieceAtPos(new ChessPosition(6, 1), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, true)),
+                    new ChessPieceAtPos(new ChessPosition(2, 3), new ChessPiece(ChessPieceType.Queen,   ChessColor.Black, true)),
+                    new ChessPieceAtPos(new ChessPosition(2, 4), new ChessPiece(ChessPieceType.King,    ChessColor.Black, true)),
                 };
 
                 // allow the ally to avoid the checkmate by putting an additional chess piece on the board
                 // and test if the simulator makes use of this opportunity
                 bool putSavingPiece = (putSavingPieceValue == 1);
-                if (putSavingPiece) { pieces.Add(new ChessPieceAtPos(new ChessPosition(1, 7), new ChessPiece() { Type = ChessPieceType.Rook, Color = ChessColor.White, WasMoved = true })); }
+                if (putSavingPiece) { pieces.Add(new ChessPieceAtPos(new ChessPosition(1, 7), new ChessPiece(ChessPieceType.Rook, ChessColor.White, true))); }
 
                 board = new ChessBoard(pieces);
                 enemyDraw = new ChessDraw(board, new ChessPosition(2, 3), new ChessPosition(1, 4));
@@ -119,12 +119,12 @@ namespace Chess.UnitTest
             // test stalemate
             pieces = new List<ChessPieceAtPos>()
             {
-                new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.White, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(6, 1), new ChessPiece() { Type = ChessPieceType.Peasant, Color = ChessColor.White, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(2, 3), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.Black, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(3, 5), new ChessPiece() { Type = ChessPieceType.Queen,   Color = ChessColor.Black, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(2, 4), new ChessPiece() { Type = ChessPieceType.King,    Color = ChessColor.Black, WasMoved = true }),
-                new ChessPieceAtPos(new ChessPosition(7, 1), new ChessPiece() { Type = ChessPieceType.Rook,    Color = ChessColor.Black, WasMoved = true }),
+                new ChessPieceAtPos(new ChessPosition(0, 4), new ChessPiece(ChessPieceType.King,    ChessColor.White, true)),
+                new ChessPieceAtPos(new ChessPosition(6, 1), new ChessPiece(ChessPieceType.Peasant, ChessColor.White, true)),
+                new ChessPieceAtPos(new ChessPosition(2, 3), new ChessPiece(ChessPieceType.Queen,   ChessColor.Black, true)),
+                new ChessPieceAtPos(new ChessPosition(3, 5), new ChessPiece(ChessPieceType.Queen,   ChessColor.Black, true)),
+                new ChessPieceAtPos(new ChessPosition(2, 4), new ChessPiece(ChessPieceType.King,    ChessColor.Black, true)),
+                new ChessPieceAtPos(new ChessPosition(7, 1), new ChessPiece(ChessPieceType.Rook,    ChessColor.Black, true)),
             };
 
             board = new ChessBoard(pieces);

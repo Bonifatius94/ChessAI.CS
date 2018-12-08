@@ -73,10 +73,10 @@ namespace Chess.AI
         /// <summary>
         /// Compute the next chess draw according to the given difficulty level.
         /// </summary>
-        /// <param name="board">the chess board representing the current game situation</param>
-        /// <param name="precedingEnemyDraw">the opponent's last draw (null on white-side's first draw)</param>
-        /// <param name="level">the difficulty level</param>
-        /// <returns>one possible chess draw</returns>
+        /// <param name="board">The chess board representing the current game situation</param>
+        /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
+        /// <param name="level">The difficulty level</param>
+        /// <returns>The 'best' possible chess draw</returns>
         public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, ChessDifficultyLevel level)
         {
             // TODO: check whether the optimal draw was already found (-> database query)
@@ -126,7 +126,6 @@ namespace Chess.AI
                 // randomize draws on first run
                 var window = draws.Shuffle().ToArray();
                 double maxScore = 0;
-                double stdDeviation = 0;
                 IEnumerable<Tuple<ChessDraw, double>> drawsXScores = new List<Tuple<ChessDraw, double>>();
 
                 // increase search depth step by step, trying to go the optimal way first, so alpha/beta prune works best
@@ -136,14 +135,12 @@ namespace Chess.AI
                     drawsXScores = getDrawsOrder(board, window, simDepth);
 
                     // calculate the standard deviation of the scores, the average score and the new maximum score
-                    stdDeviation = getStandardDeviation(drawsXScores.Select(x => x.Item2));
+                    double stdDeviation = drawsXScores.Select(x => x.Item2).StandardDeviation();
                     double avgScore = drawsXScores.Select(x => x.Item2).Average();
                     double newMaxScore = drawsXScores.Select(x => x.Item2).Max();
                     
                     // select a reasonable aspiration window (make sure the last 'best draw' is always included)
-                    var newWindow = drawsXScores.Where(x =>
-                        Math.Abs(newMaxScore - x.Item2) <= stdDeviation || (x.Item2 >= Math.Min(maxScore, newMaxScore) && x.Item2 <= Math.Max(maxScore, newMaxScore)))
-                        .Select(x => x.Item1).ToArray();
+                    window = drawsXScores.Where(x => x.Item2 >= (newMaxScore - stdDeviation) && x.Item2 <= Math.Max(maxScore, newMaxScore)).Select(x => x.Item1).ToArray();
 
                     // update the maximum score
                     maxScore = newMaxScore;
@@ -156,11 +153,18 @@ namespace Chess.AI
             return bestDraw;
         }
         
+        /// <summary>
+        /// Retrieve a list of the given draws ordered by the scores of the minimax algorithm of the given depth.
+        /// </summary>
+        /// <param name="board">The chess board before the chess draw is applied</param>
+        /// <param name="draws">The chess draws to evaluate</param>
+        /// <param name="depth">The depth of the minimax algorithm</param>
+        /// <returns>a list of (chess draw, minimax score) tuples, ordered by the score (desc)</returns>
         private IEnumerable<Tuple<ChessDraw, double>> getDrawsOrder(ChessBoard board, IEnumerable<ChessDraw> draws, int depth)
         {
             // make sure that the ally can draw
             if (draws.Count() == 0) { throw new ArgumentException("draws list is empty"); }
-
+            
             // get the best draw
             var drawsWithScores = draws.AsParallel().Select(simDraw =>
             {
@@ -169,19 +173,29 @@ namespace Chess.AI
                 simBoard.ApplyDraw(simDraw);
 
                 // compute minimax score (needs to be started as minimizing player)
-                double simScore = (depth <= 0) 
+                double simScore = (depth <= 0)
                     ? new ChessScoreHelper().GetScore(simBoard, simDraw.DrawingSide)                    // no minimax algo required. just get the score after applying the draw.
                     : minimax(simBoard, simDraw, depth - 1, double.MinValue, double.MaxValue, false);   // use minimax algo to determine the score
-                
+
                 // return the simulated draw and its score
                 return new Tuple<ChessDraw, double>(simDraw, simScore);
             });
-            
+
             // return the draws ordered by score (desc)
             return drawsWithScores.OrderByDescending(x => x.Item2).ToArray();
         }
 
-        private double minimax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool maximize = true)
+        /// <summary>
+        /// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.
+        /// </summary>
+        /// <param name="board">The chess board representing the game situation data</param>
+        /// <param name="precedingEnemyDraw">The last chess draw made by the opponent</param>
+        /// <param name="depth">The recursion depth (is decremented step-by-step, so the recursion stops eventually when it has reached depth=0)</param>
+        /// <param name="alpha">The lower bound of the already computed game scores</param>
+        /// <param name="beta">The upper bound of the already computed game scores</param>
+        /// <param name="isMaximizing">Iindicates whether the side to draw is maximizing or minimizing</param>
+        /// <returns>The best score to be expected for the maximizing player</returns>
+        private double minimax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
             double score;
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
@@ -197,9 +211,9 @@ namespace Chess.AI
                 // get all draws (child nodes) and shuffle them to randomize the algorithm
                 var alliedPieces = board.GetPiecesOfColor(drawingSide);
                 var draws = alliedPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
-                
+
                 // init score with negative infinity when maximizing / positive infinity when minimizing
-                score = maximize ? double.MinValue : double.MaxValue;
+                score = isMaximizing ? double.MinValue : double.MaxValue;
 
                 // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
                 for (int i = 0; i < draws.Length; i++)
@@ -208,14 +222,14 @@ namespace Chess.AI
                     var simDraw = draws[i];
                     var simBoard = new ChessBoard(board.Pieces);
                     simBoard.ApplyDraw(simDraw);
-                    
+
                     // update the minimax score of recursions
-                    double minimaxScore = minimax(simBoard, simDraw, depth - 1, alpha, beta, !maximize);
-                    score = maximize ? Math.Max(score, minimaxScore) : Math.Min(score, minimaxScore);
+                    double minimaxScore = minimax(simBoard, simDraw, depth - 1, alpha, beta, !isMaximizing);
+                    score = isMaximizing ? Math.Max(score, minimaxScore) : Math.Min(score, minimaxScore);
 
                     // update alpha / beta
-                    if (maximize) { alpha = Math.Max(score, alpha); }
-                    else          { beta  = Math.Min(score, beta);  }
+                    if (isMaximizing) { alpha = Math.Max(score, alpha); }
+                    else { beta = Math.Min(score, beta); }
 
                     // cut-off when alpha and beta overlap
                     if (alpha >= beta) { break; }
@@ -225,27 +239,31 @@ namespace Chess.AI
             return score;
         }
 
-        private double getStandardDeviation(IEnumerable<double> scores)
+        // TODO: implement minimax algorithm in a way that the best draw and its following draws can also be retrieved (not only score)
+        // => this would allow some caching optimizations during the next minimax procedure
+        
+        #endregion Methods
+    }
+
+    /// <summary>
+    /// An extension providing standard deviation computation functionality.
+    /// </summary>
+    public static class StandardDeviationEx
+    {
+        #region Methods
+
+        /// <summary>
+        /// Compute the standard deviation of the given double values.
+        /// </summary>
+        /// <param name="values">The list of double values to be evaluated</param>
+        /// <returns>The standard deviation of the given double values</returns>
+        public static double StandardDeviation(this IEnumerable<double> values)
         {
-            double avg = scores.Average();
-            double variance = scores.Select(x => Math.Pow((x - avg), 2)).Sum() / scores.Count();
+            double avg = values.Average();
+            double variance = values.Select(x => Math.Pow((x - avg), 2)).Sum() / values.Count();
             return Math.Sqrt(variance);
         }
 
-        //private class ChessDrawSimulationResult
-        //{
-        //    #region Members
-
-        //    public ChessDraw Draw { get; set; }
-        //    public ChessBoard SimBoard { get; set; }
-        //    public double ScoreBefore { get; set; }
-        //    public double ScoreAfter { get; set; }
-
-        //    public double Diff { get { return ScoreAfter - ScoreBefore; } }
-
-        //    #endregion Members
-        //}
-        
         #endregion Methods
     }
 }

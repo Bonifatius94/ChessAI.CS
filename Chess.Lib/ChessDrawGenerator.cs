@@ -53,7 +53,7 @@ namespace Chess.Lib
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }
 
-            var draws = helper.GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck).ToList();
+            var draws = helper.GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck).ToArray();
             
             return draws;
         }
@@ -132,6 +132,12 @@ namespace Chess.Lib
             return positions;
         }
 
+        // the rochade passage positions of the king
+        private static readonly ChessPosition[] whiteKingBigRochadePassagePositions   = new ChessPosition[] { new ChessPosition(0, 2), new ChessPosition(0, 3), new ChessPosition(0, 4) };
+        private static readonly ChessPosition[] whiteKingSmallRochadePassagePositions = new ChessPosition[] { new ChessPosition(0, 4), new ChessPosition(0, 5), new ChessPosition(0, 6) };
+        private static readonly ChessPosition[] blackKingBigRochadePassagePositions   = new ChessPosition[] { new ChessPosition(7, 2), new ChessPosition(7, 3), new ChessPosition(7, 4) };
+        private static readonly ChessPosition[] blackKingSmallRochadePassagePositions = new ChessPosition[] { new ChessPosition(7, 4), new ChessPosition(7, 5), new ChessPosition(7, 6) };
+
         private IEnumerable<ChessDraw> getRochadeDraws(ChessBoard board, ChessColor drawingSide)
         {
             var draws = new List<ChessDraw>();
@@ -144,14 +150,14 @@ namespace Chess.Lib
                 .Concat(getStandardDrawPositions(enemyKing.Position));
 
             // get the allied king and towers
-            int row = drawingSide == ChessColor.White ? 0 : 7;
+            int row = (drawingSide == ChessColor.White) ? 0 : 7;
             var alliedKing = (drawingSide == ChessColor.White) ? board.WhiteKing : board.BlackKing;
             var farAlliedTower = board.GetPieceAt(new ChessPosition(row, 0));
             var nearAlliedTower = board.GetPieceAt(new ChessPosition(row, 7));
 
             // define the fields that must not be capturable by the opponent
-            var bigRochadeKingPassagePositions = new ChessPosition[] { new ChessPosition(row, 2), new ChessPosition(row, 3), new ChessPosition(row, 4) };
-            var smallRochadeKingPassagePositions = new ChessPosition[] { new ChessPosition(row, 4), new ChessPosition(row, 5), new ChessPosition(row, 6) };
+            var bigRochadeKingPassagePositions   = (drawingSide == ChessColor.White) ? whiteKingBigRochadePassagePositions   : blackKingBigRochadePassagePositions;
+            var smallRochadeKingPassagePositions = (drawingSide == ChessColor.White) ? whiteKingSmallRochadePassagePositions : blackKingSmallRochadePassagePositions;
 
             // check for preconditions of big rochade
             if (farAlliedTower != null && !alliedKing.Piece.WasMoved && !farAlliedTower.Value.WasMoved 
@@ -168,8 +174,8 @@ namespace Chess.Lib
             if (nearAlliedTower != null && !alliedKing.Piece.WasMoved && !nearAlliedTower.Value.WasMoved 
                 && smallRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
             {
-                // make sure that no rochade field can be captured by the opponent
-                bool canBigRochade = !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
+                // make sure that no rochade field can be captured by the opponent and the rochade field on the B-line is not captured
+                bool canBigRochade = !board.IsCapturedAt(new ChessPosition(row, 1)) && !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
 
                 // add the draw to the list
                 if (canBigRochade) { draws.Add(new ChessDraw(board, alliedKing.Position, new ChessPosition(row, 6))); }

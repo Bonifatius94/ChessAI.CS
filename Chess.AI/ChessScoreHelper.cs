@@ -41,7 +41,7 @@ namespace Chess.AI
             double allyScore = board.GetPiecesOfColor(sideToDraw).Select(x => getPieceScore(board, x.Position)).Sum();
             double enemyScore = board.GetPiecesOfColor(sideToDraw.Opponent()).Select(x => getPieceScore(board, x.Position)).Sum();
 
-            // calculate the relative score compared to the opponent
+            // calculate the relative score: the own score compared to the opponent's score
             return allyScore - enemyScore;
         }
 
@@ -176,7 +176,7 @@ namespace Chess.AI
             
             // bonus the more the peasant advances (punish if peasant is not drawn)
             int advanceFactor = (piece.Color == ChessColor.White) ? (position.Row - 4) : (5 - position.Row);
-            score += advanceFactor * 0.2;
+            score += advanceFactor * 0.1;
             
             // bonus for connected peasants / malus for an isolated peasant
             int protectedRow = (piece.Color == ChessColor.White) ? (position.Row + 1) : (position.Row - 1);
