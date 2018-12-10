@@ -96,7 +96,7 @@ namespace Chess.AI
             }
 
             // bonus for rochade (king should be already moved and positioned at the margin of the base row. moreover there should be at least 2 covering pieces in front of the king)
-            if (isKingAtOuterMarginOfBaseRow && isKingCovered) { score += 2; }
+            if (isKingAtOuterMarginOfBaseRow && isKingCovered) { score += 0.9; }
             
             return score;
         }
