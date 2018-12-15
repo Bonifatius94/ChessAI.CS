@@ -18,9 +18,7 @@ namespace Chess.UnitTest
         #endregion Constructor
 
         #region Tests
-
-        private static readonly Random _random = new Random();
-
+        
         [Fact/*(Skip = "test would take too long")*/]
         public void PlaymakingTest()
         {
