@@ -4,7 +4,7 @@ This project offers a cross-plattform chess library for C# .NET Core, implementi
 
 # How To Build
 
-You just need to have Visual Studio 2017 with cross-plattform .NET Core tools installed (Community Edition should be enough) for building the source code. Open the solution with a suitable Visual Studio version, wait until loading finished and hit the build button (either Release or Debug mode as usual). There were no special build settings made, so just visit the Microsoft documentation of Visual Studio for more details.
+You just need to have Visual Studio 2017 with cross-plattform .NET Core tools installed for building the basic source code (Community Edition should be enough). For building the documentation project you need to additionally install sandcastle (see: https://github.com/EWSoftware/SHFB). Open the solution with a suitable Visual Studio version, wait until loading finished and hit the build button (either Release or Debug mode as usual). There were no special build settings made, so just visit the Microsoft documentation of Visual Studio for more details.
 
 # Roadmap
 
