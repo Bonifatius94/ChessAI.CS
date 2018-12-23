@@ -168,11 +168,16 @@ namespace Chess.AI
         /// <returns>a list of chess draws</returns>
         private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsXScores, double maxScore)
         {
-            ChessDrawScore[] window;
+            // eliminate too bad scores, so the deviation is not chosen too widely
+            var notCatastophicDraws = drawsXScores.Where(x => x.Score > -10);
+            drawsXScores = (notCatastophicDraws.Count() > 0) ? notCatastophicDraws : drawsXScores;
 
+            // compute standard deviation of the scores and the average score
             double stdDeviation = drawsXScores.Select(x => x.Score).StandardDeviation();
             double avgScore = drawsXScores.Select(x => x.Score).Average();
+
             double deviationFactor = 0.5;
+            ChessDrawScore[] window;
 
             do
             {
@@ -182,7 +187,7 @@ namespace Chess.AI
                 deviationFactor = deviationFactor * 2;
             }
             while (drawsXScores.Count() > 0 && window.Count() <= 0);
-
+            
             return window;
         }
         
@@ -199,7 +204,7 @@ namespace Chess.AI
             if (draws.Count() == 0) { throw new ArgumentException("draws list is empty"); }
             
             // get the best draw
-            var drawsWithScores = draws.AsParallel().Select(oldScore =>
+            var drawsWithScores = draws./*AsParallel().*/Select(oldScore =>
             {
                 // simulate draw
                 var simDraw = oldScore.Draw;
@@ -207,7 +212,7 @@ namespace Chess.AI
                 simBoard.ApplyDraw(simDraw);
 
                 // prepare the new best draws cache
-                var newCache = new ChessDraw[depth + 1];
+                var newCache = new ChessDraw?[depth + 1];
                 if (oldScore.Cache != null) { Array.Copy(oldScore.Cache, newCache, oldScore.Cache.Length); }
                 newCache[0] = simDraw;
                 
@@ -230,7 +235,7 @@ namespace Chess.AI
 
             public ChessDraw Draw { get; set; }
             public double Score { get; set; }
-            public ChessDraw[] Cache { get; set; }
+            public ChessDraw?[] Cache { get; set; }
 
             #endregion Members
 
@@ -257,10 +262,10 @@ namespace Chess.AI
         /// <param name="beta">The upper bound of the already computed game scores</param>
         /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
-        private double minimax(ChessBoard board, ref ChessDraw[] cache, int depth, double alpha, double beta, bool isMaximizing = true)
+        private double minimax(ChessBoard board, ref ChessDraw?[] cache, int depth, double alpha, double beta, bool isMaximizing = true)
         {
             double score;
-            var precedingEnemyDraw = cache[cache.Length - depth - 2];
+            var precedingEnemyDraw = cache[cache.Length - depth - 2].Value;
             var drawingSide = precedingEnemyDraw.DrawingSide.Opponent();
 
             // recursion anchor: depth == 0
@@ -277,7 +282,7 @@ namespace Chess.AI
 
                 // init score with negative infinity when maximizing / positive infinity when minimizing
                 score = isMaximizing ? double.MinValue : double.MaxValue;
-                ChessDraw bestDraw = cachedDraw;
+                ChessDraw? bestDraw = cachedDraw;
 
                 // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
                 for (int i = 0; i < draws.Length; i++)

@@ -174,6 +174,8 @@ namespace Chess.Lib
             if (nearAlliedTower != null && !alliedKing.Piece.WasMoved && !nearAlliedTower.Value.WasMoved 
                 && smallRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
             {
+                // TODO: fix the bug allowing a big rochade even though another allied chess piece is on the B line
+
                 // make sure that no rochade field can be captured by the opponent and the rochade field on the B-line is not captured
                 bool canBigRochade = !board.IsCapturedAt(new ChessPosition(row, 1)) && !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
 
