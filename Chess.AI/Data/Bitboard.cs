@@ -29,7 +29,7 @@ namespace Chess.AI.Data
             BinaryData = binaryData;
             Length = (bitsCount > 0) ? bitsCount : binaryData.Length * 8;
         }
-
+        
         #endregion Constructor
 
         #region Members
@@ -68,6 +68,8 @@ namespace Chess.AI.Data
         /// <returns></returns>
         public bool IsBitSetAt(int index)
         {
+            // TODO: test logic
+
             // make sure the index is within range
             if (index < 0 || index >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -90,23 +92,28 @@ namespace Chess.AI.Data
         /// <returns>a byte containing the bits (starting with higher value bits)</returns>
         public byte GetBitsAt(int index, int length = 8)
         {
+            // TODO: test logic
+
             // make sure the index is within range
             if (index < 0 || index + length >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
-            byte data = 0;
+            // load data bytes into cache
+            byte upper = BinaryData[index / 8];
+            byte lower = (index / 8 + 1 < BinaryData.Length) ? BinaryData[index / 8] : (byte)0x00;
+            int bitOffset = index % 8;
 
-            // loop through all bits to be read
-            for (int i = 0; i < length; i++)
-            {
-                // check if the bit is set
-                if (IsBitSetAt(index + i))
-                {
-                    // apply the bit to the data byte
-                    byte bitData = (byte)(1 << (7 - index));
-                    data = (byte)(data | bitData);
-                }
-            }
+            // cut the bits from the upper byte
+            byte upperDataMask = (byte)((1 << (8 - bitOffset)) - 1);
+            int lastIndexOfByte = bitOffset + length;
+            if (lastIndexOfByte < ((index / 8 + 1) * 8) - 1) { upperDataMask = (byte)((upperDataMask >> (8 - lastIndexOfByte)) << (8 - lastIndexOfByte)); }
+            byte upperData = (byte)((upper & upperDataMask) << (bitOffset));
 
+            // cut bits from the lower byte (if needed, otherwise set all bits 0 and overwrite them with bitwise OR)
+            byte lowerDataMask = (byte)(0xFF << (16 - bitOffset - length));
+            byte lowerData = (byte)((lower & lowerDataMask) >> (8 - bitOffset));
+
+            // put the data bytes together (with bitwise OR)
+            byte data = (byte)(upperData | lowerData);
             return data;
         }
         
@@ -121,6 +128,8 @@ namespace Chess.AI.Data
         /// <param name="bit">Indicates whether the bit should be set or not.</param>
         public void SetBitAt(int index, bool bit)
         {
+            // TODO: test logic
+
             // make sure the index is within range
             if (index < 0 || index >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -143,19 +152,37 @@ namespace Chess.AI.Data
         /// <param name="length">The length of the data to write.</param>
         public void SetBitsAt(int index, byte newData, int length = 8)
         {
+            // TODO: test logic
+
             // make sure the index is within range
             if (index < 0 || index + length >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
-            // loop through all bits to be set
-            for (int i = 0; i < length; i++)
-            {
-                // determine whether the bit should be set or not
-                byte and = (byte)(1 << (7 - i));
-                bool bit = (newData & and) > 0;
+            // compute initial data byte index containing the first bits to be written
+            int byteIndex = index / 8;
+            int i = 0;
 
-                // set the bit accordingly
-                SetBitAt(index + i, bit);
+            // loop through all data bytes to be written (max 2 bytes)
+            do
+            {
+                // init data cache with the old data byte
+                byte dataCache = BinaryData[byteIndex];
+
+                // loop through all bits of the binary data byte (quit loop when end of data byte is reached)
+                for (; i < length && index < (byteIndex + 1) * 8; i++, index++)
+                {
+                    // determine whether the bit should be set or not
+                    byte bitOfInputByte = (byte)(1 << (7 - i));
+                    bool isBitSet = (newData & bitOfInputByte) > 0;
+
+                    // set the bit accordingly
+                    byte bitOfDataByte = (byte)(1 << (7 - index % 8));
+                    dataCache = (byte)((dataCache & ~bitOfDataByte) | (isBitSet ? 0xFF : 0x00) & bitOfDataByte);
+                }
+
+                // apply the bits to the binary data array
+                BinaryData[byteIndex++] = dataCache;
             }
+            while (i < length);
         }
 
         #endregion Write
@@ -179,7 +206,8 @@ namespace Chess.AI.Data
         {
             return GetEnumerator();
         }
-        
+
+        // TODO: test logic
         private class BitboardEnumerator : IEnumerator<bool>
         {
             #region Constructor
