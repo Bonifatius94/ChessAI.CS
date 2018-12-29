@@ -65,7 +65,7 @@ namespace Chess.AI.Data
         /// Determine whether the bit at the given index is set.
         /// </summary>
         /// <param name="index">The index of the bit.</param>
-        /// <returns></returns>
+        /// <returns>a boolean indicating whether the bit is set.</returns>
         public bool IsBitSetAt(int index)
         {
             // TODO: test logic
@@ -108,7 +108,7 @@ namespace Chess.AI.Data
             if (lastIndexOfByte < ((index / 8 + 1) * 8) - 1) { upperDataMask = (byte)((upperDataMask >> (8 - lastIndexOfByte)) << (8 - lastIndexOfByte)); }
             byte upperData = (byte)((upper & upperDataMask) << (bitOffset));
 
-            // cut bits from the lower byte (if needed, otherwise set all bits 0 and overwrite them with bitwise OR)
+            // cut bits from the lower byte (if needed, otherwise set all bits 0)
             byte lowerDataMask = (byte)(0xFF << (16 - bitOffset - length));
             byte lowerData = (byte)((lower & lowerDataMask) >> (8 - bitOffset));
 
@@ -125,7 +125,7 @@ namespace Chess.AI.Data
         /// Set a single bit of the bitboard at the given index.
         /// </summary>
         /// <param name="index">The index of the bit.</param>
-        /// <param name="bit">Indicates whether the bit should be set or not.</param>
+        /// <param name="bit">Indicates whether the bit should be set.</param>
         public void SetBitAt(int index, bool bit)
         {
             // TODO: test logic
@@ -176,7 +176,7 @@ namespace Chess.AI.Data
 
                     // set the bit accordingly
                     byte bitOfDataByte = (byte)(1 << (7 - index % 8));
-                    dataCache = (byte)((dataCache & ~bitOfDataByte) | (isBitSet ? 0xFF : 0x00) & bitOfDataByte);
+                    dataCache = (byte)((dataCache & ~bitOfDataByte) | ((isBitSet ? 0xFF : 0x00) & bitOfDataByte));
                 }
 
                 // apply the bits to the binary data array
@@ -222,9 +222,19 @@ namespace Chess.AI.Data
             private const int START_INDEX = -1;
             private int _index = START_INDEX;
             private Bitboard _data;
+            private byte _cache = 0;
+            
+            public bool Current
+            {
+                get
+                {
+                    // retrieve the bit at the current index (from cached data byte)
+                    byte and = (byte)(1 << (7 - _index % 8));
+                    bool bit = ((_cache & and) > 0);
+                    return bit;
+                }
+            }
 
-            // retrieve the bit at the current index
-            public bool Current { get { return _data.IsBitSetAt(_index); } }
             object IEnumerator.Current { get { return Current; } }
 
             #endregion Members
@@ -238,7 +248,12 @@ namespace Chess.AI.Data
             public bool MoveNext()
             {
                 // increment index and check whether it is still within bitboard range
-                return ++_index < _data.Length;
+                bool canMoveNext = ++_index < _data.Length;
+
+                // load next byte into cache
+                if (_index % 8 == 0) { _cache = _data.BinaryData[_index / 8]; }
+                
+                return canMoveNext;
             }
 
             public void Reset()
@@ -262,12 +277,24 @@ namespace Chess.AI.Data
         {
             // make sure the index is within range
             if (index < 0 || index + length >= Length) { throw new ArgumentException("index out of bitboard range"); }
+            
+            // init data array
+            var data = new byte[length / 8 + ((length % 8 > 0) ? 1 : 0)];
+            int i;
+
+            // copy whole data bytes until last byte
+            for (i = 0; i < length - 8; i += 8)
+            {
+                // determine whether the bit is set in the original board
+                byte dataByte = GetBitsAt(index + i);
+                data[i / 8] = dataByte;
+            }
 
             // create a new bitboard with the given length
-            var board = new Bitboard(length);
+            var board = new Bitboard(data, length);
 
-            // loop through all bits
-            for (int i = 0; i < length; i++)
+            // copy the last bits
+            for (; i < length; i++)
             {
                 // determine whether the bit is set in the original board and apply it to the new board
                 bool bit = IsBitSetAt(index + i);
