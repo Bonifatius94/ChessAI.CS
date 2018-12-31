@@ -9,7 +9,7 @@ namespace Chess.AI.Data
     /// <summary>
     /// Provide bitwise operations for a concatenation of data bits.
     /// </summary>
-    public struct Bitboard : IEnumerable<bool>
+    public struct Bitboard : IEnumerable<bool>, ICloneable
     {
         #region Constructor
 
@@ -26,7 +26,11 @@ namespace Chess.AI.Data
         /// <param name="bitsCount">The exact length of the bitboard. (default: binary data array length * 8)</param>
         public Bitboard(byte[] binaryData, int bitsCount = 0)
         {
-            BinaryData = binaryData;
+            // copy the binary data
+            BinaryData = new byte[binaryData.Length];
+            Array.Copy(binaryData, BinaryData, binaryData.Length);
+
+            // determine the bitboard length
             Length = (bitsCount > 0) ? bitsCount : binaryData.Length * 8;
         }
         
@@ -99,13 +103,13 @@ namespace Chess.AI.Data
 
             // load data bytes into cache
             byte upper = BinaryData[index / 8];
-            byte lower = (index / 8 + 1 < BinaryData.Length) ? BinaryData[index / 8] : (byte)0x00;
+            byte lower = (index / 8 + 1 < BinaryData.Length) ? BinaryData[index / 8 + 1] : (byte)0x00;
             int bitOffset = index % 8;
 
             // cut the bits from the upper byte
             byte upperDataMask = (byte)((1 << (8 - bitOffset)) - 1);
-            int lastIndexOfByte = bitOffset + length;
-            if (lastIndexOfByte < ((index / 8 + 1) * 8) - 1) { upperDataMask = (byte)((upperDataMask >> (8 - lastIndexOfByte)) << (8 - lastIndexOfByte)); }
+            int lastIndexOfByte = bitOffset + length - 1;
+            if (lastIndexOfByte < 7) { upperDataMask = (byte)((upperDataMask >> (7 - lastIndexOfByte)) << (7 - lastIndexOfByte)); }
             byte upperData = (byte)((upper & upperDataMask) << (bitOffset));
 
             // cut bits from the lower byte (if needed, otherwise set all bits 0)
@@ -328,7 +332,16 @@ namespace Chess.AI.Data
 
             return board;
         }
-        
+
+        /// <summary>
+        /// Create a deep copy of the current bitboard instance.
+        /// </summary>
+        /// <returns>a deep copy of the bitboard</returns>
+        public object Clone()
+        {
+            return new Bitboard(BinaryData, Length);
+        }
+
         #endregion Extensions
 
         #endregion Methods

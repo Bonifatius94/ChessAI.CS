@@ -203,7 +203,7 @@ namespace Chess.AI.Data
 
         private static char getHexChar(byte data)
         {
-            return (char)(((data < 10) ? '0' : 'A') + data);
+            return (char)((data < 10) ? ('0' + data) : ('A' + data - 10));
         }
 
         #endregion Helpers
