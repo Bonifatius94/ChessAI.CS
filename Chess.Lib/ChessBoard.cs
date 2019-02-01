@@ -229,7 +229,33 @@ namespace Chess.Lib
             UpdatePieceAt(draw.OldPosition, null, false);
             UpdatePieceAt(draw.NewPosition, drawingPiece, true);
         }
-        
+
+        // TODO: implement equals() and gethashcode() properly
+
+        // problem: hash code would require 40 byte (5 bit per chess piece * 64 positions), but int has only 4 byte (32-bit int)
+        //       => hash the content of the chess pieces array and dump it to 4 byte
+        //       => make sure that similar chess boards have unique hash codes
+
+        ///// <summary>
+        ///// Check whether the two objects are equal.
+        ///// </summary>
+        ///// <param name="obj">the instance to be compared to 'this'</param>
+        ///// <returns>a boolean indicating whether the objects are equal</returns>
+        //public override bool Equals(object obj)
+        //{
+        //    return (obj != null && obj.GetType() == typeof(ChessBoard)) && (((ChessBoard)obj).GetHashCode() == GetHashCode());
+        //}
+
+        ///// <summary>
+        ///// Retrieve a unique hash code representing a chess piece and its position.
+        ///// </summary>
+        ///// <returns>a unique hash code representing a chess piece and its position</returns>
+        //public override int GetHashCode()
+        //{
+        //    // combine unique hash codes of chess piece (5 bits) and chess position (6 bits)
+        //    return (Piece.GetHashCode() << 6) | Position.GetHashCode();
+        //}
+
         /// <summary>
         /// Transform the current game situation of the chess board into a text format.
         /// 
