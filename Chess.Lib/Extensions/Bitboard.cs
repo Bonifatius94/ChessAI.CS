@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chess.AI.Data
+namespace Chess.Lib.Extensions
 {
     /// <summary>
     /// Provide bitwise operations for a concatenation of data bits.

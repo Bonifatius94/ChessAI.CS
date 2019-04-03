@@ -1,8 +1,7 @@
 ﻿using Chess.AI.Data;
+using Chess.Lib.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 

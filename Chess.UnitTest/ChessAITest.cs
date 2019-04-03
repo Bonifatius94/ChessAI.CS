@@ -28,7 +28,7 @@ namespace Chess.UnitTest
                 var difficulty = (ChessDifficultyLevel)difficultyValue;
 
                 var board = ChessBoard.StartFormation;
-                var draw = new ChessDrawAI().GetNextDraw(board, null, difficulty);
+                var draw = new MinimaxChessDrawAI().GetNextDraw(board, null, difficulty);
 
                 output.WriteLine(draw.ToString());
             }
@@ -129,7 +129,7 @@ namespace Chess.UnitTest
             do
             {
                 // select the best draw considering the next couple of draws
-                var draw = new ChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, level);
+                var draw = new MinimaxChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, level);
 
                 // apply the draw to the chess board and check if the game is over
                 game.ApplyDraw(draw);

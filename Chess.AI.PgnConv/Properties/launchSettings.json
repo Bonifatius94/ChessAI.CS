@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Chess.AI.PgnConv": {
+      "commandName": "Project",
+      "commandLineArgs": "Test\\ficsgamesdb_search_56516.pgn out.py"
+    }
+  }
+}

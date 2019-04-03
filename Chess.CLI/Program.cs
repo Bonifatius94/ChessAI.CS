@@ -11,7 +11,7 @@ namespace Chess.CLI
     {
         #region Main
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var gameWatch = new Stopwatch();
             gameWatch.Start();
@@ -29,7 +29,7 @@ namespace Chess.CLI
                     
                     // select the best draw considering the next couple of draws
                     drawWatch.Start();
-                    var draw = new ChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
+                    var draw = new MinimaxChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
                     drawWatch.Stop();
 
                     // apply the draw to the chess board and  check if the game is over

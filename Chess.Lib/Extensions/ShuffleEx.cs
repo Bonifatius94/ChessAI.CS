@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Chess.Lib
+namespace Chess.Lib.Extensions
 {
     /// <summary>
     /// This is an extension class that provides linear, equal distributed shuffle and random selection of elements from a given list. 

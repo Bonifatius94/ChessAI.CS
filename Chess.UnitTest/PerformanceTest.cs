@@ -53,7 +53,7 @@ namespace Chess.UnitTest
                 do
                 {
                     // select the best draw considering the next couple of draws
-                    var draw = new ChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
+                    var draw = new MinimaxChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
 
                     // apply the draw to the chess board and check if the game is over
                     game.ApplyDraw(draw);

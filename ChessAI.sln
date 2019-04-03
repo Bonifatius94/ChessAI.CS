@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.WebApi.Client", "Ches
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.WebApi.Server.Interface", "Chess.WebApi.Server.Interface\Chess.WebApi.Server.Interface.csproj", "{8EE357BB-1D70-4263-99B1-A351B8256C77}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.AI.PgnConv", "Chess.AI.PgnConv\Chess.AI.PgnConv.csproj", "{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{8EE357BB-1D70-4263-99B1-A351B8256C77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EE357BB-1D70-4263-99B1-A351B8256C77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EE357BB-1D70-4263-99B1-A351B8256C77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
