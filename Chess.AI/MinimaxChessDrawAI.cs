@@ -52,7 +52,7 @@ namespace Chess.AI
         public double RateDraw(ChessBoard board, ChessDraw draw)
         {
             // TODO: implement rating function
-            throw new NotImplementedException();
+            return 0;
         }
 
         /*

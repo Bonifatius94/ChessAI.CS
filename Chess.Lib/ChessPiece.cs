@@ -44,14 +44,14 @@ namespace Chess.Lib
     public enum ChessColor
     {
         /// <summary>
-        /// Representing black chess pieces, black chess fields, etc.
-        /// </summary>
-        Black = 0,
-
-        /// <summary>
         /// Representing white chess pieces, white chess fields, etc.
         /// </summary>
-        White = 1
+        White = 0,
+
+        /// <summary>
+        /// Representing black chess pieces, black chess fields, etc.
+        /// </summary>
+        Black = 1,
     }
     
     /// <summary>
@@ -231,7 +231,7 @@ namespace Chess.Lib
                 case ChessPieceType.Queen:   return 'Q';
                 case ChessPieceType.Rook:    return 'R';
                 case ChessPieceType.Bishop:  return 'B';
-                case ChessPieceType.Knight:  return 'H'; // 'H' like horse (because 'K' is already taken by king)
+                case ChessPieceType.Knight:  return 'N';
                 case ChessPieceType.Peasant: return 'P';
                 default: throw new ArgumentException("unknown chess piece type detected!");
             }

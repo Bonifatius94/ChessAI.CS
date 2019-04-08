@@ -7,7 +7,7 @@ namespace Chess.Lib
     /// <summary>
     /// This class represents a chess game including a chess board and a chess draws history.
     /// </summary>
-    public class ChessGame
+    public class ChessGame : ICloneable
     {
         #region Constructor
 
@@ -158,6 +158,17 @@ namespace Chess.Lib
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Create a deep copy of this instance.
+        /// </summary>
+        /// <returns>a deep copy of this instance</returns>
+        public object Clone()
+        {
+            var game = new ChessGame();
+            AllDraws.ForEach(draw => game.ApplyDraw(draw));
+            return game;
         }
 
         #endregion Methods

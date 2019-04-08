@@ -51,6 +51,8 @@ namespace Chess.AI.PgnConv.TensorflowExport
                 // apply the draw to the chess board
                 board.ApplyDraw(draw);
 
+                // TODO: fix formatting by forcing .0 ending for each double value
+
                 // get the chess board data
                 var boardAsIntArray = convertBytesToInt32Array(board.ToBitboard().BinaryData);
                 var boardData = boardAsIntArray.Select(x => ((double)x).ToString()).Aggregate((x, y) => $"{ x }, { y }");
@@ -73,20 +75,20 @@ namespace Chess.AI.PgnConv.TensorflowExport
             int[] data = new int[length];
 
             // loop through input byte array (4 byte steps)
-            for (int i = 0; i < bytes.Length; i += 4)
+            for (int i = 0; i < length; i++)
             {
                 // set all bits to zero
-                int temp = 0;
+                uint temp = 0;
 
                 // apply the bits from the byte array
                 for (int j = 0; j < 4; j++)
                 {
                     temp = temp << 8;
-                    temp = (i + j < bytes.Length) ? temp & bytes[i + j] : temp;
+                    temp = (i * 4 + j < bytes.Length) ? temp | bytes[i * 4 + j] : temp;
                 }
 
                 // apply the 4 bytes (as int32) to the output array
-                data[i] = temp;
+                data[i] = (int)temp;
             }
 
             return data;

@@ -33,31 +33,11 @@ namespace Chess.AI.PgnConv.TensorflowExport
 
         private IEnumerable<string> extractGameLogs(string content)
         {
-            //int offset = 0;
-            //var logs = new List<string>();
+            // remove \r characters for multi-plattform compatibility
+            content = content.Replace("\r", "");
 
-            //do
-            //{
-            //    // determine the start and end of the next log
-            //    int logStart = content.IndexOf("\n1.", offset) + 1;
-            //    int logEnd = content.IndexOf("\r\n", logStart);
-
-            //    logEnd = logEnd > 0 ? logEnd : content.Length;
-            //    offset = logEnd;
-
-            //    try
-            //    {
-            //        // extract the log and apply it to the output list
-            //        string s = content.Substring(logStart, logEnd);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Console.WriteLine($"{ offset } / { content.Length }, { logStart } - { logEnd }");
-            //    }
-            //}
-            //while (offset < content.Length);
-            
-            var logs = content.Split("\n1.").Select(x => "1." + x).ToList();
+            // extract the lines containing the game log data
+            var logs = content.Split("\n1.").Select(x => "1." + x).Select(x => x.Substring(0, x.IndexOf("\n"))).ToList();
             logs.RemoveAt(0);
 
             return logs;
@@ -70,72 +50,149 @@ namespace Chess.AI.PgnConv.TensorflowExport
             int i = 0;
             int nextComment = log.IndexOf('{');
 
+            // parse all draws of the game log
             while (i < log.Length)
             {
+                // determine the start and end of the draw data to be parsed
                 int start = log.IndexOf('.', i) + 1;
-                int end = log.IndexOf('.', start);
+                int end = log.IndexOf('.', start) - 1;
 
-                // get text of the draw
-                string drawText = ((end > 0) ? log.Substring(start, end) : log.Substring(start)).Trim();
+                // get text of the draw data (usually 1 or 2 draws)
+                string drawText = ((end > 0) ? log.Substring(start, end - start) : log.Substring(start)).Trim();
 
-                // ignore dots in comments
+                // ignore comments
                 if (end > nextComment)
                 {
                     int commentEnd = log.IndexOf('}', nextComment);
-                    drawText = log.Substring(start, nextComment).Trim() + log.Substring(commentEnd + 1, log.IndexOf('.', commentEnd));
+                    drawText = log.Substring(start, nextComment - start).Trim() + log.Substring(commentEnd + 1, log.IndexOf('.', commentEnd) - commentEnd - 1);
+                    nextComment = log.IndexOf('{', commentEnd);
                 }
 
-                // split draw text into parts separated by white spaces (first two parts contain the positions)
-                var drawParts = 
-                    drawText.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Where(x => x.Length >= 2).Select(x => x.Substring(x.Length - 2, 2)).ToArray();
-
-                // parse white and black draw
-                var whiteDraw = parseDraw(drawParts[0]);
-                var blackDraw = parseDraw(drawParts[1]);
+                // parse draws of this round (each white and black side)
+                var draws = parseRound(game, drawText);
                 
                 // apply white and black draw to the chess board
-                game.ApplyDraw(whiteDraw);
-                game.ApplyDraw(blackDraw);
+                foreach (var draw in draws) { game.ApplyDraw(draw); }
+
+                // stop if there was a parsing error / no draw content is left to be parsed
+                if (draws?.Count() == 0) { break; }
+
+                // update index
+                i = end;
             }
 
             return game;
         }
 
-        private ChessDraw parseDraw(ChessGame game, string content)
+        private IEnumerable<ChessDraw> parseRound(ChessGame game, string content)
         {
-            ChessPosition oldPos;
-            ChessPosition newPos;
+            var gameCopy = game.Clone() as ChessGame;
+            var draws = new List<ChessDraw>();
 
-            var alliedDraws = game.GetDraws(true);
+            // split draw text into parts separated by white spaces (first two parts contain the positions)
+            var drawParts = content.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (content.Length == 2)
+            if (drawParts.Length >= 1)
             {
-                // only new position given, no metadata
-                newPos = new ChessPosition(content);
-                oldPos = alliedDraws.Where(x => x.NewPosition == newPos).First().OldPosition;
+                // parse white player's draw
+                ChessDraw? whiteDraw = parseDraw(gameCopy, drawParts[0]);
+
+                if (whiteDraw != null && drawParts.Length >= 2)
+                {
+                    // apply white player's draw to the chess game copy
+                    gameCopy.ApplyDraw(whiteDraw.Value);
+                    draws.Add(whiteDraw.Value);
+
+                    // parse black player's draw
+                    ChessDraw? blackDraw = parseDraw(gameCopy, drawParts[1]);
+                    if (blackDraw != null) { draws.Add(blackDraw.Value); }
+                }
             }
             else
             {
-                // evaluate a draw with metadata
-
-                // evaluate first char
-                if (char.IsUpper(content[0]))
-                {
-                    content = content.Substring(1, content.Length);
-
-                }
+                Console.WriteLine($"WARNING: content found that could not be parsed (\"{ content }\")! aborting parsing ...");
             }
-            
-            var oldPos = new ChessPosition();
 
-            // TODO: take care of peasant promotion type
-            var draw = new ChessDraw(game.Board, oldPos, newPos);
+            return draws;
         }
 
-        private ChessPieceType parseType(string )
-        {
+        private const string LITTLE_ROCHADE = "O-O";
+        //private const string BIG_ROCHADE = "O-O-O";
 
+        private ChessDraw? parseDraw(ChessGame game, string content)
+        {
+            return content.Contains(LITTLE_ROCHADE) ? parseRochade(game, content) : parseMetadataDraw(game, content);
+        }
+
+        private ChessDraw parseRochade(ChessGame game, string content)
+        {
+            int row = (game.SideToDraw == ChessColor.White) ? 0 : 7;
+            int column = content.Equals(LITTLE_ROCHADE) ? 6 : 2;
+
+            var oldPos = new ChessPosition(row, 4);
+            var newPos = new ChessPosition(row, column);
+
+            var draw = new ChessDraw(game.Board, oldPos, newPos);
+            return draw;
+        }
+
+        private ChessDraw? parseMetadataDraw(ChessGame game, string content)
+        {
+            // remove 'x' markup (flag meaning: enemy piece taken)
+            content = content.Replace("x", "");
+
+            // remove '+' markup (flag meaning: enemy king checked)
+            content = content.Replace("+", "");
+
+            // parse drawing piece type
+            ChessPieceType type = (char.IsUpper(content[0])) ? parseType(content[0]) : ChessPieceType.Peasant;
+            content = char.IsUpper(content[0]) ? content.Substring(1, content.Length - 1) : content;
+
+            // parse promotion piece type
+            ChessPieceType? promotionType = (char.IsUpper(content[content.Length - 1])) ? (ChessPieceType?)parseType(content[content.Length - 1]) : null;
+            content = char.IsUpper(content[content.Length - 1]) ? content.Substring(0, content.Length - 1) : content;
+
+            // parse row / column hints
+            int hintRow;
+            hintRow = (content.Length == 3 && int.TryParse(content.Substring(0, 1), out hintRow)) ? hintRow : - 1;
+            int hintColumn = (content.Length == 3 && content[0] >= 'a' && content[0] <= 'h') ? (content[0] - 'a') : -1;
+            content = (content.Length == 3) ? content.Substring(1, content.Length - 1) : content;
+
+            // make sure that the content has only 2 characters left
+            if (content.Length > 2) { throw new NotImplementedException($"unknown pgn format detected! { content }"); }
+
+            // determine the old and new position of the drawing chess piece
+            var newPos = new ChessPosition(content);
+
+            // compute all possible allied draws
+            var alliedDraws = game.GetDraws(true);
+
+            // find the draw instance in the list of all possible draws
+            var draw = alliedDraws
+                .Where(x => 
+                    x.DrawingPieceType == type && x.NewPosition == newPos 
+                    && (hintRow == -1 || x.OldPosition.Row == hintRow) && (hintColumn == -1 || x.OldPosition.Column == hintColumn)
+                ).First();
+
+            return draw;
+        }
+
+        private ChessPieceType parseType(char c)
+        {
+            ChessPieceType type;
+
+            switch (c)
+            {
+                case 'K': type = ChessPieceType.King;    break;
+                case 'Q': type = ChessPieceType.Queen;   break;
+                case 'R': type = ChessPieceType.Rook;    break;
+                case 'B': type = ChessPieceType.Bishop;  break;
+                case 'N': type = ChessPieceType.Knight;  break;
+                case 'P': type = ChessPieceType.Peasant; break;
+                default: throw new NotImplementedException($"unknown chess piece type detected! { c }");
+            }
+
+            return type;
         }
 
         #endregion Methods

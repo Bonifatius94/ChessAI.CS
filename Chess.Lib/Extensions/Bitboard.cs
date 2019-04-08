@@ -99,7 +99,7 @@ namespace Chess.Lib.Extensions
             // TODO: test logic
 
             // make sure the index is within range
-            if (index < 0 || index + length >= Length) { throw new ArgumentException("index out of bitboard range"); }
+            if (index < 0 || index + length > Length) { throw new ArgumentException("index out of bitboard range"); }
 
             // load data bytes into cache
             byte upper = BinaryData[index / 8];
@@ -159,7 +159,7 @@ namespace Chess.Lib.Extensions
             // TODO: test logic
 
             // make sure the index is within range
-            if (index < 0 || index + length >= Length) { throw new ArgumentException("index out of bitboard range"); }
+            if (index < 0 || index + length > Length) { throw new ArgumentException("index out of bitboard range"); }
 
             // compute initial data byte index containing the first bits to be written
             int byteIndex = index / 8;
