@@ -26,7 +26,7 @@ namespace Chess.AI.PgnConv.TensorflowExport
             var logs = extractGameLogs(content);
 
             // parse raw text into chess game format
-            var games = logs./*AsParallel().*/Select(log => parseGameLog(log)).ToList();
+            var games = logs.AsParallel().Select(log => parseGameLog(log)).ToList();
 
             return games;
         }
@@ -46,6 +46,7 @@ namespace Chess.AI.PgnConv.TensorflowExport
         private ChessGame parseGameLog(string log)
         {
             var game = new ChessGame();
+            log = log.Trim();
 
             int i = 0;
             int nextComment = log.IndexOf('{');
@@ -55,16 +56,17 @@ namespace Chess.AI.PgnConv.TensorflowExport
             {
                 // determine the start and end of the draw data to be parsed
                 int start = log.IndexOf('.', i) + 1;
-                int end = log.IndexOf('.', start) - 1;
+                int end = (log.IndexOf('.', start) > 0) ? (log.IndexOf('.', start) - 1) : (log.Length);
 
                 // get text of the draw data (usually 1 or 2 draws)
                 string drawText = ((end > 0) ? log.Substring(start, end - start) : log.Substring(start)).Trim();
 
                 // ignore comments
-                if (end > nextComment)
+                if (nextComment > 0 && end > nextComment)
                 {
                     int commentEnd = log.IndexOf('}', nextComment);
-                    drawText = log.Substring(start, nextComment - start).Trim() + log.Substring(commentEnd + 1, log.IndexOf('.', commentEnd) - commentEnd - 1);
+                    end = (log.IndexOf('.', commentEnd) > 0) ? (log.IndexOf('.', commentEnd) - 1) : (log.Length);
+                    drawText = log.Substring(start, nextComment - start).Trim() + log.Substring(commentEnd + 1, end - commentEnd - 1);
                     nextComment = log.IndexOf('{', commentEnd);
                 }
 
@@ -108,10 +110,6 @@ namespace Chess.AI.PgnConv.TensorflowExport
                     if (blackDraw != null) { draws.Add(blackDraw.Value); }
                 }
             }
-            else
-            {
-                Console.WriteLine($"WARNING: content found that could not be parsed (\"{ content }\")! aborting parsing ...");
-            }
 
             return draws;
         }
@@ -121,10 +119,10 @@ namespace Chess.AI.PgnConv.TensorflowExport
 
         private ChessDraw? parseDraw(ChessGame game, string content)
         {
-            return content.Contains(LITTLE_ROCHADE) ? parseRochade(game, content) : parseMetadataDraw(game, content);
+            return content.Contains(LITTLE_ROCHADE) ? parseRochade(game, content) as ChessDraw? : parseMetadataDraw(game, content);
         }
 
-        private ChessDraw parseRochade(ChessGame game, string content)
+        private ChessDraw? parseRochade(ChessGame game, string content)
         {
             int row = (game.SideToDraw == ChessColor.White) ? 0 : 7;
             int column = content.Equals(LITTLE_ROCHADE) ? 6 : 2;
@@ -132,47 +130,59 @@ namespace Chess.AI.PgnConv.TensorflowExport
             var oldPos = new ChessPosition(row, 4);
             var newPos = new ChessPosition(row, column);
 
-            var draw = new ChessDraw(game.Board, oldPos, newPos);
+            ChessDraw? draw = new ChessDraw(game.Board, oldPos, newPos);
             return draw;
         }
 
         private ChessDraw? parseMetadataDraw(ChessGame game, string content)
         {
-            // remove 'x' markup (flag meaning: enemy piece taken)
-            content = content.Replace("x", "");
+            ChessDraw? draw = null;
+            string original = content;
 
-            // remove '+' markup (flag meaning: enemy king checked)
-            content = content.Replace("+", "");
+            try
+            {
+                // remove not significant markups ('x', '+', '#', '=')
+                content = content.Replace("x", "");
+                content = content.Replace("+", "");
+                content = content.Replace("#", "");
+                content = content.Replace("=", "");
 
-            // parse drawing piece type
-            ChessPieceType type = (char.IsUpper(content[0])) ? parseType(content[0]) : ChessPieceType.Peasant;
-            content = char.IsUpper(content[0]) ? content.Substring(1, content.Length - 1) : content;
+                // parse drawing piece type
+                ChessPieceType type = (char.IsUpper(content[0])) ? parseType(content[0]) : ChessPieceType.Peasant;
+                content = char.IsUpper(content[0]) ? content.Substring(1, content.Length - 1) : content;
 
-            // parse promotion piece type
-            ChessPieceType? promotionType = (char.IsUpper(content[content.Length - 1])) ? (ChessPieceType?)parseType(content[content.Length - 1]) : null;
-            content = char.IsUpper(content[content.Length - 1]) ? content.Substring(0, content.Length - 1) : content;
+                // parse promotion piece type
+                ChessPieceType? promotionType = (char.IsUpper(content[content.Length - 1])) ? (ChessPieceType?)parseType(content[content.Length - 1]) : null;
+                content = char.IsUpper(content[content.Length - 1]) ? content.Substring(0, content.Length - 1) : content;
 
-            // parse row / column hints
-            int hintRow;
-            hintRow = (content.Length == 3 && int.TryParse(content.Substring(0, 1), out hintRow)) ? hintRow : - 1;
-            int hintColumn = (content.Length == 3 && content[0] >= 'a' && content[0] <= 'h') ? (content[0] - 'a') : -1;
-            content = (content.Length == 3) ? content.Substring(1, content.Length - 1) : content;
+                // parse row / column hints
+                int hintRow;
+                hintRow = (content.Length == 3 && int.TryParse(content.Substring(0, 1), out hintRow)) ? (hintRow - 1) : -1;
+                int hintColumn = (content.Length == 3 && content[0] >= 'a' && content[0] <= 'h') ? (content[0] - 'a') : -1;
+                content = (content.Length == 3) ? content.Substring(1, content.Length - 1) : content;
 
-            // make sure that the content has only 2 characters left
-            if (content.Length > 2) { throw new NotImplementedException($"unknown pgn format detected! { content }"); }
+                // make sure that the content has only 2 characters left
+                if (content.Length > 2 || !ChessPosition.AreCoordsValid(content)) { return null; }
 
-            // determine the old and new position of the drawing chess piece
-            var newPos = new ChessPosition(content);
+                // determine the old and new position of the drawing chess piece
+                var newPos = new ChessPosition(content);
 
-            // compute all possible allied draws
-            var alliedDraws = game.GetDraws(true);
+                // compute all possible allied draws
+                var alliedDraws = game.GetDraws(true);
 
-            // find the draw instance in the list of all possible draws
-            var draw = alliedDraws
-                .Where(x => 
-                    x.DrawingPieceType == type && x.NewPosition == newPos 
-                    && (hintRow == -1 || x.OldPosition.Row == hintRow) && (hintColumn == -1 || x.OldPosition.Column == hintColumn)
-                ).First();
+                // find the draw instance in the list of all possible draws
+                draw = alliedDraws
+                    .Where(x =>
+                        x.DrawingPieceType == type && x.NewPosition == newPos && x.PeasantPromotionPieceType == promotionType
+                        && (hintRow == -1 || x.OldPosition.Row == hintRow) && (hintColumn == -1 || x.OldPosition.Column == hintColumn)
+                    ).First();
+
+                // TODO: implement parser logic for en-passant
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"unable to parse \"{ original }\"\n{ game.Board.ToString() }\n");
+            }
 
             return draw;
         }

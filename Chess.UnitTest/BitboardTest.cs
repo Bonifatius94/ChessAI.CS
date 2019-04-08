@@ -22,10 +22,10 @@ namespace Chess.UnitTest
         private static int multipleBitsRead = 0;
         private static int multipleBitsWritten = 0;
 
-        private static readonly Stopwatch stopwatchReadSingleBit = new Stopwatch();
-        private static readonly Stopwatch stopwatchWriteSingleBit = new Stopwatch();
-        private static readonly Stopwatch stopwatchReadMultipleBits = new Stopwatch();
-        private static readonly Stopwatch stopwatchWriteSMultipleBits = new Stopwatch();
+        //private static readonly Stopwatch stopwatchReadSingleBit = new Stopwatch();
+        //private static readonly Stopwatch stopwatchWriteSingleBit = new Stopwatch();
+        //private static readonly Stopwatch stopwatchReadMultipleBits = new Stopwatch();
+        //private static readonly Stopwatch stopwatchWriteSMultipleBits = new Stopwatch();
 
         #endregion Stopwatch
 
@@ -197,7 +197,7 @@ namespace Chess.UnitTest
             // retrieving bits failed! binary data: 095A, j = 0, n = 7, length = 16 => expected result = 0x08
             executeEdgeCaseTest(new byte[] { 0x09, 0x5A }, 16, 0, 7, 0x08);
 
-            // retrieving bits failed! binary data: 19FE4AE0D43A91B00054, j = 9, n = 8, length = 80 => expected result = 
+            // retrieving bits failed! binary data: 19FE4AE0D43A91B00054, j = 9, n = 8, length = 80 => expected result = 0xFC
             executeEdgeCaseTest(new byte[] { 0x19, 0xFE, 0x4A, 0xE0, 0xD4, 0x3A, 0x91, 0xB0, 0x00, 0x54 }, 80, 9, 8, 0xFC);
         }
 
@@ -215,72 +215,72 @@ namespace Chess.UnitTest
 
         #region Helpers
 
-        private bool readSingleBitFromBitboard(Bitboard bitboard, int index)
-        {
-            // start stopwatch
-            stopwatchReadSingleBit.Start();
+        //private bool readSingleBitFromBitboard(Bitboard bitboard, int index)
+        //{
+        //    // start stopwatch
+        //    stopwatchReadSingleBit.Start();
 
-            // get bit from bitboard
-            bool bit = bitboard.IsBitSetAt(index);
+        //    // get bit from bitboard
+        //    bool bit = bitboard.IsBitSetAt(index);
 
-            // stop stopwatch and increment the operations counter
-            stopwatchReadSingleBit.Stop();
-            singleBitsRead++;
+        //    // stop stopwatch and increment the operations counter
+        //    stopwatchReadSingleBit.Stop();
+        //    singleBitsRead++;
 
-            return bit;
-        }
+        //    return bit;
+        //}
 
-        private void writeSingleBitToBitboard(Bitboard bitboard, int index, bool bit)
-        {
-            // start stopwatch
-            stopwatchWriteSingleBit.Start();
+        //private void writeSingleBitToBitboard(Bitboard bitboard, int index, bool bit)
+        //{
+        //    // start stopwatch
+        //    stopwatchWriteSingleBit.Start();
 
-            // apply the bit to the bitboard
-            bitboard.SetBitAt(index, bit);
+        //    // apply the bit to the bitboard
+        //    bitboard.SetBitAt(index, bit);
 
-            // stop stopwatch and increment the operations counter
-            stopwatchWriteSingleBit.Stop();
-            singleBitsWritten++;
-        }
+        //    // stop stopwatch and increment the operations counter
+        //    stopwatchWriteSingleBit.Stop();
+        //    singleBitsWritten++;
+        //}
 
-        private byte readMultipleBitsFromBitboard(Bitboard bitboard, int index, int length)
-        {
-            // start stopwatch
-            stopwatchReadMultipleBits.Start();
+        //private byte readMultipleBitsFromBitboard(Bitboard bitboard, int index, int length)
+        //{
+        //    // start stopwatch
+        //    stopwatchReadMultipleBits.Start();
 
-            // get bits from bitboard
-            byte bits = bitboard.GetBitsAt(index, length);
+        //    // get bits from bitboard
+        //    byte bits = bitboard.GetBitsAt(index, length);
 
-            // stop stopwatch and increment the operations counter
-            stopwatchReadMultipleBits.Stop();
-            multipleBitsRead++;
+        //    // stop stopwatch and increment the operations counter
+        //    stopwatchReadMultipleBits.Stop();
+        //    multipleBitsRead++;
 
-            return bits;
-        }
+        //    return bits;
+        //}
 
-        private void writeMultipleBitsToBitboard(Bitboard bitboard, int index, byte bits, int length)
-        {
-            // start stopwatch
-            stopwatchWriteSMultipleBits.Start();
+        //private void writeMultipleBitsToBitboard(Bitboard bitboard, int index, byte bits, int length)
+        //{
+        //    // start stopwatch
+        //    stopwatchWriteSMultipleBits.Start();
 
-            // apply the bit to the bitboard
-            bitboard.SetBitsAt(index, bits, length);
+        //    // apply the bit to the bitboard
+        //    bitboard.SetBitsAt(index, bits, length);
 
-            // stop stopwatch and increment the operations counter
-            stopwatchWriteSMultipleBits.Stop();
-            multipleBitsWritten++;
-        }
+        //    // stop stopwatch and increment the operations counter
+        //    stopwatchWriteSMultipleBits.Stop();
+        //    multipleBitsWritten++;
+        //}
 
-        private double getAverageOperationTimeInMs(Stopwatch stopwatch, int operationsCount)
-        {
-            var time = new TimeSpan(stopwatch.ElapsedTicks);
-            return time.TotalMilliseconds / operationsCount;
-        }
+        //private double getAverageOperationTimeInMs(Stopwatch stopwatch, int operationsCount)
+        //{
+        //    var time = new TimeSpan(stopwatch.ElapsedTicks);
+        //    return time.TotalMilliseconds / operationsCount;
+        //}
 
-        private double getOperationsPerSecond(Stopwatch stopwatch, int operationsCount)
-        {
-            return 1000 / getAverageOperationTimeInMs(stopwatch, operationsCount);
-        }
+        //private double getOperationsPerSecond(Stopwatch stopwatch, int operationsCount)
+        //{
+        //    return 1000 / getAverageOperationTimeInMs(stopwatch, operationsCount);
+        //}
 
         #endregion Helpers
 

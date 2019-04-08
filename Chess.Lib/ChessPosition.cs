@@ -76,10 +76,31 @@ namespace Chess.Lib
         /// Generates the color of the chess field at the given position on the chess board.
         /// </summary>
         public ChessColor ColorOfField { get { return (((Row + Column) % 2) == 1) ? ChessColor.White : ChessColor.Black; } }
-        
+
         #endregion Members
 
         #region Methods
+
+        /// <summary>
+        /// Check whether the given coords are in bounds of the chess board.
+        /// </summary>
+        /// <param name="fieldName">The name of the field (with the coords)</param>
+        /// <returns>a boolean whether the coords are valid</returns>
+        public static bool AreCoordsValid(string fieldName)
+        {
+            bool ret = false;
+
+            if (fieldName.Length == 2)
+            {
+                // parse row and column
+                int row = fieldName[1] - '1';
+                int column = char.ToUpper(fieldName[0]) - 'A';
+
+                ret = row >= 0 && row < 8 && column >= 0 && column < 8;
+            }
+
+            return ret;
+        }
 
         /// <summary>
         /// Check whether the given coords are in bounds of the chess board.

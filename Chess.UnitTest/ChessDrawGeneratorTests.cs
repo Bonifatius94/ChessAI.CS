@@ -97,31 +97,40 @@ namespace Chess.UnitTest
                         var enemyPos = new ChessPosition(4, (rookCol == 0) ? (4 - attack) : (4 + attack));
                         var enemyKingPos = new ChessPosition(4, 0);
 
-                        var pieces = new List<ChessPieceAtPos>()
+                        for (int block = 0; block < 2; block++)
                         {
-                            new ChessPieceAtPos(oldKingPos,   new ChessPiece(ChessPieceType.King, allyColor,  wasKingMoved)),
-                            new ChessPieceAtPos(oldRookPos,   new ChessPiece(ChessPieceType.Rook, allyColor,  wasRookMoved)),
-                            new ChessPieceAtPos(enemyPos,     new ChessPiece(ChessPieceType.Rook, enemyColor, true        )),
-                            new ChessPieceAtPos(enemyKingPos, new ChessPiece(ChessPieceType.King, enemyColor, true        )),
-                        };
+                            bool isBlocked = block == 1;
+                            var blockPos = new ChessPosition(rookRow, 1);
 
-                        // init chess board and rochade draw
-                        var board = new ChessBoard(pieces);
-                        var draw = new ChessDraw(board, pieces[0].Position, newKingPos);
+                            var pieces = new List<ChessPieceAtPos>()
+                            {
+                                new ChessPieceAtPos(oldKingPos,   new ChessPiece(ChessPieceType.King, allyColor,  wasKingMoved)),
+                                new ChessPieceAtPos(oldRookPos,   new ChessPiece(ChessPieceType.Rook, allyColor,  wasRookMoved)),
+                                new ChessPieceAtPos(enemyPos,     new ChessPiece(ChessPieceType.Rook, enemyColor, true        )),
+                                new ChessPieceAtPos(enemyKingPos, new ChessPiece(ChessPieceType.King, enemyColor, true        )),
+                            };
 
-                        // check whether the draw validation returns the expected value
-                        bool shouldRochadeBeValid = !wasKingMoved && !wasRookMoved && attack >= 3;
-                        bool isRochadeValid = draw.IsValid(board);
-                        Assert.True(shouldRochadeBeValid == isRochadeValid);
+                            if (isBlocked) { pieces.Add(new ChessPieceAtPos(blockPos, new ChessPiece(ChessPieceType.Knight, allyColor, false))); }
 
-                        // check whether the rochade is applied correctly to the chess board
-                        if (isRochadeValid)
-                        {
-                            board.ApplyDraw(draw);
-                            Assert.True(
-                                   board.GetPieceAt(oldKingPos) == null && board.GetPieceAt(newKingPos).Value.Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Value.Color == allyColor
-                                && board.GetPieceAt(oldRookPos) == null && board.GetPieceAt(newRookPos).Value.Type == ChessPieceType.Rook && board.GetPieceAt(newRookPos).Value.Color == allyColor
-                            );
+                            // init chess board and rochade draw
+                            var board = new ChessBoard(pieces);
+                            var draw = new ChessDraw(board, pieces[0].Position, newKingPos);
+
+                            // check whether the draw validation returns the expected value
+                            bool shouldRochadeBeValid = !wasKingMoved && !wasRookMoved && attack >= 3 && (!isBlocked || rookCol != 0);
+                            bool isRochadeValid = draw.IsValid(board);
+
+                            Assert.True(shouldRochadeBeValid == isRochadeValid);
+
+                            // check whether the rochade is applied correctly to the chess board
+                            if (isRochadeValid)
+                            {
+                                board.ApplyDraw(draw);
+                                Assert.True(
+                                       board.GetPieceAt(oldKingPos) == null && board.GetPieceAt(newKingPos).Value.Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Value.Color == allyColor
+                                    && board.GetPieceAt(oldRookPos) == null && board.GetPieceAt(newRookPos).Value.Type == ChessPieceType.Rook && board.GetPieceAt(newRookPos).Value.Color == allyColor
+                                );
+                            }
                         }
                     }
                 }

@@ -161,7 +161,8 @@ namespace Chess.Lib
 
             // check for preconditions of big rochade
             if (farAlliedTower != null && !alliedKing.Piece.WasMoved && !farAlliedTower.Value.WasMoved 
-                && bigRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
+                && bigRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King)
+                && board.GetPieceAt(new ChessPosition(row, 1)) == null)
             {
                 // make sure that no rochade field can be captured by the opponent
                 bool canBigRochade = !enemyCapturablePositions.Any(pos => bigRochadeKingPassagePositions.Contains(pos));
@@ -172,12 +173,10 @@ namespace Chess.Lib
 
             // check for preconditions of small rochade
             if (nearAlliedTower != null && !alliedKing.Piece.WasMoved && !nearAlliedTower.Value.WasMoved 
-                && smallRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || x.Value.Type == ChessPieceType.King))
+                && smallRochadeKingPassagePositions.Select(x => board.GetPieceAt(x)).All(x => x == null || (x.Value.Color == drawingSide && x.Value.Type == ChessPieceType.King)))
             {
-                // TODO: fix the bug allowing a big rochade even though another allied chess piece is on the B line
-
                 // make sure that no rochade field can be captured by the opponent and the rochade field on the B-line is not captured
-                bool canBigRochade = !board.IsCapturedAt(new ChessPosition(row, 1)) && !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
+                bool canBigRochade = !enemyCapturablePositions.Any(pos => smallRochadeKingPassagePositions.Contains(pos));
 
                 // add the draw to the list
                 if (canBigRochade) { draws.Add(new ChessDraw(board, alliedKing.Position, new ChessPosition(row, 6))); }

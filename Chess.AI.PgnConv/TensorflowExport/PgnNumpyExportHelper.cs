@@ -55,14 +55,14 @@ namespace Chess.AI.PgnConv.TensorflowExport
 
                 // get the chess board data
                 var boardAsIntArray = convertBytesToInt32Array(board.ToBitboard().BinaryData);
-                var boardData = boardAsIntArray.Select(x => ((double)x).ToString()).Aggregate((x, y) => $"{ x }, { y }");
+                var boardData = boardAsIntArray.Select(x => ((double)x).ToString("n2")).Aggregate((x, y) => $"{ x }, { y }");
 
                 // calculate the score of the draw
                 double score = new MinimaxChessDrawAI().RateDraw(board, draw);
 
                 // transform data into a data line
-                string dataLine = $"chessdata.append([{ (double)draw.GetHashCode() }, { boardData }, { score }])";
-                builder.Append(dataLine);
+                string dataLine = $"chessdata.append([{ ((double)draw.GetHashCode()).ToString("n2") }, { boardData }, { score.ToString("n2") }])";
+                builder.AppendLine(dataLine);
             }
 
             return builder.ToString();

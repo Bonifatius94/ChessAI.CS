@@ -10,6 +10,7 @@ namespace Chess.AI.PgnConv
 
         public enum ExitCodes
         {
+            Ok = 0,
             NotEnoughArgs = -1,
             InputFileNotExisting = -2,
             FatalError = -3
@@ -36,11 +37,13 @@ namespace Chess.AI.PgnConv
             if (!File.Exists(inputFilePath))
             {
                 Console.WriteLine("Invalid arguments! Input file does not exist!");
-                Environment.Exit((int)ExitCodes.InputFileNotExisting);
+                Environment.ExitCode = (int)ExitCodes.InputFileNotExisting;
+                return;
             }
 
             // execute data extraction from file
             new Program().Convert(inputFilePath, outputFilePath);
+            Environment.ExitCode = (int)ExitCodes.Ok;
         }
 
         #endregion Main
@@ -60,7 +63,7 @@ namespace Chess.AI.PgnConv
             catch (Exception ex)
             {
                 Console.WriteLine("program encountered a fatal error: \r\n" + ex.ToString());
-                Environment.Exit((int)ExitCodes.FatalError);
+                Environment.ExitCode = (int)ExitCodes.FatalError;
             }
         }
 
