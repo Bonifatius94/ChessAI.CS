@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.Lib", "Chess.Lib\Chess.Lib.csproj", "{E9CF1C53-37A2-4544-A9EC-8DC698B3EE42}"
 EndProject
@@ -29,6 +29,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.WebApi.Server.Interface", "Chess.WebApi.Server.Interface\Chess.WebApi.Server.Interface.csproj", "{8EE357BB-1D70-4263-99B1-A351B8256C77}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.AI.PgnConv", "Chess.AI.PgnConv\Chess.AI.PgnConv.csproj", "{3D1185BB-A7B0-4E8F-BBB5-3CAD388939BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3E14D2E4-F6C7-4756-A57D-C53F59676E3F}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

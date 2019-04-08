@@ -11,3 +11,4 @@ You just need to have Visual Studio 2017 with cross-plattform .NET Core tools in
 - improve the scoring system (better AI decision making)
 - improve AI performance -> increase search depth
 - build a little database with 'good' chess draws (especially for the first draws of a game)
+- extract chess draws from games of professional chess players (PGN files) and do some deep learning stuff with it (-> fix minimax performance issues)
