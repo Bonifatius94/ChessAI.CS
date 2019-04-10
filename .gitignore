@@ -266,3 +266,4 @@ __pycache__/
 /Chess.WebApi/Chess.WebApi.xml
 /Chess.Doku/Help
 /Chess.WebApi.Server.Interface/Chess.WebApi.Server.Interface.xml
+/Chess.AI.DeepLearning/env

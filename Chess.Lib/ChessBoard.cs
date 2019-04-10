@@ -324,6 +324,26 @@ namespace Chess.Lib
             return new ChessBoard(this.Pieces);
         }
 
+        /// <summary>
+        /// Determine whether another object is equal to this object.
+        /// </summary>
+        /// <param name="obj">The object to be compared to</param>
+        /// <returns>a boolean indicating whether the objects are equal</returns>
+        public override bool Equals(object obj)
+        {
+            // TODO: test logic
+            return (obj != null && obj.GetType() == typeof(ChessBoard)) && (((ChessBoard)obj).Pieces.Intersect(this.Pieces).Count() == this.Pieces.Count());
+        }
+
+        /// <summary>
+        /// Overwrite hash code function and always return 0, so the equals method gets called for comparison.
+        /// </summary>
+        /// <returns>always 0</returns>
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+
         #endregion Methods
     }
 }

@@ -2,6 +2,7 @@
 using Chess.Lib.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,21 +20,22 @@ namespace Chess.AI.PgnConv.TensorflowExport
         /// Export the chess draws of the given games to the given file as python code.
         /// </summary>
         /// <param name="filePath">The output file path</param>
-        /// <param name="data">A list of chess games containing the chess draws to be exported</param>
-        public void ExportAsPythonCode(string filePath, IList<ChessGame> data)
+        /// <param name="games">A list of chess games containing the chess draws to be exported</param>
+        public void ExportAsPythonCode(string filePath, IEnumerable<ChessGame> games)
         {
             using (var writer = new StreamWriter(filePath))
             {
                 // declare empty array
                 writer.WriteLine("chessdata = []");
+                writer.WriteLine();
 
-                // write all games
-                foreach (var game in data)
-                {
+                // write game data parallel
+                games.AsParallel().ToList().ForEach(game => {
+
                     // extract data lines from the game and write it to the output file
                     string lines = getDataLinesFromGame(game);
                     writer.WriteLine(lines);
-                }
+                });
             }
         }
 
@@ -48,17 +50,15 @@ namespace Chess.AI.PgnConv.TensorflowExport
             // loop through all chess draws
             foreach (var draw in game.AllDraws)
             {
-                // TODO: fix formatting by forcing .0 ending for each double value
-
                 // get the chess board data
                 var boardAsIntArray = convertBytesToInt32Array(board.ToBitboard().BinaryData);
-                var boardData = boardAsIntArray.Select(x => ((double)x).ToString("f2")).Aggregate((x, y) => $"{ x }, { y }");
+                var boardData = boardAsIntArray.Select(x => formatDouble(x)).Aggregate((x, y) => $"{ x }, { y }");
 
                 // calculate the score of the draw
                 double score = new MinimaxChessDrawAI().RateDraw(board, draw, ChessDifficultyLevel.Medium);
 
                 // transform data into a data line
-                string dataLine = $"chessdata.append([{ ((double)draw.GetHashCode()).ToString("f2") }, { boardData }, { score.ToString("f2") }])";
+                string dataLine = $"chessdata.append([{ formatDouble(draw.GetHashCode()) }, { boardData }, { formatDouble(score) }])";
                 builder.AppendLine(dataLine);
 
                 // apply the draw to the chess board
@@ -67,6 +67,8 @@ namespace Chess.AI.PgnConv.TensorflowExport
 
             return builder.ToString();
         }
+
+        #region Helpers
 
         private int[] convertBytesToInt32Array(byte[] bytes)
         {
@@ -93,6 +95,15 @@ namespace Chess.AI.PgnConv.TensorflowExport
 
             return data;
         }
+
+        private static readonly CultureInfo CULTURE_EN_US = CultureInfo.CreateSpecificCulture("en-US");
+
+        private string formatDouble(double value)
+        {
+            return value.ToString("f2", CULTURE_EN_US);
+        }
+
+        #endregion Helpers
 
         //public void ExportGamesAsNumpy(string filePath, IList<ChessGame> data)
         //{
