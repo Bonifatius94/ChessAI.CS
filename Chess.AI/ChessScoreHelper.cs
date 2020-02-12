@@ -25,6 +25,18 @@ namespace Chess.AI
 
         #endregion Constants
 
+        #region Singleton
+
+        // flag constructor private to avoid objects being generated other than the singleton instance
+        private ChessScoreHelper() { }
+
+        /// <summary>
+        /// Get singleton object reference.
+        /// </summary>
+        public static readonly ChessScoreHelper Instance = new ChessScoreHelper();
+
+        #endregion Singleton
+
         #region Methods
 
         /// <summary>
@@ -72,32 +84,12 @@ namespace Chess.AI
             // TODO: check this heuristic
             double score = BASE_SCORE_KING;
             
-            var king = board.GetPieceAt(position).Value;
-            int baseRow = (king.Color == ChessColor.White) ? 0 : 7;
-            bool isKingAtOuterMarginOfBaseRow = king.WasMoved && (position.Column < 3 || position.Column > 5) && position.Row == baseRow;
-            bool isKingCovered = false;
+            // grant bonus if the king is protected at least by two pieces standing in front of him
+            if (isKingCovered(board, position)) { score += 0.4; }
 
-            if (isKingAtOuterMarginOfBaseRow)
-            {
-                int coveringPieces = 0;
-                int coveringRow = (king.Color == ChessColor.White) ? 1 : 6;
+            // grant bonus if the king is likely moved to the outer base line region => make rochade more attractive
+            if (isKingAtOuterMarginOfBaseRow(board, position)) { score += 0.2; }
 
-                for (int i = -1; i < 2; i++)
-                {
-                    if (ChessPosition.AreCoordsValid(coveringRow, position.Column + i))
-                    {
-                        var coveringPosition = new ChessPosition(coveringRow, position.Column + i);
-                        var coveringPiece = board.GetPieceAt(coveringPosition);
-                        if (coveringPiece != null && coveringPiece.Value.Color == king.Color) { coveringPieces++; }
-                    }
-                }
-
-                isKingCovered = (coveringPieces >= 2);
-            }
-
-            // bonus for rochade (king should be already moved and positioned at the margin of the base row. moreover there should be at least 2 covering pieces in front of the king)
-            if (isKingAtOuterMarginOfBaseRow && isKingCovered) { score += 0.9; }
-            
             return score;
         }
 
@@ -106,8 +98,7 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            return BASE_SCORE_QUEEN /*+ (0.05 * drawsCount)*/;
+            return BASE_SCORE_QUEEN + getMovabilityBonus(board, position, 0.05);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,14 +106,13 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            //return BASE_SCORE_ROOK + (0.05 * drawsCount);
+            //return BASE_SCORE_ROOK + getMovabilityBonus(board, position);
 
             double score = BASE_SCORE_ROOK;
 
-            //// bonus for developing piece
-            //var piece = board.GetPieceAt(position).Value;
-            //if (piece.WasMoved) { score += 0.2; }
+            // bonus for developing piece
+            var piece = board.GetPieceAt(position).Value;
+            if (piece.WasMoved) { score += 0.2; }
 
             return score;
         }
@@ -132,8 +122,7 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            //return BASE_SCORE_BISHOP + (0.1 * drawsCount);
+            //return BASE_SCORE_BISHOP + getMovabilityBonus(board, position);
 
             double score = BASE_SCORE_BISHOP;
 
@@ -149,8 +138,7 @@ namespace Chess.AI
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
-            //int drawsCount = new ChessDrawGenerator().GetDraws(board, position, null, false).Count();
-            //return BASE_SCORE_KNIGHT + (0.1 * drawsCount);
+            //return BASE_SCORE_KNIGHT + getMovabilityBonus(board, position);
 
             double score = BASE_SCORE_KNIGHT;
 
@@ -185,9 +173,9 @@ namespace Chess.AI
                 || (ChessPosition.AreCoordsValid(protectedRow, position.Column + 1) && board.GetPieceAt(new ChessPosition(protectedRow, position.Column + 1))?.Color == piece.Color);
             score += (isConnected ? 1 : -1) * 0.05;
 
-            //// malus for doubled peasants
-            //bool isDoubled = allPieces.Any(x => x.Piece.Color == piece.Color && x.Piece.Type == ChessPieceType.Peasant && x.Position.Column == position.Column && x.Position.Row != position.Row);
-            //if (isConnected) { score -= 0.1; }
+            // malus for doubled peasants
+            bool isDoubled = board.GetPiecesOfColor(piece.Color).Any(x => x.Piece.Type == ChessPieceType.Peasant && x.Position.Column == position.Column && x.Position.Row != position.Row);
+            if (isConnected) { score -= 0.1; }
 
             //// malus if peasant was passed by an enemy peasant
             //bool isPassed = allPieces.Any(x => x.Piece.Color == piece.Color.Opponent()
@@ -198,6 +186,42 @@ namespace Chess.AI
 
             return score;
         }
+
+        #region Helpers
+
+        private double getMovabilityBonus(ChessBoard board, ChessPosition position, double factor = 0.1)
+        {
+            int drawsCount = ChessDrawGenerator.Instance.GetDraws(board, position, null, false).Count();
+            return factor * drawsCount;
+        }
+
+        private bool isKingAtOuterMarginOfBaseRow(ChessBoard board, ChessPosition position)
+        {
+            var king = board.GetPieceAt(position).Value;
+            int baseRow = (king.Color == ChessColor.White) ? 0 : 7;
+            return king.WasMoved && (position.Column < 3 || position.Column > 5) && position.Row == baseRow;
+        }
+
+        private bool isKingCovered(ChessBoard board, ChessPosition position)
+        {
+            var king = board.GetPieceAt(position).Value;
+            int coveringPieces = 0;
+            int coveringRow = (king.Color == ChessColor.White) ? 1 : 6;
+
+            for (int i = -1; i < 2; i++)
+            {
+                if (ChessPosition.AreCoordsValid(coveringRow, position.Column + i))
+                {
+                    var coveringPosition = new ChessPosition(coveringRow, position.Column + i);
+                    var coveringPiece = board.GetPieceAt(coveringPosition);
+                    if (coveringPiece != null && coveringPiece.Value.Color == king.Color) { coveringPieces++; }
+                }
+            }
+
+            return coveringPieces >= 2;
+        }
+
+        #endregion Helpers
 
         #endregion Methods
     }

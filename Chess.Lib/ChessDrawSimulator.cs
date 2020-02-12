@@ -46,6 +46,18 @@ namespace Chess.Lib
     /// </summary>
     public class ChessDrawSimulator
     {
+        #region Singleton
+
+        // flag constructor private to avoid objects being generated other than the singleton instance
+        private ChessDrawSimulator() { }
+
+        /// <summary>
+        /// Get of singleton object reference.
+        /// </summary>
+        public static readonly ChessDrawSimulator Instance = new ChessDrawSimulator();
+
+        #endregion Singleton
+
         #region Methods
 
         /// <summary>
@@ -64,7 +76,7 @@ namespace Chess.Lib
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = simulatedBoard.GetPiecesOfColor(draw.DrawingSide.Opponent());
-            var possibleEnemyAnswers = enemyPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(simulatedBoard, piece.Position, draw, false));
+            var possibleEnemyAnswers = enemyPieces.SelectMany(piece => ChessDrawGenerator.Instance.GetDraws(simulatedBoard, piece.Position, draw, false));
             
             // find out if the allied king could be taken by at least one enemy answer
             var alliedKing = (draw.DrawingSide == ChessColor.White) ? simulatedBoard.WhiteKing : simulatedBoard.BlackKing;
@@ -94,12 +106,12 @@ namespace Chess.Lib
 
             // find out if any allied chess piece can draw
             var alliedPieces = board.GetPiecesOfColor(alliedSide);
-            bool canAllyDraw = alliedPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
+            bool canAllyDraw = alliedPieces.Any(piece => ChessDrawGenerator.Instance.GetDraws(board, piece.Position, precedingEnemyDraw, true).Count() > 0);
 
             // find out whether the allied king is checked
             var alliedKing = (alliedSide == ChessColor.White) ? board.WhiteKing : board.BlackKing;
             var enemyPieces = board.GetPiecesOfColor(alliedSide.Opponent());
-            bool isAlliedKingChecked = enemyPieces.Any(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, null, false).Any(y => y.NewPosition == alliedKing.Position));
+            bool isAlliedKingChecked = enemyPieces.Any(piece => ChessDrawGenerator.Instance.GetDraws(board, piece.Position, null, false).Any(y => y.NewPosition == alliedKing.Position));
             
             // none:      ally can draw and is not checked
             // check:     ally is checked, but can at least draw

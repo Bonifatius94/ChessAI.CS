@@ -60,7 +60,7 @@ namespace Chess.UnitTest
                         var draw = new ChessDraw(board, oldPos, newPos[pieceType]);
 
                         bool shouldBeDrawIntoCheck = putAttacker;
-                        bool isDrawIntoCheck = new ChessDrawSimulator().IsDrawIntoCheck(board, draw);
+                        bool isDrawIntoCheck = ChessDrawSimulator.Instance.IsDrawIntoCheck(board, draw);
                         Assert.True(shouldBeDrawIntoCheck == isDrawIntoCheck);
                     }
                 }
@@ -74,7 +74,7 @@ namespace Chess.UnitTest
             var board = ChessBoard.StartFormation;
             var enemyDraw = new ChessDraw(board, new ChessPosition(0, 0), new ChessPosition(0, 0));
             board.ApplyDraw(enemyDraw);
-            Assert.True(new ChessDrawSimulator().GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.None);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.None);
 
             // test simple check
             var pieces = new List<ChessPieceAtPos>()
@@ -88,7 +88,7 @@ namespace Chess.UnitTest
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(7, 3), new ChessPosition(6, 4));
             board.ApplyDraw(enemyDraw);
-            Assert.True(new ChessDrawSimulator().GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check);
 
             // test checkmate
             for (int putSavingPieceValue = 0; putSavingPieceValue < 2; putSavingPieceValue++)
@@ -111,8 +111,8 @@ namespace Chess.UnitTest
                 board.ApplyDraw(enemyDraw);
 
                 Assert.True(
-                    (!putSavingPiece && new ChessDrawSimulator().GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Checkmate)
-                    || (putSavingPiece && new ChessDrawSimulator().GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check)
+                    (!putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Checkmate)
+                    || (putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check)
                 );
             }
 
@@ -130,7 +130,7 @@ namespace Chess.UnitTest
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(3, 5), new ChessPosition(2, 5));
             board.ApplyDraw(enemyDraw);
-            Assert.True(new ChessDrawSimulator().GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Stalemate);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Stalemate);
         }
 
         // moves to be made for testing the check situation
@@ -459,16 +459,16 @@ namespace Chess.UnitTest
             var lastDraw = game.LastDraw;
 
             // make sure that the algorithm recognizes the check situation
-            Assert.True(new ChessDrawSimulator().GetCheckGameStatus(game.Board, lastDraw) == CheckGameStatus.Check);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, lastDraw) == CheckGameStatus.Check);
 
             // test whether the black player recognizes he is checked and needs to save his king
             var alliedPieces = game.Board.GetPiecesOfColor(lastDraw.DrawingSide.Opponent());
-            var draws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(game.Board, piece.Position, lastDraw, true));
+            var draws = alliedPieces.SelectMany(piece => ChessDrawGenerator.Instance.GetDraws(game.Board, piece.Position, lastDraw, true));
 
             // check whether the king is safe after each of the draws
             foreach (var draw in draws)
             {
-                Assert.True(!new ChessDrawSimulator().IsDrawIntoCheck(game.Board, draw));
+                Assert.True(!ChessDrawSimulator.Instance.IsDrawIntoCheck(game.Board, draw));
             }
         }
 
@@ -484,7 +484,7 @@ namespace Chess.UnitTest
 
                 foreach (var piece in alliedPieces)
                 {
-                    draws.AddRange(new ChessDrawGenerator().GetDraws(game.Board, piece.Position, game.LastDraw, true));
+                    draws.AddRange(ChessDrawGenerator.Instance.GetDraws(game.Board, piece.Position, game.LastDraw, true));
                 }
 
                 draws.ForEach(x => output.WriteLine(x.ToString()));
@@ -508,7 +508,7 @@ namespace Chess.UnitTest
                 lastDraw = new ChessDraw(game.Board, move.Item1, move.Item2);
                 game.ApplyDraw(lastDraw);
 
-                var status = new ChessDrawSimulator().GetCheckGameStatus(game.Board, lastDraw);
+                var status = ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, lastDraw);
                 Assert.True(status == CheckGameStatus.Check || status == CheckGameStatus.None);
             }
 

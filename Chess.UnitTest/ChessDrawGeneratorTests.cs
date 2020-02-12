@@ -55,12 +55,12 @@ namespace Chess.UnitTest
 
                 // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
                 var board = new ChessBoard(pieces);
-                var draws = new ChessDrawGenerator().GetDraws(board, board.WhiteKing.Position, null, true);
+                var draws = ChessDrawGenerator.Instance.GetDraws(board, board.WhiteKing.Position, null, true);
                 Assert.True(draws.Count() == ((row + col == 7) ? 2 : 3));
 
                 // evaluate black king draws (when white king is onto A8, then the white peasant cannot be taken because of draw into check by the black king)
                 board = new ChessBoard(pieces);
-                draws = new ChessDrawGenerator().GetDraws(board, board.BlackKing.Position, null, true);
+                draws = ChessDrawGenerator.Instance.GetDraws(board, board.BlackKing.Position, null, true);
                 Assert.True(draws.Count() == ((row == 7 && col == 0) ? 7 : 8));
             }
         }
@@ -169,7 +169,7 @@ namespace Chess.UnitTest
 
                     // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
                     var board = new ChessBoard(pieces);
-                    var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, null, true);
+                    var draws = ChessDrawGenerator.Instance.GetDraws(board, pieces[0].Position, null, true);
                     Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
 
                     // check if the draws are correctly applied to the chess board
@@ -218,7 +218,7 @@ namespace Chess.UnitTest
 
                     // evaluate queen draws
                     var board = new ChessBoard(pieces);
-                    var draws = new ChessDrawGenerator().GetDraws(board, pieces[0].Position, null, true);
+                    var draws = ChessDrawGenerator.Instance.GetDraws(board, pieces[0].Position, null, true);
                     Assert.True(draws.Count() == ((row + col == 7) ? 7 : 5));
 
                     // check if the draws are correctly applied to the chess board
@@ -259,7 +259,7 @@ namespace Chess.UnitTest
                 };
 
                 var board = new ChessBoard(pieces);
-                var draws = new ChessDrawGenerator().GetDraws(board, bishopPos, null, true);
+                var draws = ChessDrawGenerator.Instance.GetDraws(board, bishopPos, null, true);
                 Assert.True(draws.Count() == 10);
 
                 // check if the draws are correctly applied to the chess board
@@ -309,7 +309,7 @@ namespace Chess.UnitTest
                     };
 
                     var board = new ChessBoard(pieces);
-                    var draws = new ChessDrawGenerator().GetDraws(board, knightPos, null, true);
+                    var draws = ChessDrawGenerator.Instance.GetDraws(board, knightPos, null, true);
                     Assert.True(draws.Count() == 5);
 
                     // check if the draws are correctly applied to the chess board
@@ -470,7 +470,7 @@ namespace Chess.UnitTest
                             //output.WriteLine($"current constellation: allyColor={allyColor}, targetColor={targetColor}, allyRow={allyRow}, allyCol={allyCol}, targetColMiddle={targetColMiddle}");
 
                             var board = new ChessBoard(pieces);
-                            var catchDraws = new ChessDrawGenerator().GetDraws(board, oldPos, null, true).Where(x => x.OldPosition.Column != x.NewPosition.Column);
+                            var catchDraws = ChessDrawGenerator.Instance.GetDraws(board, oldPos, null, true).Where(x => x.OldPosition.Column != x.NewPosition.Column);
 
                             int expectedCatchDrawsCount = (targetColor == allyColor) ? 0 : (targetColMiddle == allyCol) ? 2 : ((Math.Abs(targetColMiddle - allyCol) == 2) ? 1 : 0);
                             expectedCatchDrawsCount = ((rowDiff == 5) ? 4 : 1) * expectedCatchDrawsCount;
@@ -588,7 +588,7 @@ namespace Chess.UnitTest
                     }
 
                     var board = new ChessBoard(pieces);
-                    var draws = new ChessDrawGenerator().GetDraws(board, fwPos, null, true);
+                    var draws = ChessDrawGenerator.Instance.GetDraws(board, fwPos, null, true);
                     Assert.True(draws.Count() ==  (4 * ((fwCol % 7 == 0) ? 2 : 3)));
                         
                     foreach (var draw in draws)

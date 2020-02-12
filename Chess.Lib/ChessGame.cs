@@ -120,7 +120,7 @@ namespace Chess.Lib
         public IEnumerable<ChessDraw> GetDraws(bool analyzeDrawIntoCheck = true)
         {
             var alliedPieces = Board.GetPiecesOfColor(SideToDraw);
-            var draws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(Board, piece.Position, LastDrawOrDefault, analyzeDrawIntoCheck));
+            var draws = alliedPieces.SelectMany(piece => ChessDrawGenerator.Instance.GetDraws(Board, piece.Position, LastDrawOrDefault, analyzeDrawIntoCheck));
 
             return draws;
         }

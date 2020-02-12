@@ -128,7 +128,7 @@ namespace Chess.UnitTest
                             // check whether the correct bits were retrieved
                             Assert.True(bits == cmp);
                         }
-                        catch (Exception ex)
+                        catch (Exception /*ex*/)
                         {
                             // determine whether the exception was expected
                             bool isCorrectOutOfBoundsError = (j + n >= length);
@@ -167,7 +167,7 @@ namespace Chess.UnitTest
                             // check whether the bits were correctly set
                             Assert.True(bitsToWrite == cmp);
                         }
-                        catch (Exception ex)
+                        catch (Exception /*ex*/)
                         {
                             // determine whether the exception was expected
                             bool isCorrectOutOfBoundsError = (j + n >= length);

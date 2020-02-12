@@ -11,6 +11,20 @@ namespace Chess.AI
     /// </summary>
     public class DeepLearningChessDrawAI : IChessDrawAI
     {
+        #region Singleton
+
+        // flag constructor private to avoid objects being generated other than the singleton instance
+        private DeepLearningChessDrawAI() { }
+
+        /// <summary>
+        /// Get of singleton object reference.
+        /// </summary>
+        public static readonly IChessDrawAI Instance = new DeepLearningChessDrawAI();
+
+        #endregion Singleton
+
+        #region Methods
+
         /// <summary>
         /// Compute the next chess draw according to the given difficulty level.
         /// </summary>
@@ -22,10 +36,10 @@ namespace Chess.AI
         {
             // get all possible allied draws
             var alliedPieces = board.GetPiecesOfColor(precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White);
-            var possibleDraws = alliedPieces.SelectMany(piece => new ChessDrawGenerator().GetDraws(board, piece.Position, precedingEnemyDraw, false));
+            var possibleDraws = alliedPieces.SelectMany(piece => ChessDrawGenerator.Instance.GetDraws(board, piece.Position, precedingEnemyDraw, false));
 
             // calculate the predictions according to the difficulty level
-            var drawsWithPrediction = possibleDraws.Select(draw => new { Draw = draw, Score = predictScore(board, draw, level) });
+            var drawsWithPrediction = possibleDraws.Select(draw => new { Draw = draw, Score = RateDraw(board, draw, level) });
 
             // get the draw with the highest prediction (best draw)
             double maxScore = drawsWithPrediction.Select(x => x.Score).Max();
@@ -34,10 +48,19 @@ namespace Chess.AI
             return bestDraw;
         }
 
-        private double predictScore(ChessBoard board, ChessDraw draw, ChessDifficultyLevel level)
+        /// <summary>
+        /// Predict the score of the given draw using the deep learning technology.
+        /// </summary>
+        /// <param name="board">The chess game situation before the draw to be evaluated</param>
+        /// <param name="draw">The chess draw to be evaluated</param>
+        /// <param name="level">The minimax search depth (higher level = deeper search = better decisions)</param>
+        /// <returns>a score that rates the quality of the given chess draw</returns>
+        public double RateDraw(ChessBoard board, ChessDraw draw, ChessDifficultyLevel level)
         {
-            // TODO: implement prediction logic
+            // TODO: implement AI rating function
             throw new NotImplementedException();
         }
+
+        #endregion Methods
     }
 }

@@ -225,7 +225,7 @@ namespace Chess.Lib
             if (piece.Value.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
-            var possibleDraws = new ChessDrawGenerator().GetDraws(board, OldPosition, predecedingEnemyDraw, true);
+            var possibleDraws = ChessDrawGenerator.Instance.GetDraws(board, OldPosition, predecedingEnemyDraw, true);
             
             // check if there is a possible draw with the same new position and type (this implies that the given draw is valid)
             var type = Type;

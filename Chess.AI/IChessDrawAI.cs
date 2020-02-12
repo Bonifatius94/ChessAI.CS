@@ -54,5 +54,16 @@ namespace Chess.AI
         /// <param name="level">The difficulty level</param>
         /// <returns>The 'best' possible chess draw</returns>
         ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, ChessDifficultyLevel level);
+
+        /// <summary>
+        /// Compute the score of the given draw using the rating technique of the chosen implementation.
+        /// </summary>
+        /// <param name="board">The chess game situation before the draw to be evaluated</param>
+        /// <param name="draw">The chess draw to be evaluated</param>
+        /// <param name="level">The minimax search depth (higher level = deeper search = better decisions)</param>
+        /// <returns>a score that rates the quality of the given chess draw</returns>
+        double RateDraw(ChessBoard board, ChessDraw draw, ChessDifficultyLevel level);
+
+        // TODO: rework! why specifying difficulty here???
     }
 }

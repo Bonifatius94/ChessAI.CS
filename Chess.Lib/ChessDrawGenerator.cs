@@ -27,6 +27,33 @@ namespace Chess.Lib
     /// </summary>
     public class ChessDrawGenerator : IChessDrawGenerator
     {
+        #region Singleton
+
+        // flag constructor private to avoid objects being generated other than the singleton instance
+        private ChessDrawGenerator() { }
+
+        /// <summary>
+        /// Get of singleton object reference.
+        /// </summary>
+        public static readonly IChessDrawGenerator Instance = new ChessDrawGenerator();
+
+        #endregion Singleton
+
+        #region Members
+
+        // chess draw generators (one per chess piece type)
+        private static readonly Dictionary<ChessPieceType, IChessDrawGenerator> _explicitGenerators = new Dictionary<ChessPieceType, IChessDrawGenerator>()
+        {
+            { ChessPieceType.King, new KingChessDrawGenerator() },
+            { ChessPieceType.Queen, new QueenChessDrawGenerator() },
+            { ChessPieceType.Rook, new RookChessDrawGenerator() },
+            { ChessPieceType.Bishop, new BishopChessDrawGenerator() },
+            { ChessPieceType.Knight, new KnightChessDrawGenerator() },
+            { ChessPieceType.Peasant, new PeasantChessDrawGenerator() }
+        };
+
+        #endregion Members
+
         #region Methods
 
         /// <summary>
@@ -39,21 +66,12 @@ namespace Chess.Lib
         /// <returns>a list of all possible chess draws</returns>
         public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
-            IChessDrawGenerator helper;
+            // determine the drawing piece and the required draw generator
             var piece = board.GetPieceAt(drawingPiecePosition).Value;
+            var generator = _explicitGenerators[piece.Type];
 
-            switch (piece.Type)
-            {
-                case ChessPieceType.King:    helper = new KingChessDrawGenerator();    break;
-                case ChessPieceType.Queen:   helper = new QueenChessDrawGenerator();   break;
-                case ChessPieceType.Rook:    helper = new RookChessDrawGenerator();    break;
-                case ChessPieceType.Bishop:  helper = new BishopChessDrawGenerator();  break;
-                case ChessPieceType.Knight:  helper = new KnightChessDrawGenerator();  break;
-                case ChessPieceType.Peasant: helper = new PeasantChessDrawGenerator(); break;
-                default: throw new ArgumentException("unknown chess piece type detected!");
-            }
-
-            var draws = helper.GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck).ToArray();
+            // compute all possible chess draws for the given chess piece
+            var draws = generator.GetDraws(board, drawingPiecePosition, precedingEnemyDraw, analyzeDrawIntoCheck).ToArray();
             
             return draws;
         }
@@ -101,7 +119,7 @@ namespace Chess.Lib
             // analyze draw into a check situation
             if (analyzeDrawIntoCheck && draws?.Count() > 0)
             {
-                draws = draws.Where(draw => !new ChessDrawSimulator().IsDrawIntoCheck(board, draw));
+                draws = draws.Where(draw => !ChessDrawSimulator.Instance.IsDrawIntoCheck(board, draw));
             }
 
             // add rochade draws
@@ -146,7 +164,7 @@ namespace Chess.Lib
             var enemyKing = (drawingSide == ChessColor.White) ? board.BlackKing : board.WhiteKing;
             var enemyCapturablePositions =
                 board.GetPiecesOfColor(drawingSide.Opponent()).Where(x => x.Piece.Type != ChessPieceType.King)
-                .SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, null, false)).Select(x => x.NewPosition)
+                .SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, null, false)).Select(x => x.NewPosition)
                 .Concat(getStandardDrawPositions(enemyKing.Position));
 
             // get the allied king and towers
@@ -304,7 +322,7 @@ namespace Chess.Lib
             // analyze draw into a check situation
             if (analyzeDrawIntoCheck && draws?.Count() > 0)
             {
-                draws = draws.Where(draw => !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)).ToList();
+                draws = draws.Where(draw => !ChessDrawSimulator.Instance.IsDrawIntoCheck(board, draw)).ToList();
             }
 
             return draws;
@@ -396,7 +414,7 @@ namespace Chess.Lib
             // analyze draw into a check situation
             if (analyzeDrawIntoCheck && draws?.Count() > 0)
             {
-                draws = draws.Where(draw => !new ChessDrawSimulator().IsDrawIntoCheck(board, draw)).ToList();
+                draws = draws.Where(draw => !ChessDrawSimulator.Instance.IsDrawIntoCheck(board, draw)).ToList();
             }
             
             return draws;
@@ -452,7 +470,7 @@ namespace Chess.Lib
             if (analyzeDrawIntoCheck && draws?.Count() > 0)
             {
                 // remove draws that would draw into a check situation
-                draws = draws.Where(x => !new ChessDrawSimulator().IsDrawIntoCheck(board, x));
+                draws = draws.Where(x => !ChessDrawSimulator.Instance.IsDrawIntoCheck(board, x));
             }
             
             return draws;
@@ -509,7 +527,7 @@ namespace Chess.Lib
             if (analyzeDrawIntoCheck && draws?.Count() > 0)
             {
                 // remove draws that would draw into a check situation
-                draws = draws.Where(x => !new ChessDrawSimulator().IsDrawIntoCheck(board, x));
+                draws = draws.Where(x => !ChessDrawSimulator.Instance.IsDrawIntoCheck(board, x));
             }
 
             return draws;

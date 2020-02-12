@@ -19,7 +19,6 @@ namespace Chess.CLI
             // init new game
             var game = new ChessGame();
             var gameStatus = CheckGameStatus.None;
-            var draws = new List<Tuple<ChessDraw, CheckGameStatus>>();
             
             try
             {
@@ -29,13 +28,12 @@ namespace Chess.CLI
                     
                     // select the best draw considering the next couple of draws
                     drawWatch.Start();
-                    var draw = new MinimaxChessDrawAI().GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
+                    var draw = MinimaxChessDrawAI.Instance.GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
                     drawWatch.Stop();
 
                     // apply the draw to the chess board and  check if the game is over
                     game.ApplyDraw(draw);
-                    gameStatus = new ChessDrawSimulator().GetCheckGameStatus(game.Board, draw);
-                    draws.Add(new Tuple<ChessDraw, CheckGameStatus>(game.LastDraw, gameStatus));
+                    gameStatus = ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, draw);
 
                     // print draw and board after draw was applied
                     Console.WriteLine();

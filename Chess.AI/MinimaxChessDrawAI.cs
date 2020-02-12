@@ -11,11 +11,17 @@ namespace Chess.AI
     /// </summary>
     public class MinimaxChessDrawAI : IChessDrawAI
     {
-        //#region Members
+        #region Singleton
 
-        //private static readonly ChessAIContext _context = new ChessAIContext();
+        // flag constructor private to avoid objects being generated other than the singleton instance
+        private MinimaxChessDrawAI() { }
 
-        //#endregion Members
+        /// <summary>
+        /// Get of singleton object reference.
+        /// </summary>
+        public static readonly IChessDrawAI Instance = new MinimaxChessDrawAI();
+
+        #endregion Singleton
 
         #region Methods
 
@@ -31,7 +37,7 @@ namespace Chess.AI
             // TODO: check whether the optimal draw was already found (-> database query)
 
             // make sure the game is not over yet
-            if (precedingEnemyDraw != null && new ChessDrawSimulator().GetCheckGameStatus(board, precedingEnemyDraw.Value).IsGameOver())
+            if (precedingEnemyDraw != null && ChessDrawSimulator.Instance.GetCheckGameStatus(board, precedingEnemyDraw.Value).IsGameOver())
             {
                 throw new ArgumentException("the game is already over.");
             }
@@ -91,7 +97,7 @@ namespace Chess.AI
             // compute all possible draws
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
             var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
+            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
 
             // make sure there are chess draws to evaluate
             if (draws?.Count() <= 0) { throw new ArgumentException("the given player cannot draw. game is already over."); }
@@ -135,12 +141,13 @@ namespace Chess.AI
         /// <returns>a list of chess draws</returns>
         private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsXScores, double maxScore)
         {
-            // eliminate too bad scores, so the deviation is not chosen too widely
+            // eliminate too bad scores, so the deviation is not chosen too widely (not more than a queen sacrifice)
             var notCatastophicDraws = drawsXScores.Where(x => x.Score > -10);
             drawsXScores = (notCatastophicDraws.Count() > 0) ? notCatastophicDraws : drawsXScores;
 
             // compute standard deviation of the scores and the average score
-            double stdDeviation = drawsXScores.Select(x => x.Score).StandardDeviation();
+            double drawProbability = 1.0 / drawsXScores.Count();
+            double stdDeviation = drawsXScores.Select(x => new Tuple<double, double>(x.Score, drawProbability)).StandardDeviation();
             double avgScore = drawsXScores.Select(x => x.Score).Average();
 
             double deviationFactor = 0.5;
@@ -151,7 +158,7 @@ namespace Chess.AI
                 // select a reasonable aspiration window (make sure the last 'best draw' is always included)
                 double minScore = avgScore - (stdDeviation * deviationFactor);
                 window = drawsXScores.Where(x => x.Score >= minScore && x.Score <= maxScore).ToArray();
-                deviationFactor = deviationFactor * 2;
+                deviationFactor *= 2;
 
                 // TODO: rework this logic
             }
@@ -187,7 +194,7 @@ namespace Chess.AI
                 
                 // compute minimax score (needs to be started as minimizing player)
                 double simScore = (depth <= 0)
-                    ? new ChessScoreHelper().GetScore(simBoard, simDraw.DrawingSide)                        // no minimax algo required. just get the score after applying the draw.
+                    ? ChessScoreHelper.Instance.GetScore(simBoard, simDraw.DrawingSide)                        // no minimax algo required. just get the score after applying the draw.
                     : minimax(simBoard, ref newCache, depth - 1, double.MinValue, double.MaxValue, false);  // use minimax algo to determine the score
 
                 // return the simulated draw and its score
@@ -240,7 +247,7 @@ namespace Chess.AI
             // recursion anchor: depth == 0
             if (depth == 0)
             {
-                score = new ChessScoreHelper().GetScore(board, drawingSide);
+                score = ChessScoreHelper.Instance.GetScore(board, drawingSide);
             }
             // recursion call: depth > 0
             else
@@ -291,7 +298,7 @@ namespace Chess.AI
             // get all draws (child nodes) and shuffle them to randomize the algorithm
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
             var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
             
             // if there is already a draw advise in the cache -> put it at the start of the array
             if (cachedDraw != null)
@@ -329,14 +336,14 @@ namespace Chess.AI
             // recursion anchor: depth == 0
             if (depth == 0)
             {
-                score = new ChessScoreHelper().GetScore(board, drawingSide);
+                score = ChessScoreHelper.Instance.GetScore(board, drawingSide);
             }
             // recursion call: depth > 0
             else
             {
                 // get all draws (child nodes) and shuffle them to randomize the algorithm
                 var alliedPieces = board.GetPiecesOfColor(drawingSide);
-                var draws = alliedPieces.SelectMany(x => new ChessDrawGenerator().GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+                var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
 
                 // TODO: remember 'good' draws, so the alpha/beta prune works best (-> some data needs to be cached, e.g. to draws of the last run)
                 // TODO: enhance alpha/beta prune efficiency by an efficient way to order the computed draws (-> data needs to be cached)
@@ -379,14 +386,25 @@ namespace Chess.AI
         #region Methods
 
         /// <summary>
-        /// Compute the standard deviation of the given double values.
+        /// Compute the expectation of the given (value, probability) tuples.
         /// </summary>
-        /// <param name="values">The list of double values to be evaluated</param>
-        /// <returns>The standard deviation of the given double values</returns>
-        public static double StandardDeviation(this IEnumerable<double> values)
+        /// <param name="values">The list of (value, probability) tuples to be evaluated</param>
+        /// <returns>The expectation of the given tuples</returns>
+        public static double Expectation(this IEnumerable<Tuple<double, double>> values)
         {
-            double avg = values.Average();
-            double variance = values.Select(x => Math.Pow((x - avg), 2)).Sum() / values.Count();
+            // list of values as (value, probability) tuples
+            return values.Select(x => x.Item1 * x.Item2).Sum();
+        }
+
+        /// <summary>
+        /// Compute the standard deviation of the given (value, probability) tuples.
+        /// </summary>
+        /// <param name="values">The list of (value, probability) tuples to be evaluated</param>
+        /// <returns>The standard deviation of the given tuples</returns>
+        public static double StandardDeviation(this IEnumerable<Tuple<double, double>> values)
+        {
+            double exp = Expectation(values);
+            double variance = values.Select(x => Math.Pow((x.Item1 - exp), 2) * x.Item2).Sum();
             return Math.Sqrt(variance);
         }
 
