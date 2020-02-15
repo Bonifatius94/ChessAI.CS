@@ -26,6 +26,9 @@ namespace Chess.CLI
         CvC
     }
 
+    /// <summary>
+    /// Representing startup arguments of the chess CLI program.
+    /// </summary>
     public class StartupArgs
     {
         #region Constants

@@ -1,5 +1,4 @@
-﻿using Chess.AI.Data;
-using Chess.Lib.Extensions;
+﻿using Chess.Lib.Extensions;
 using System;
 using System.Diagnostics;
 using Xunit;
