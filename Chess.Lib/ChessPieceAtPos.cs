@@ -5,7 +5,7 @@ using System.Text;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This struct represents a chess piece and its position. (required because position property was removed from chess piece struct)
+    /// This struct represents a chess piece and its position as an immutable data type. (required because position property was removed from chess piece struct)
     /// </summary>
     public readonly struct ChessPieceAtPos
     {
@@ -18,8 +18,16 @@ namespace Chess.Lib
         /// <param name="piece">The chess piece data</param>
         public ChessPieceAtPos(ChessPosition position, ChessPiece piece)
         {
-            Position = position;
-            Piece = piece;
+            _hashCode = (short)((position.GetHashCode() << 5) | piece.GetHashCode());
+        }
+
+        /// <summary>
+        /// Create a new instance of hash code.
+        /// </summary>
+        /// <param name="hashCode">The hash code of the new instance.</param>
+        public ChessPieceAtPos(int hashCode)
+        {
+            _hashCode = (short)hashCode;
         }
 
         #endregion Constructor
@@ -27,14 +35,20 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// The chess position of the chess piece.
+        /// The hash code of a chess piece and its position on a chess board.
+        /// The data is stored as a short value with 6 bits for the position (X) and 5 bits for the chess piece (Y), the leading 5 bits are usused (?????XXXXXXYYYYY).
         /// </summary>
-        public readonly ChessPosition Position;
+        private readonly short _hashCode;
 
         /// <summary>
         /// The chess piece data.
         /// </summary>
-        public readonly ChessPiece Piece;
+        public ChessPiece Piece { get { return new ChessPiece((byte)(_hashCode & 0b_11111)); } }
+
+        /// <summary>
+        /// The chess position of the chess piece.
+        /// </summary>
+        public ChessPosition Position { get { return new ChessPosition((byte)(_hashCode >> 5)); } }
 
         #endregion Members
 
@@ -65,8 +79,7 @@ namespace Chess.Lib
         /// <returns>a unique hash code representing a chess piece and its position</returns>
         public override int GetHashCode()
         {
-            // combine unique hash codes of chess piece (5 bits) and chess position (6 bits)
-            return (Piece.GetHashCode() << 6) | Position.GetHashCode();
+            return _hashCode;
         }
 
         /// <summary>

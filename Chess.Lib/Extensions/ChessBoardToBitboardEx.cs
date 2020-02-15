@@ -9,12 +9,6 @@ namespace Chess.Lib.Extensions
     /// </summary>
     public static class ChessBoardToBitboardEx
     {
-        #region Constants
-
-        private const byte CHESS_PIECE_NULL = 0xFF;
-
-        #endregion Constants
-
         #region Methods
 
         /// <summary>
@@ -32,7 +26,7 @@ namespace Chess.Lib.Extensions
             {
                 // get the chess piece bits
                 var position = new ChessPosition(pos);
-                byte pieceCode = (byte)((board.GetPieceAt(position)?.GetHashCode() ?? CHESS_PIECE_NULL) << 3);
+                byte pieceCode = (byte)(board.GetPieceAt(position).GetHashCode() << 3);
 
                 // apply bits to bitboard
                 bitboard.SetBitsAt(pos * 5, pieceCode, 5);
@@ -53,8 +47,8 @@ namespace Chess.Lib.Extensions
             for (byte posHash = 0; posHash < 64; posHash++)
             {
                 byte pieceHash = (byte)(bitboard.GetBitsAt(posHash * 5, 5) >> 3);
-                var piece = (pieceHash == CHESS_PIECE_NULL) ? (ChessPiece?)null : new ChessPiece(pieceHash);
-                board.UpdatePieceAt(new ChessPosition(posHash), piece, (posHash == 63));
+                var piece = new ChessPiece(pieceHash);
+                board.UpdatePieceAt(new ChessPosition(posHash), piece/*, (posHash == 63)*/);
             }
 
             return board;
@@ -73,8 +67,8 @@ namespace Chess.Lib.Extensions
             for (byte posHash = 0; posHash < 64; posHash++)
             {
                 byte pieceHash = (byte)(bitboard.GetBitsAt(posHash * 5, 5) >> 3);
-                var piece = (pieceHash == CHESS_PIECE_NULL) ? (ChessPiece?)null : new ChessPiece(pieceHash);
-                board.UpdatePieceAt(new ChessPosition(posHash), piece, (posHash == 63));
+                var piece = new ChessPiece(pieceHash);
+                board.UpdatePieceAt(new ChessPosition(posHash), piece/*, (posHash == 63)*/);
             }
 
             return board;

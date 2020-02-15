@@ -30,9 +30,9 @@ namespace Chess.AI
         /// </summary>
         /// <param name="board">The chess board representing the current game situation</param>
         /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
-        /// <param name="level">The difficulty level</param>
+        /// <param name="searchDepth">The difficulty level</param>
         /// <returns>The 'best' possible chess draw</returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, ChessDifficultyLevel level)
+        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
         {
             // TODO: check whether the optimal draw was already found (-> database query)
 
@@ -43,8 +43,7 @@ namespace Chess.AI
             }
 
             // retrieve the optimal draw by iterative deepening
-            int depth = ((int)level) * 2;
-            var bestDraw = iterativeDeepening(board, precedingEnemyDraw, depth);
+            var bestDraw = iterativeDeepening(board, precedingEnemyDraw, searchDepth);
             
             return bestDraw;
         }
@@ -54,15 +53,16 @@ namespace Chess.AI
         /// </summary>
         /// <param name="board">The chess game situation before the draw to be evaluated</param>
         /// <param name="draw">The chess draw to be evaluated</param>
-        /// <param name="level">The minimax search depth (higher level = deeper search = better decisions)</param>
+        /// <param name="searchDepth">The minimax search depth (higher level = deeper search = better decisions)</param>
         /// <returns>a score that rates the quality of the given chess draw</returns>
-        public double RateDraw(ChessBoard board, ChessDraw draw, ChessDifficultyLevel level)
+        public double RateDraw(ChessBoard board, ChessDraw draw, int searchDepth)
         {
+            // simulate the given draw
             var simulatedBoard = (ChessBoard)board.Clone();
             simulatedBoard.ApplyDraw(draw);
 
-            int depth = ((int)level) * 2;
-            double score = minimax(simulatedBoard, draw, depth, double.MaxValue, double.MinValue, false);
+            // use the minimax algorithm to rate the score of the given draw
+            double score = negamax(simulatedBoard, draw, searchDepth - 1, double.MinValue, double.MaxValue, false) * -1;
 
             return score;
         }
@@ -103,32 +103,56 @@ namespace Chess.AI
             if (draws?.Count() <= 0) { throw new ArgumentException("the given player cannot draw. game is already over."); }
 
             // randomize draws on first run
-            IEnumerable<ChessDrawScore> window = draws.Shuffle().Select(x => new ChessDrawScore() { Draw = x }).ToArray();
-            IEnumerable<ChessDrawScore> drawsXScores = null;
+            IEnumerable<ChessDrawScore> window = draws.Shuffle().Select(x => new ChessDrawScore() { Draw = x, Score = 0 }).ToArray();
+            IEnumerable<ChessDrawScore> drawsScores = null;
 
             double maxScore = 0;
             int simDepth = 0;
+
+            Console.WriteLine();
 
             // increase search depth step by step
             do
             {
                 // calculate the score for all draws inside the aspiration window
-                drawsXScores = getDrawsWithScores(board, window, simDepth);
+                drawsScores = getRatedDraws(board, window, simDepth).ToArray();
+
+                #if DEBUG
+                    // write aspiration window to console
+                    //Console.WriteLine($"computed new aspiration window ({ minimaxCalls } minimax calls):");
+                    Console.WriteLine($"computed new draws with ratings:");
+                    drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+                    Console.WriteLine();
+                #endif
 
                 // select a new reasonable aspiration window according to the additional information
-                double newMaxScore = drawsXScores.Select(x => x.Score).Max();
-                window = selectAspirationWindow(drawsXScores, Math.Max(maxScore, newMaxScore));
-                
+                // moreover make sure that the best draw of the previous iteration is at least considered
+                double newMaxScore = drawsScores.Select(x => x.Score).Max();
+                var previousBestDraws = drawsScores.Where(x => x.Score == newMaxScore).ToArray();
+                window = selectAspirationWindow(drawsScores).Concat(previousBestDraws).Distinct().ToArray();
+
+                #if DEBUG
+                    // write aspiration window to console
+                    //Console.WriteLine($"computed new aspiration window ({ minimaxCalls } minimax calls):");
+                    Console.WriteLine($"computed new aspiration window:");
+                    window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+                    Console.WriteLine();
+                #endif
+
                 // update variables
                 maxScore = newMaxScore;
-                simDepth += 2;
+                simDepth = simDepth < depth - 1 ? simDepth + 2 : depth;
             }
-            while (simDepth <= depth && window.Count() > 1);
+            // termination conditions: 
+            //   1. max search depth reached
+            //   2. only one good draw left
+            //   3. draw found leading to victory
+            while (simDepth <= depth && window.Count() > 1 && maxScore < double.MaxValue);
             
             // determine the draw with the highest score (the 'best' draw)
             var bestDraw = (window.Count() == 1) 
                 ? window.Select(x => x.Draw).First() 
-                : drawsXScores.Where(x => x.Score == maxScore).Select(x => x.Draw).ChooseRandom();
+                : drawsScores.Where(x => x.Score == maxScore).Select(x => x.Draw).ChooseRandom();
 
             return bestDraw;
         }
@@ -136,82 +160,68 @@ namespace Chess.AI
         /// <summary>
         /// Select a reasonable aspiration window from the given chess draws and their scores according to statistic mathods.
         /// </summary>
-        /// <param name="drawsXScores">The chess draws and their scores </param>
-        /// <param name="maxScore">The maximum score to be included inside the aspiration window</param>
+        /// <param name="drawsXScores">The chess draws and their previous scores.</param>
         /// <returns>a list of chess draws</returns>
-        private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsXScores, double maxScore)
+        private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsXScores)
         {
             // eliminate too bad scores, so the deviation is not chosen too widely (not more than a queen sacrifice)
-            var notCatastophicDraws = drawsXScores.Where(x => x.Score > -10);
-            drawsXScores = (notCatastophicDraws.Count() > 0) ? notCatastophicDraws : drawsXScores;
+            //var notCatastophicDraws = drawsXScores.Where(x => x.Score >= ChessScoreGenerator.BASE_SCORE_QUEEN);
+            //drawsXScores = ((notCatastophicDraws.Count() > 0) ? notCatastophicDraws : drawsXScores).ToArray();
 
             // compute standard deviation of the scores and the average score
             double drawProbability = 1.0 / drawsXScores.Count();
-            double stdDeviation = drawsXScores.Select(x => new Tuple<double, double>(x.Score, drawProbability)).StandardDeviation();
-            double avgScore = drawsXScores.Select(x => x.Score).Average();
+            var valueXProbTuples = drawsXScores.Select(x => new Tuple<double, double>(x.Score, drawProbability)).ToArray();
+            double stdDeviation = valueXProbTuples.StandardDeviation();
+            double expectation = valueXProbTuples.Expectation();
 
-            double deviationFactor = 0.5;
+            // init loop variables
+            double deviationFactor = 0.3;
             ChessDrawScore[] window;
 
             do
             {
                 // select a reasonable aspiration window (make sure the last 'best draw' is always included)
-                double minScore = avgScore - (stdDeviation * deviationFactor);
-                window = drawsXScores.Where(x => x.Score >= minScore && x.Score <= maxScore).ToArray();
+                double minScore = expectation - (stdDeviation * deviationFactor);
+                window = drawsXScores.Where(x => x.Score >= minScore/* && x.Score <= maxScore*/).ToArray();
                 deviationFactor *= 2;
 
                 // TODO: rework this logic
             }
-            while (drawsXScores.Count() > 0 && window.Count() <= 0);
+            while (window.Count() <= 0);
             
             return window;
         }
-        
+
         /// <summary>
         /// Retrieve a list of the given chess draws and their scores of the minimax algorithm of the given depth.
         /// </summary>
         /// <param name="board">The chess board before the chess draw is applied</param>
-        /// <param name="draws">The chess draws to evaluate</param>
+        /// <param name="drawScores">The chess draws to evaluate</param>
         /// <param name="depth">The depth of the minimax algorithm</param>
         /// <returns>a list of (chess draw, minimax score) tuples, ordered by the score (desc)</returns>
-        private IEnumerable<ChessDrawScore> getDrawsWithScores(ChessBoard board, IEnumerable<ChessDrawScore> draws, int depth)
+        private IEnumerable<ChessDrawScore> getRatedDraws(ChessBoard board, IEnumerable<ChessDrawScore> drawScores, int depth)
         {
             // make sure that the ally can draw
-            if (draws.Count() == 0) { throw new ArgumentException("draws list is empty"); }
-            
+            if (drawScores?.Count() == 0) { throw new ArgumentException("draws list is empty"); }
+
             // get the best draw
-            var drawsWithScores = draws./*AsParallel().*/Select(oldScore =>
-            {
-                // simulate draw
-                var simDraw = oldScore.Draw;
-                var simBoard = new ChessBoard(board.Pieces);
-                simBoard.ApplyDraw(simDraw);
-
-                // prepare the new best draws cache
-                var newCache = new ChessDraw?[depth + 1];
-                if (oldScore.Cache != null) { Array.Copy(oldScore.Cache, newCache, oldScore.Cache.Length); }
-                newCache[0] = simDraw;
-                
-                // compute minimax score (needs to be started as minimizing player)
-                double simScore = (depth <= 0)
-                    ? ChessScoreHelper.Instance.GetScore(simBoard, simDraw.DrawingSide)                        // no minimax algo required. just get the score after applying the draw.
-                    : minimax(simBoard, ref newCache, depth - 1, double.MinValue, double.MaxValue, false);  // use minimax algo to determine the score
-
-                // return the simulated draw and its score
-                return new ChessDrawScore() { Draw = simDraw, Score = simScore, Cache = newCache };
-            });
+            #if DEBUG
+                drawScores = drawScores./*AsParallel().*/Select(x => new ChessDrawScore() { Draw = x.Draw, Score = RateDraw(board, x.Draw, depth) }).ToArray();
+            #else
+                drawScores = drawScores.AsParallel().Select(x => new ChessDrawScore() { Draw = x.Draw, Score = RateDraw(board, x.Draw, depth) }).ToArray();
+            #endif
 
             // return the draws and their scores
-            return drawsWithScores.ToArray();
+            return drawScores;
         }
 
-        private class ChessDrawScore
+        private struct ChessDrawScore
         {
             #region Members
 
             public ChessDraw Draw { get; set; }
             public double Score { get; set; }
-            public ChessDraw?[] Cache { get; set; }
+            //public ChessDraw?[] Cache { get; set; }
 
             #endregion Members
 
@@ -225,99 +235,6 @@ namespace Chess.AI
             #endregion Methods
         }
 
-        // TODO: implement minimax algorithm in a way that the best draw and its following draws can also be retrieved (not only score)
-        // => this would allow some caching optimizations during the next minimax procedure
-        
-        /// <summary>
-        /// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.
-        /// </summary>
-        /// <param name="board">The chess board representing the game situation data</param>
-        /// <param name="cache">A set with the best chess draw for each recursion level</param>
-        /// <param name="depth">The recursion depth (is decremented step-by-step, so the recursion stops eventually when it has reached depth=0)</param>
-        /// <param name="alpha">The lower bound of the already computed game scores</param>
-        /// <param name="beta">The upper bound of the already computed game scores</param>
-        /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
-        /// <returns>The best score to be expected for the maximizing player</returns>
-        private double minimax(ChessBoard board, ref ChessDraw?[] cache, int depth, double alpha, double beta, bool isMaximizing = true)
-        {
-            double score;
-            var precedingEnemyDraw = cache[cache.Length - depth - 2].Value;
-            var drawingSide = precedingEnemyDraw.DrawingSide.Opponent();
-
-            // recursion anchor: depth == 0
-            if (depth == 0)
-            {
-                score = ChessScoreHelper.Instance.GetScore(board, drawingSide);
-            }
-            // recursion call: depth > 0
-            else
-            {
-                // get all draws (child nodes) and shuffle them to randomize the algorithm
-                var cachedDraw = cache[cache.Length - depth];
-                var draws = getMinimaxDraws(board, precedingEnemyDraw, cachedDraw);
-
-                // init score with negative infinity when maximizing / positive infinity when minimizing
-                score = isMaximizing ? double.MinValue : double.MaxValue;
-                ChessDraw? bestDraw = cachedDraw;
-
-                // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
-                for (int i = 0; i < draws.Length; i++)
-                {
-                    // simulate chess draw
-                    var simDraw = draws[i];
-                    var simBoard = new ChessBoard(board.Pieces);
-                    simBoard.ApplyDraw(simDraw);
-
-                    // apply the simulated draw to the cache and compute the minimax score recursively
-                    cache[cache.Length - depth - 1] = simDraw;
-                    double minimaxScore = minimax(simBoard, ref cache, depth - 1, alpha, beta, !isMaximizing);
-
-                    // update score
-                    score = isMaximizing ? Math.Max(score, minimaxScore) : Math.Min(score, minimaxScore);
-
-                    // update alpha / beta
-                    if (isMaximizing) { alpha = Math.Max(score, alpha); }
-                    else              { beta  = Math.Min(score, beta);  }
-
-                    // cut-off when alpha and beta overlap (reset cached draw)
-                    if (alpha >= beta) { break; }
-
-                    // update the cache if there was an improvement of score
-                    if ((isMaximizing && minimaxScore > score) || (!isMaximizing && minimaxScore < score)) { bestDraw = simDraw; }
-                }
-
-                // update cached draw array
-                cache[cache.Length - depth - 1] = (alpha >= beta) ? cachedDraw : bestDraw;
-            }
-
-            return score;
-        }
-
-        private ChessDraw[] getMinimaxDraws(ChessBoard board, ChessDraw? precedingEnemyDraw, ChessDraw? cachedDraw)
-        {
-            // get all draws (child nodes) and shuffle them to randomize the algorithm
-            var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
-            var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
-            
-            // if there is already a draw advise in the cache -> put it at the start of the array
-            if (cachedDraw != null)
-            {
-                // find the index of the cached draw in the draws array
-                int index = Array.IndexOf(draws, cachedDraw.Value);
-
-                // make sure the draw is part of the draws array (this indicates that the cached draw is valid)
-                if (index > 0)
-                {
-                    // put the cached draw at the start of the array
-                    draws[index] = draws[0];
-                    draws[0] = cachedDraw.Value;
-                }
-            }
-
-            return draws;
-        }
-
         /// <summary>
         /// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.
         /// </summary>
@@ -328,85 +245,122 @@ namespace Chess.AI
         /// <param name="beta">The upper bound of the already computed game scores</param>
         /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
-        private double minimax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
+        private double negamax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
-            double score;
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
-            // recursion anchor: depth == 0
-            if (depth == 0)
+            // recursion anchor: depth <= 0
+            if (depth <= 0) { return ChessScoreGenerator.Instance.GetScore(board, drawingSide); }
+
+            // init max score
+            double maxScore = alpha;
+
+            // compute possible draws
+            var alliedPieces = board.GetPiecesOfColor(drawingSide);
+            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+
+            // order draws by possible gain, so alpha-beta prune can achieve more cut-offs
+            var preorderedDraws = getPreorderedDrawsByPossibleGain(board, draws, drawingSide);
+
+            // loop through all possible draws
+            foreach (var simDraw in preorderedDraws)
             {
-                score = ChessScoreHelper.Instance.GetScore(board, drawingSide);
-            }
-            // recursion call: depth > 0
-            else
-            {
-                // get all draws (child nodes) and shuffle them to randomize the algorithm
-                var alliedPieces = board.GetPiecesOfColor(drawingSide);
-                var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+                // simulate draw
+                var simBoard = (ChessBoard)board.Clone();
+                simBoard.ApplyDraw(simDraw);
 
-                // TODO: remember 'good' draws, so the alpha/beta prune works best (-> some data needs to be cached, e.g. to draws of the last run)
-                // TODO: enhance alpha/beta prune efficiency by an efficient way to order the computed draws (-> data needs to be cached)
+                // start recursion
+                double score = negamax(simBoard, simDraw, depth - 1, -beta, -maxScore, !isMaximizing) * -1;
 
-                // init score with negative infinity when maximizing / positive infinity when minimizing
-                score = isMaximizing ? double.MinValue : double.MaxValue;
+                // update max score
+                if (score > maxScore) { maxScore = score; }
 
-                // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
-                for (int i = 0; i < draws.Length; i++)
-                {
-                    // simulate chess draw
-                    var simDraw = draws[i];
-                    var simBoard = new ChessBoard(board.Pieces);
-                    simBoard.ApplyDraw(simDraw);
-
-                    // update the minimax score of recursions
-                    double minimaxScore = minimax(simBoard, simDraw, depth - 1, alpha, beta, !isMaximizing);
-                    score = isMaximizing ? Math.Max(score, minimaxScore) : Math.Min(score, minimaxScore);
-
-                    // update alpha / beta
-                    if (isMaximizing) { alpha = Math.Max(score, alpha); }
-                    else { beta = Math.Min(score, beta); }
-
-                    // cut-off when alpha and beta overlap
-                    if (alpha >= beta) { break; }
-                }
+                // check for beta cut-off
+                if (maxScore >= beta) { break; }
             }
 
-            return score;
+            return maxScore;
         }
 
-        #endregion Methods
-    }
-
-    /// <summary>
-    /// An extension providing standard deviation computation functionality.
-    /// </summary>
-    public static class StandardDeviationEx
-    {
-        #region Methods
-
-        /// <summary>
-        /// Compute the expectation of the given (value, probability) tuples.
-        /// </summary>
-        /// <param name="values">The list of (value, probability) tuples to be evaluated</param>
-        /// <returns>The expectation of the given tuples</returns>
-        public static double Expectation(this IEnumerable<Tuple<double, double>> values)
+        private IEnumerable<ChessDraw> getPreorderedDrawsByPossibleGain(ChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
         {
-            // list of values as (value, probability) tuples
-            return values.Select(x => x.Item1 * x.Item2).Sum();
+            // compute the score
+            var drawsXScoreTuples = new List<ChessDrawScore>();
+
+            foreach (var simDraw in draws)
+            {
+                // simulate draw
+                var simBoard = (ChessBoard)board.Clone();
+                simBoard.ApplyDraw(simDraw);
+
+                // compute the new score of the resulting position
+                double score = ChessScoreGenerator.Instance.GetScore(simBoard, drawingSide);
+
+                // add the (draw, score) tuple to the list
+                drawsXScoreTuples.Add(new ChessDrawScore() { Draw = simDraw, Score = score });
+            }
+
+            return drawsXScoreTuples.OrderByDescending(x => x.Score).Select(x => x.Draw).ToArray();
         }
 
-        /// <summary>
-        /// Compute the standard deviation of the given (value, probability) tuples.
-        /// </summary>
-        /// <param name="values">The list of (value, probability) tuples to be evaluated</param>
-        /// <returns>The standard deviation of the given tuples</returns>
-        public static double StandardDeviation(this IEnumerable<Tuple<double, double>> values)
-        {
-            double exp = Expectation(values);
-            double variance = values.Select(x => Math.Pow((x.Item1 - exp), 2) * x.Item2).Sum();
-            return Math.Sqrt(variance);
-        }
+        ///// <summary>
+        ///// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.
+        ///// </summary>
+        ///// <param name="board">The chess board representing the game situation data</param>
+        ///// <param name="precedingEnemyDraw">The last chess draw made by the opponent</param>
+        ///// <param name="depth">The recursion depth (is decremented step-by-step, so the recursion stops eventually when it has reached depth=0)</param>
+        ///// <param name="alpha">The lower bound of the already computed game scores</param>
+        ///// <param name="beta">The upper bound of the already computed game scores</param>
+        ///// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
+        ///// <returns>The best score to be expected for the maximizing player</returns>
+        //private double minimax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
+        //{
+        //    // TODO: make sure that the minimax algo actually makes clever decisions instead of rather random ones
+
+        //    double score;
+        //    var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
+
+        //    // recursion anchor: depth <= 0
+        //    if (depth <= 0)
+        //    {
+        //        score = ChessScoreGenerator.Instance.GetScore(board/*, drawingSide*/);
+        //    }
+        //    // recursion call: depth > 0
+        //    else
+        //    {
+        //        // get all draws (child nodes) and shuffle them to randomize the algorithm
+        //        var alliedPieces = board.GetPiecesOfColor(drawingSide);
+        //        var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+
+        //        // TODO: remember 'good' draws, so the alpha/beta prune works best (-> some data needs to be cached, e.g. to draws of the last run)
+        //        // TODO: enhance alpha/beta prune efficiency by an efficient way to order the computed draws (-> data needs to be cached)
+
+        //        // init score with negative infinity when maximizing / positive infinity when minimizing
+        //        score = isMaximizing ? double.MinValue : double.MaxValue;
+
+        //        // simulate each draw and recurse (if player is checkmate => draw.count == 0 => recursion anchor)
+        //        for (int i = 0; i < draws.Length; i++)
+        //        {
+        //            // simulate chess draw
+        //            var simDraw = draws[i];
+        //            var simBoard = new ChessBoard(board.Pieces);
+        //            simBoard.ApplyDraw(simDraw);
+
+        //            // update the minimax score of recursions
+        //            double minimaxScore = minimax(simBoard, simDraw, depth - 1, alpha, beta, !isMaximizing);
+        //            score = isMaximizing ? Math.Max(score, minimaxScore) : Math.Min(score, minimaxScore);
+
+        //            // update alpha / beta
+        //            if (isMaximizing) { alpha = Math.Max(score, alpha); }
+        //            else              { beta  = Math.Min(score, beta);  }
+
+        //            // cut-off when alpha and beta overlap
+        //            if (alpha >= beta) { break; }
+        //        }
+        //    }
+
+        //    return score;
+        //}
 
         #endregion Methods
     }

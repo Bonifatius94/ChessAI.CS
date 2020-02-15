@@ -61,6 +61,11 @@ namespace Chess.Lib
         /// </summary>
         public List<ChessDraw> AllDraws { get { return _drawHistory.Reverse().ToList(); } }
 
+        /// <summary>
+        /// The current status of the chess game.
+        /// </summary>
+        public ChessGameStatus GameStatus { get { return _drawHistory.Count > 0 ? ChessDrawSimulator.Instance.GetCheckGameStatus(Board, LastDraw) : ChessGameStatus.None; } }
+
         #endregion Members
 
         #region Methods

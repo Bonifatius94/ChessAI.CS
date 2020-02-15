@@ -54,22 +54,21 @@ namespace Chess.Lib
         #endregion Constants
 
         #region Constructor
-        
+
         /// <summary>
         /// Create a new instance of a chess board with the given chess pieces.
         /// </summary>
         /// <param name="piecesAtPos">The chess pieces to be applied to the chess board</param>
         public ChessBoard(IEnumerable<ChessPieceAtPos> piecesAtPos)
         {
-            _pieces = new ChessPiece?[64];
-            
+            // init empty pieces array
+            _pieces = new ChessPiece[64];
+
+            // copy overloaded pieces into pieces array
             foreach (var pieceAtPos in piecesAtPos)
             {
                 _pieces[pieceAtPos.Position.GetHashCode()] = pieceAtPos.Piece;
             }
-            
-            _piecesCache = new ChessPieceAtPos?[32];
-            updatePiecesCache(_pieces, ref _piecesCache);
         }
 
         #endregion Constructor
@@ -79,7 +78,7 @@ namespace Chess.Lib
         /// <summary>
         /// An array of all chess pieces at the index of their position's hash code. (value is null if there is no chess piece at the position)
         /// </summary>
-        private ChessPiece?[] _pieces;
+        private ChessPiece[] _pieces;
         
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
@@ -87,14 +86,24 @@ namespace Chess.Lib
         public static ChessBoard StartFormation { get { return new ChessBoard(START_FORMATION); } }
         
         /// <summary>
-        /// A cache for chess pieces list containing tuples of (chess piece, chess position).
-        /// </summary>
-        private ChessPieceAtPos?[] _piecesCache;
-
-        /// <summary>
         /// A list of all chess pieces (and their position) that are currently on the chess board.
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> Pieces { get { return _piecesCache.Where(x => x.HasValue).Select(x => x.Value); } }
+        public IEnumerable<ChessPieceAtPos> AllPieces
+        {
+            get
+            {
+                // determine the pieces count
+                byte piecesCount = 0;
+                for (byte pos = 0; pos < 64; pos++) { if (_pieces[pos].HasValue) { piecesCount++; } }
+
+                // fill the pieces array
+                byte i = 0;
+                var pieces = new ChessPieceAtPos[piecesCount];
+                for (byte pos = 0; pos < 64; pos++) { if (_pieces[pos].HasValue) { pieces[i++] = new ChessPieceAtPos(new ChessPosition(pos), _pieces[pos]); } }
+
+                return pieces;
+            }
+        }
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
@@ -109,17 +118,17 @@ namespace Chess.Lib
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPieceAtPos WhiteKing { get { return WhitePieces.Where(x => x.Piece.Type == ChessPieceType.King).First(); } }
+        public ChessPieceAtPos WhiteKing { get { return WhitePieces.First(x => x.Piece.Type == ChessPieceType.King); } }
 
         /// <summary>
         /// Selects the black king from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPieceAtPos BlackKing { get { return BlackPieces.Where(x => x.Piece.Type == ChessPieceType.King).First(); } }
+        public ChessPieceAtPos BlackKing { get { return BlackPieces.First(x => x.Piece.Type == ChessPieceType.King); } }
 
         #endregion Members
 
         #region Methods
-        
+
         /// <summary>
         /// Indicates whether the chess field at the given positon is captured by a chess piece.
         /// </summary>
@@ -127,7 +136,7 @@ namespace Chess.Lib
         /// <returns>A boolean that indicates whether the given chess field is captured</returns>
         public bool IsCapturedAt(ChessPosition position)
         {
-            return _pieces[position.GetHashCode()] != null;
+            return _pieces[position.GetHashCode()].HasValue;
         }
 
         /// <summary>
@@ -135,7 +144,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The chess field</param>
         /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
-        public ChessPiece? GetPieceAt(ChessPosition position)
+        public ChessPiece GetPieceAt(ChessPosition position)
         {
             return _pieces[position.GetHashCode()];
         }
@@ -145,36 +154,13 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece to be updated</param>
         /// <param name="newPiece">The new chess piece data</param>
-        /// <param name="updateCache">Indicates whether the cached pieces list should be updated</param>
-        public void UpdatePieceAt(ChessPosition position, ChessPiece? newPiece, bool updateCache = true)
+        ///// <param name="updateCache">Indicates whether the cached pieces list should be updated</param>
+        public void UpdatePieceAt(ChessPosition position, ChessPiece newPiece/*, bool updateCache = true*/)
         {
             // update main pieces list
             _pieces[position.GetHashCode()] = newPiece;
-
-            // update pieces cache (if desired)
-            if (updateCache) { updatePiecesCache(_pieces, ref _piecesCache); }
         }
         
-        private static void updatePiecesCache(ChessPiece?[] pieces, ref ChessPieceAtPos?[] cache)
-        {
-            byte piecesCount = 0;
-
-            // write all existing chess pieces
-            for (byte posIndex = 0; posIndex < 64; posIndex++)
-            {
-                var position = new ChessPosition(posIndex);
-
-                if (pieces[posIndex] != null)
-                {
-                    cache[piecesCount++] = new ChessPieceAtPos(position, pieces[posIndex].Value);
-                }
-            }
-
-            // set rest of array null
-            int i = piecesCount;
-            while (i < 32 && cache[i] != null) { cache[i++] = null; }
-        }
-
         /// <summary>
         /// Retrieve all chess pieces of the given player's side.
         /// </summary>
@@ -182,7 +168,7 @@ namespace Chess.Lib
         /// <returns>a list of all chess pieces of the given player's side</returns>
         public IEnumerable<ChessPieceAtPos> GetPiecesOfColor(ChessColor side)
         {
-            return Pieces.Where(x => x.Piece.Color == side);
+            return AllPieces.Where(x => x.Piece.Color == side).ToArray();
         }
 
         /// <summary>
@@ -192,8 +178,8 @@ namespace Chess.Lib
         public void ApplyDraw(ChessDraw draw)
         {
             // get the destination chess field instance of the chess board
-            var drawingPiece = GetPieceAt(draw.OldPosition).Value;
-            var pieceToTake = GetPieceAt(draw.NewPosition);
+            var drawingPiece = GetPieceAt(draw.OldPosition);
+            //var pieceToTake = GetPieceAt(draw.NewPosition);
             
             // update drawing piece data
             drawingPiece.WasMoved = true;
@@ -210,11 +196,11 @@ namespace Chess.Lib
                 // get the rook involved and its old and new position
                 var oldRookPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 0 : 7);
                 var newRookPosition = new ChessPosition(draw.NewPosition.Row, (draw.NewPosition.Column == 2) ? 3 : 5);
-                var drawingRook = GetPieceAt(oldRookPosition).Value;
+                var drawingRook = GetPieceAt(oldRookPosition);
 
                 // move the tower
-                UpdatePieceAt(oldRookPosition, null, false);
-                UpdatePieceAt(newRookPosition, drawingRook, false);
+                UpdatePieceAt(oldRookPosition, ChessPiece.NULL);
+                UpdatePieceAt(newRookPosition, drawingRook);
             }
 
             // handle en-passant
@@ -222,19 +208,13 @@ namespace Chess.Lib
             {
                 // get position of the taken enemy peasant and remove it
                 var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
-                UpdatePieceAt(takenPeasantPosition, null, false);
+                UpdatePieceAt(takenPeasantPosition, ChessPiece.NULL);
             }
 
             // apply data to the chess board
-            UpdatePieceAt(draw.OldPosition, null, false);
-            UpdatePieceAt(draw.NewPosition, drawingPiece, true);
+            UpdatePieceAt(draw.OldPosition, ChessPiece.NULL);
+            UpdatePieceAt(draw.NewPosition, drawingPiece);
         }
-
-        // TODO: implement equals() and gethashcode() properly
-
-        // problem: hash code would require 40 byte (5 bit per chess piece * 64 positions), but int has only 4 byte (32-bit int)
-        //       => hash the content of the chess pieces array and dump it to 4 byte
-        //       => make sure that similar chess boards have unique hash codes
 
         ///// <summary>
         ///// Check whether the two objects are equal.
@@ -262,7 +242,7 @@ namespace Chess.Lib
         /// e.g. start position:
         /// 
         ///   -----------------------------------------
-        /// 8 | BR | BH | BB | BQ | BK | BB | BH | BR |
+        /// 8 | BR | BN | BB | BQ | BK | BB | BN | BR |
         ///   -----------------------------------------
         /// 7 | BP | BP | BP | BP | BP | BP | BP | BP |
         ///   -----------------------------------------
@@ -276,7 +256,7 @@ namespace Chess.Lib
         ///   -----------------------------------------
         /// 2 | WP | WP | WP | WP | WP | WP | WP | WP |
         ///   -----------------------------------------
-        /// 1 | WR | WH | WB | WQ | WK | WB | WH | WR |
+        /// 1 | WR | WN | WB | WQ | WK | WB | WN | WR |
         ///   -----------------------------------------
         ///     A    B    C    D    E    F    G    H
         /// </summary>
@@ -296,8 +276,8 @@ namespace Chess.Lib
                     var piece = GetPieceAt(position);
 
                     // TODO: try to use unicode chess symbols
-                    char chessPieceColor = piece != null ? (char)piece.Value.Color.ToChar() : ' ';
-                    char chessPieceType = piece != null ? piece.Value.Type.ToChar() : ' ';
+                    char chessPieceColor = IsCapturedAt(position) ? piece.Color.ToChar() : ' ';
+                    char chessPieceType = IsCapturedAt(position) ? piece.Type.ToChar() : ' ';
                     builder.Append($" { chessPieceColor }{ chessPieceType } |");
                 }
 
@@ -321,7 +301,7 @@ namespace Chess.Lib
         /// <returns>a new chess board instance</returns>
         public object Clone()
         {
-            return new ChessBoard(this.Pieces);
+            return new ChessBoard(this.AllPieces);
         }
 
         /// <summary>
@@ -331,17 +311,44 @@ namespace Chess.Lib
         /// <returns>a boolean indicating whether the objects are equal</returns>
         public override bool Equals(object obj)
         {
-            // TODO: test logic
-            return (obj != null && obj.GetType() == typeof(ChessBoard)) && (((ChessBoard)obj).Pieces.Intersect(this.Pieces).Count() == this.Pieces.Count());
+            // make sure that the object types are the same and the pieces on the boards match
+            // pieces match = the count of the intersection of both piece collection needs to be the same as the count of only one collection
+            return (obj != null && obj.GetType() == typeof(ChessBoard)) && (((ChessBoard)obj).AllPieces.Intersect(this.AllPieces).Count() == this.AllPieces.Count());
         }
 
         /// <summary>
-        /// Overwrite hash code function and always return 0, so the equals method gets called for comparison.
+        /// Overwrite hash code function and compute a hash value that is often but not always unique.
         /// </summary>
-        /// <returns>always 0</returns>
+        /// <returns>hash of pieces string, may not always be unique</returns>
         public override int GetHashCode()
         {
-            return 0;
+            // convert chess pieces into a string and return the hash of the string
+            var temp = new char[64];
+            for (byte pos = 0; pos < 64; pos++) { temp[pos] = (char)_pieces[pos].GetHashCode(); }
+            return new string(temp).GetHashCode();
+        }
+
+        #endregion Methods
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class ChessBoardEx
+    {
+        #region Methods
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="precedingEnemyDraw"></param>
+        /// <returns></returns>
+        public static IEnumerable<ChessDraw> GetAllDraws(this ChessBoard board, ChessDraw? precedingEnemyDraw)
+        {
+            var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
+            var alliedPieces = board.GetPiecesOfColor(drawingSide);
+            return alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
         }
 
         #endregion Methods

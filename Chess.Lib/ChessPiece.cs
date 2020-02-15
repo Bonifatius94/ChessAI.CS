@@ -8,34 +8,39 @@ namespace Chess.Lib
     public enum ChessPieceType
     {
         /// <summary>
+        /// Representing an invalid chess piece type (this is used for nullable chess piece value).
+        /// </summary>
+        Invalid = 0,
+
+        /// <summary>
         /// Representing a king chess piece.
         /// </summary>
-        King = 0,
+        King = 1,
 
         /// <summary>
         /// Representing a queen chess piece.
         /// </summary>
-        Queen = 1,
+        Queen = 2,
 
         /// <summary>
         /// Representing a rook chess piece.
         /// </summary>
-        Rook = 2,
+        Rook = 3,
 
         /// <summary>
         /// Representing a bishop chess piece.
         /// </summary>
-        Bishop = 3,
+        Bishop = 4,
 
         /// <summary>
         /// Representing a knigh chess piece.
         /// </summary>
-        Knight = 4,
+        Knight = 5,
 
         /// <summary>
         /// Representing a peasant chess piece.
         /// </summary>
-        Peasant = 5
+        Peasant = 6
     }
     
     /// <summary>
@@ -94,12 +99,12 @@ namespace Chess.Lib
         /// Creates a chess piece instance from hash code.
         /// </summary>
         /// <param name="hashCode">The hash code containing the chess piece data</param>
-        public ChessPiece(byte hashCode)
+        public ChessPiece(int hashCode)
         {
             // make sure the hash code is within the expected value range
             if (hashCode < 0 || hashCode >= 0b_100000) { throw new ArgumentException("invalid hash code detected (expected a number of set { 0, 1, ..., 31 })"); }
 
-            _hashCode = hashCode;
+            _hashCode = (byte)hashCode;
         }
 
         #endregion Constructor
@@ -143,11 +148,26 @@ namespace Chess.Lib
             get { return (ChessPieceType)(_hashCode & BITS_OF_TYPE); }
             set { _hashCode = (byte)((_hashCode & ~BITS_OF_TYPE) | ((byte)value)); }
         }
-        
+
+        /// <summary>
+        /// Indicates whether the chess piece is not null.
+        /// </summary>
+        public bool HasValue { get { return Type != ChessPieceType.Invalid; } }
+
+        ///// <summary>
+        ///// The value of this nullable chess piece implementation.
+        ///// </summary>
+        //public ChessPiece Value { get { return _piece; } }
+
+        /// <summary>
+        /// The chess piece value representing null value. The hash value is chosen as 0, so an empty array of chess pieces automatically contains only null values.
+        /// </summary>
+        public static readonly ChessPiece NULL = new ChessPiece(0);
+
         #endregion Members
 
         #region Methods
-        
+
         /// <summary>
         /// Create a deep copy of the current instance.
         /// </summary>

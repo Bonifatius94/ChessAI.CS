@@ -1,72 +1,75 @@
-﻿using Chess.AI;
+﻿using Chess.CLI.Player;
 using Chess.Lib;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Chess.CLI
 {
-    class Program
+    /// <summary>
+    /// Executes a chess game via command line interface.
+    /// </summary>
+    public class Program
     {
         #region Main
 
+        /// <summary>
+        /// Main routine that executes a chess game.
+        /// </summary>
+        /// <param name="args">The CLI arguments passed by the user.</param>
         public static void Main(string[] args)
         {
-            var gameWatch = new Stopwatch();
-            gameWatch.Start();
+            // parse args
+            var startupArgs = new StartupArgs().Init(args);
 
-            // init new game
-            var game = new ChessGame();
-            var gameStatus = CheckGameStatus.None;
-            
-            try
+            // make sure the program is not running in help mode
+            if (!startupArgs.IsHelp)
             {
-                do
-                {
-                    var drawWatch = new Stopwatch();
-                    
-                    // select the best draw considering the next couple of draws
-                    drawWatch.Start();
-                    var draw = MinimaxChessDrawAI.Instance.GetNextDraw(game.Board, game.LastDrawOrDefault, ChessDifficultyLevel.Medium);
-                    drawWatch.Stop();
+                // init game session
+                var session = initChessGame(startupArgs);
 
-                    // apply the draw to the chess board and  check if the game is over
-                    game.ApplyDraw(draw);
-                    gameStatus = ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, draw);
+                // execute game
+                var watch = new Stopwatch();
+                watch.Start();
+                var game = session.ExecuteGame();
+                watch.Stop();
+                var timespan = new TimeSpan(watch.ElapsedTicks);
 
-                    // print draw and board after draw was applied
-                    Console.WriteLine();
-                    Console.WriteLine($"{ draw }{ (gameStatus == CheckGameStatus.None ? string.Empty : " " + gameStatus.ToString().ToLower()) }");
-                    Console.WriteLine($"took { Math.Round(new TimeSpan(drawWatch.ElapsedTicks).TotalSeconds, 2) } seconds");
-                    Console.WriteLine(game.Board.ToString());
-                }
-                while (!gameStatus.IsGameOver() && !game.ContainsLoop());
+                // write game result
+                Console.WriteLine($"Game is over, took { timespan.Minutes }m { timespan.Seconds }s, { game.LastDraw.DrawingSide } player wins!");
             }
-            finally
-            {
-                if (gameStatus.IsGameOver())
-                {
-                    Console.WriteLine($"game over. { (gameStatus == CheckGameStatus.Stalemate ? "tied" : $"{ game.SideToDraw.Opponent().ToString().ToLower() } wins") }.");
-                    Console.WriteLine("======================");
-                }
-                else if (game.ContainsLoop())
-                {
-                    Console.WriteLine($"loop encountered. game is undecided.");
-                    Console.WriteLine("======================");
-                }
-            }
-
-            gameWatch.Stop();
-            var gameTime = new TimeSpan(gameWatch.ElapsedTicks);
-            Console.WriteLine($"game took { Math.Round(gameTime.TotalMinutes, 2) } minutes");
-
-            // wait for exit
-            Console.WriteLine();
-            Console.Write("Exit with ENTER");
-            Console.ReadLine();
         }
-        
+
+        /// <summary>
+        /// Initialize a new game session with the given startup arguments.
+        /// </summary>
+        /// <param name="args">The startup arguments.</param>
+        /// <returns>a new game session</returns>
+        private static ChessGameSession initChessGame(StartupArgs args)
+        {
+            IChessPlayer whitePlayer;
+            IChessPlayer blackPlayer;
+
+            // init players
+            if (args.GameMode == ChessGameMode.PvC)
+            {
+                var humanPlayerSide = new Random().Next(0, 2) == 0 ? ChessColor.White : ChessColor.Black;
+                whitePlayer = humanPlayerSide == ChessColor.White ? (IChessPlayer)new HumanChessPlayer(ChessColor.White) : new ArtificialChessPlayer(args.ComputerLevel);
+                blackPlayer = humanPlayerSide != ChessColor.White ? (IChessPlayer)new HumanChessPlayer(ChessColor.Black) : new ArtificialChessPlayer(args.ComputerLevel);
+            }
+            else if (args.GameMode == ChessGameMode.PvC)
+            {
+                whitePlayer = new ArtificialChessPlayer(args.ComputerLevel);
+                blackPlayer = new ArtificialChessPlayer(args.ComputerLevel);
+            }
+            else
+            {
+                whitePlayer = new HumanChessPlayer(ChessColor.White);
+                blackPlayer = new HumanChessPlayer(ChessColor.Black);
+            }
+
+            return new ChessGameSession(whitePlayer, blackPlayer);
+        }
+
         #endregion Main
     }
 }

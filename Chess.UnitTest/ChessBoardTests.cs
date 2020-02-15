@@ -53,9 +53,9 @@ namespace Chess.UnitTest
             {
                 for (int column = 0; column < 8; column++)
                 {
-                    var position = new ChessPosition(row, column);
-                    var pieceAtPos = board.GetPieceAt(position);
-                    Assert.True((pieceAtPos != null && pieces.Any(x => x.Piece == pieceAtPos.Value)) || (pieceAtPos == null && !pieces.Any(x => x.Position == position)));
+                    var pos = new ChessPosition(row, column);
+                    var pieceAtPos = board.GetPieceAt(pos);
+                    Assert.True((board.IsCapturedAt(pos) && pieces.Any(x => x.Piece == pieceAtPos)) || (!board.IsCapturedAt(pos) && !pieces.Any(x => x.Position == pos)));
                 }
             }
         }

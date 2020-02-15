@@ -8,7 +8,7 @@ namespace Chess.Lib
     /// <summary>
     /// An enumeration representing the possible chess game outcomes.
     /// </summary>
-    public enum CheckGameStatus
+    public enum ChessGameStatus
     {
         /// <summary>
         /// Nothing special. The drawing player is not checked and has options to draw.
@@ -91,7 +91,7 @@ namespace Chess.Lib
         /// <param name="board">the chess board to be evaluated</param>
         /// <param name="precedingEnemyDraw">the preceding opponent chess draw</param>
         /// <returns>a check game status</returns>
-        public CheckGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
+        public ChessGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
         {
             var alliedSide = (precedingEnemyDraw.DrawingSide == ChessColor.White) ? ChessColor.Black : ChessColor.White;
             var enemySide = precedingEnemyDraw.DrawingSide;
@@ -101,8 +101,8 @@ namespace Chess.Lib
             bool canEnemyCheckmate = canAchieveCheckmate(board, enemySide);
 
             // quit game status analysis if ally has lost due to unsufficient pieces
-            if (!canAllyCheckmate && canEnemyCheckmate) { return CheckGameStatus.UnsufficientPieces; }
-            if (!canAllyCheckmate && !canEnemyCheckmate) { return CheckGameStatus.Tie; }
+            if (!canAllyCheckmate && canEnemyCheckmate) { return ChessGameStatus.UnsufficientPieces; }
+            if (!canAllyCheckmate && !canEnemyCheckmate) { return ChessGameStatus.Tie; }
 
             // find out if any allied chess piece can draw
             var alliedPieces = board.GetPiecesOfColor(alliedSide);
@@ -120,8 +120,8 @@ namespace Chess.Lib
             
             var status = 
                 canAllyDraw
-                    ? (isAlliedKingChecked ? CheckGameStatus.Check : CheckGameStatus.None) 
-                    : (isAlliedKingChecked ? CheckGameStatus.Checkmate : CheckGameStatus.Stalemate);
+                    ? (isAlliedKingChecked ? ChessGameStatus.Check : ChessGameStatus.None) 
+                    : (isAlliedKingChecked ? ChessGameStatus.Checkmate : ChessGameStatus.Stalemate);
             
             return status;
         }
@@ -187,9 +187,9 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="status">the game status to be evaluated</param>
         /// <returns>a boolean indicating whether the game is over</returns>
-        public static bool IsGameOver(this CheckGameStatus status)
+        public static bool IsGameOver(this ChessGameStatus status)
         {
-            return !(status == CheckGameStatus.None || status == CheckGameStatus.Check);
+            return !(status == ChessGameStatus.None || status == ChessGameStatus.Check);
         }
 
         #endregion Methods

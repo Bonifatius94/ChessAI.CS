@@ -3,7 +3,8 @@
 namespace Chess.Lib
 {
     /// <summary>
-    /// Represents a position on a chess board.
+    /// This class represents a position on a chess board. Therefore the data is stored as a single byte of two 3-bit numbers for row and column (??RRRCCC), the leading 2 bits are unused.
+    /// Moreover this is an immutable data type optimized for high performance use.
     /// </summary>
     public readonly struct ChessPosition : ICloneable
     {
@@ -55,6 +56,10 @@ namespace Chess.Lib
 
         #region Members
 
+        /// <summary>
+        /// The byte representing a position on a chess board.
+        /// The data is stored as a single byte of two 3-bit numbers for row and column (??RRRCCC), the leading 2 bits are unused.
+        /// </summary>
         private readonly byte _hashCode;
         
         /// <summary>

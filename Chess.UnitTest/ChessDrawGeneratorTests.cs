@@ -127,8 +127,8 @@ namespace Chess.UnitTest
                             {
                                 board.ApplyDraw(draw);
                                 Assert.True(
-                                       board.GetPieceAt(oldKingPos) == null && board.GetPieceAt(newKingPos).Value.Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Value.Color == allyColor
-                                    && board.GetPieceAt(oldRookPos) == null && board.GetPieceAt(newRookPos).Value.Type == ChessPieceType.Rook && board.GetPieceAt(newRookPos).Value.Color == allyColor
+                                       !board.IsCapturedAt(oldKingPos) && board.GetPieceAt(newKingPos).Type == ChessPieceType.King && board.GetPieceAt(newKingPos).Color == allyColor
+                                    && !board.IsCapturedAt(oldRookPos) && board.GetPieceAt(newRookPos).Type == ChessPieceType.Rook && board.GetPieceAt(newRookPos).Color == allyColor
                                 );
                             }
                         }
@@ -178,7 +178,7 @@ namespace Chess.UnitTest
                         board = new ChessBoard(pieces);
                         board.ApplyDraw(draw);
                         var pieceCmp = new ChessPiece(ChessPieceType.Queen, allyColor, true);
-                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                        Assert.True(!board.IsCapturedAt(draw.OldPosition)  && board.GetPieceAt(draw.NewPosition) == pieceCmp);
                     }
                 }
             }
@@ -227,7 +227,7 @@ namespace Chess.UnitTest
                         board = new ChessBoard(pieces);
                         board.ApplyDraw(draw);
                         var pieceCmp = new ChessPiece(ChessPieceType.Rook, allyColor, true);
-                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                        Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
                     }
                 }
             }
@@ -268,7 +268,7 @@ namespace Chess.UnitTest
                     board = new ChessBoard(pieces);
                     board.ApplyDraw(draw);
                     var pieceCmp = new ChessPiece(ChessPieceType.Bishop, allyColor, true);
-                    Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                    Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
                 }
             }
         }
@@ -318,7 +318,7 @@ namespace Chess.UnitTest
                         board = new ChessBoard(pieces);
                         board.ApplyDraw(draw);
                         var pieceCmp = new ChessPiece(ChessPieceType.Knight, allyColor, true);
-                        Assert.True(board.GetPieceAt(draw.OldPosition) == null && board.GetPieceAt(draw.NewPosition).Value == pieceCmp);
+                        Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
                     }
                 }
             }
@@ -405,10 +405,7 @@ namespace Chess.UnitTest
                                     // check if the chess piece is moved correctly
                                     board = new ChessBoard(pieces);
                                     board.ApplyDraw(dfwDraw);
-                                    Assert.True(
-                                        board.GetPieceAt(oldPos) == null
-                                        && board.GetPieceAt(dfwNewPos).Value == pieceCmp
-                                    );
+                                    Assert.True(!board.IsCapturedAt(oldPos) && board.GetPieceAt(dfwNewPos) == pieceCmp);
                                 }
 
                                 if (isDfwValid)
@@ -418,10 +415,7 @@ namespace Chess.UnitTest
                                     // check if the chess piece is moved correctly
                                     board = new ChessBoard(pieces);
                                     board.ApplyDraw(dfwDraw);
-                                    Assert.True(
-                                        board.GetPieceAt(oldPos) == null
-                                        && board.GetPieceAt(dfwNewPos).Value == pieceCmp
-                                    );
+                                    Assert.True(!board.IsCapturedAt(oldPos) && board.GetPieceAt(dfwNewPos) == pieceCmp);
                                 }
                             }
                         }
@@ -483,7 +477,7 @@ namespace Chess.UnitTest
                                 board = new ChessBoard(pieces);
                                 board.ApplyDraw(draw);
                                 var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, true);
-                                Assert.True(board.GetPieceAt(draw.OldPosition) == null && (board.GetPieceAt(draw.NewPosition).Value == pieceCmp || (rowDiff == 5)));
+                                Assert.True(!board.IsCapturedAt(draw.OldPosition) && (board.GetPieceAt(draw.NewPosition) == pieceCmp || (rowDiff == 5)));
                             }
                         }
                     }
@@ -538,7 +532,7 @@ namespace Chess.UnitTest
                             {
                                 // check if the en-passant draw gets correctly applied to the chess board
                                 board.ApplyDraw(drawEp);
-                                Assert.True(board.GetPieceAt(dfwNewPos) == null && board.GetPieceAt(attNewPos).Value == pieces[1].Piece);
+                                Assert.True(!board.IsCapturedAt(dfwNewPos) && board.GetPieceAt(attNewPos) == pieces[1].Piece);
                             }
                         }
                     }
@@ -595,7 +589,7 @@ namespace Chess.UnitTest
                     {
                         board = new ChessBoard(pieces);
                         board.ApplyDraw(draw);
-                        Assert.True(board.Pieces.All(x => x.Piece.Color == enemyColor || x.Piece.Type != ChessPieceType.Peasant));
+                        Assert.True(board.AllPieces.All(x => x.Piece.Color == enemyColor || x.Piece.Type != ChessPieceType.Peasant));
                     }
                 }
             }

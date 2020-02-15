@@ -29,23 +29,35 @@ namespace Chess.Lib.Extensions
             // make sure the overloaded list is not null
             if (items == null) { throw new ArgumentException("items must not be null"); }
 
-            // fix the order of the given elements by converting the enumerable to a list
-            var results = items.ToList();
+            IList<T> results;
 
-            // shuffle all elements (=> linear shuffle with equal distribution)
-            for (int i = 0; i < results.Count - 1; i++)
+            // make sure the overloaded list is not empty
+            if (items?.Count() > 0)
             {
-                // get index to switch with
-                int k = _random.Next(i, results.Count);
+                // fix the order of the given elements by converting the enumerable to a list
+                var tempItems = items.ToArray();
 
-                // check if element needs to switch (same index => avoid switching with itself)
-                if (i != k)
+                // shuffle all elements (=> linear shuffle with equal distribution)
+                for (int i = 0; i < tempItems.Length - 1; i++)
                 {
-                    // switch position: results[k] <--> results[i]
-                    T value = results[k];
-                    results[k] = results[i];
-                    results[i] = value;
+                    // get index to switch with
+                    int k = _random.Next(i, tempItems.Length);
+
+                    // check if element needs to switch (same index => avoid switching with itself)
+                    if (i != k)
+                    {
+                        // switch position: results[k] <--> results[i]
+                        T value = tempItems[k];
+                        tempItems[k] = tempItems[i];
+                        tempItems[i] = value;
+                    }
                 }
+
+                results = tempItems.ToList();
+            }
+            else
+            {
+                results = new List<T>();
             }
 
             return results;

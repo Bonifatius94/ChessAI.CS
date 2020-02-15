@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Chess.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "--mode=cvc --level=5"
+    }
+  }
+}

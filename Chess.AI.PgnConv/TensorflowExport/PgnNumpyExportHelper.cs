@@ -55,7 +55,8 @@ namespace Chess.AI.PgnConv.TensorflowExport
                 var boardData = boardAsIntArray.Select(x => formatDouble(x)).Aggregate((x, y) => $"{ x }, { y }");
 
                 // calculate the score of the draw
-                double score = MinimaxChessDrawAI.Instance.RateDraw(board, draw, ChessDifficultyLevel.Medium);
+                var drawRatingHelper = MinimaxChessDrawAI.Instance;
+                double score = drawRatingHelper.RateDraw(board, draw, 5);
 
                 // transform data into a data line
                 string dataLine = $"chessdata.append([{ formatDouble(draw.GetHashCode()) }, { boardData }, { formatDouble(score) }])";

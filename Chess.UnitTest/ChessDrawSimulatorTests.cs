@@ -27,7 +27,7 @@ namespace Chess.UnitTest
                 var allyColor = (ChessColor)colorValue;
                 var enemyColor = allyColor.Opponent();
 
-                var newPos = new Dictionary<ChessPieceType, ChessPosition>()
+                var pieceXNewPos = new Dictionary<ChessPieceType, ChessPosition>()
                 {
                     { ChessPieceType.Queen,   new ChessPosition(4, 4)                                         },
                     { ChessPieceType.Rook,    new ChessPosition(4, 4)                                         },
@@ -37,7 +37,7 @@ namespace Chess.UnitTest
                 };
 
                 // go through all drawing chess piece types (except king; king is already tested in king draws unit test)
-                for (int pieceTypeValue = 1; pieceTypeValue < 6; pieceTypeValue++)
+                for (int pieceTypeValue = 2; pieceTypeValue < 7; pieceTypeValue++)
                 {
                     var pieceType = (ChessPieceType)pieceTypeValue;
                     
@@ -57,7 +57,7 @@ namespace Chess.UnitTest
                         if (putAttacker) { pieces.Add(new ChessPieceAtPos(new ChessPosition(7, 0), new ChessPiece(ChessPieceType.Bishop, enemyColor, true))); }
 
                         var board = new ChessBoard(pieces);
-                        var draw = new ChessDraw(board, oldPos, newPos[pieceType]);
+                        var draw = new ChessDraw(board, oldPos, pieceXNewPos[pieceType]);
 
                         bool shouldBeDrawIntoCheck = putAttacker;
                         bool isDrawIntoCheck = ChessDrawSimulator.Instance.IsDrawIntoCheck(board, draw);
@@ -74,7 +74,7 @@ namespace Chess.UnitTest
             var board = ChessBoard.StartFormation;
             var enemyDraw = new ChessDraw(board, new ChessPosition(0, 0), new ChessPosition(0, 0));
             board.ApplyDraw(enemyDraw);
-            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.None);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.None);
 
             // test simple check
             var pieces = new List<ChessPieceAtPos>()
@@ -88,7 +88,7 @@ namespace Chess.UnitTest
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(7, 3), new ChessPosition(6, 4));
             board.ApplyDraw(enemyDraw);
-            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Check);
 
             // test checkmate
             for (int putSavingPieceValue = 0; putSavingPieceValue < 2; putSavingPieceValue++)
@@ -111,8 +111,8 @@ namespace Chess.UnitTest
                 board.ApplyDraw(enemyDraw);
 
                 Assert.True(
-                    (!putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Checkmate)
-                    || (putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Check)
+                    (!putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Checkmate)
+                    || (putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Check)
                 );
             }
 
@@ -130,7 +130,7 @@ namespace Chess.UnitTest
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(3, 5), new ChessPosition(2, 5));
             board.ApplyDraw(enemyDraw);
-            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == CheckGameStatus.Stalemate);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Stalemate);
         }
 
         // moves to be made for testing the check situation
@@ -459,7 +459,7 @@ namespace Chess.UnitTest
             var lastDraw = game.LastDraw;
 
             // make sure that the algorithm recognizes the check situation
-            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, lastDraw) == CheckGameStatus.Check);
+            Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, lastDraw) == ChessGameStatus.Check);
 
             // test whether the black player recognizes he is checked and needs to save his king
             var alliedPieces = game.Board.GetPiecesOfColor(lastDraw.DrawingSide.Opponent());
@@ -509,7 +509,7 @@ namespace Chess.UnitTest
                 game.ApplyDraw(lastDraw);
 
                 var status = ChessDrawSimulator.Instance.GetCheckGameStatus(game.Board, lastDraw);
-                Assert.True(status == CheckGameStatus.Check || status == CheckGameStatus.None);
+                Assert.True(status == ChessGameStatus.Check || status == ChessGameStatus.None);
             }
 
             return game;

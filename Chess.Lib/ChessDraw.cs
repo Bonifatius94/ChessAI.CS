@@ -70,7 +70,7 @@ namespace Chess.Lib
         public ChessDraw(ChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType = null)
         {
             // get the drawing piece
-            var piece = board.GetPieceAt(oldPos).Value;
+            var piece = board.GetPieceAt(oldPos);
 
             // determine all property values
             var type = getDrawType(board, oldPos, newPos, peasantPromotionType);
@@ -80,7 +80,7 @@ namespace Chess.Lib
             var takenPieceType = 
                 (type == ChessDrawType.EnPassant) 
                     ? (ChessPieceType?)ChessPieceType.Peasant 
-                    : (board.IsCapturedAt(newPos) ? (ChessPieceType?)board.GetPieceAt(newPos).Value.Type : null);
+                    : (board.IsCapturedAt(newPos) ? (ChessPieceType?)board.GetPieceAt(newPos).Type : null);
 
             // transform property values to a hash code
             _hashCode = toHashCode(type, drawingSide, drawingPieceType, takenPieceType, peasantPromotionType, oldPos, newPos);
@@ -187,7 +187,7 @@ namespace Chess.Lib
 
         private static ChessDrawType getDrawType(ChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType)
         {
-            var piece = board.GetPieceAt(oldPos).Value;
+            var piece = board.GetPieceAt(oldPos);
             var type = ChessDrawType.Standard;
 
             // check for a peasant promotion
@@ -201,7 +201,7 @@ namespace Chess.Lib
                 type = ChessDrawType.Rochade;
             }
             // check for an en-passant
-            else if (piece.Type == ChessPieceType.Peasant && board.GetPieceAt(newPos) == null && Math.Abs(oldPos.Column - newPos.Column) == 1)
+            else if (piece.Type == ChessPieceType.Peasant && !board.IsCapturedAt(newPos) && Math.Abs(oldPos.Column - newPos.Column) == 1)
             {
                 type = ChessDrawType.EnPassant;
             }
@@ -221,8 +221,8 @@ namespace Chess.Lib
             var piece = board.GetPieceAt(OldPosition);
 
             // make sure that there is a chess piece of the correct color that can be drawn
-            if (piece == null) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }
-            if (piece.Value.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
+            if (!board.IsCapturedAt(OldPosition)) { throw new ArgumentException($"There is no chess piece on { OldPosition.FieldName }."); }
+            if (piece.Color != DrawingSide) { throw new ArgumentException($"The chess piece on { OldPosition.FieldName } is owned by the opponent."); }
 
             // compute the possible chess draws for the given chess piece
             var possibleDraws = ChessDrawGenerator.Instance.GetDraws(board, OldPosition, predecedingEnemyDraw, true);
