@@ -136,7 +136,7 @@ namespace Chess.CLI
 
             if (!string.IsNullOrEmpty(arg))
             {
-                string argValue = arg.Substring(ARG_COMPUTER_LEVEL.Length, arg.Length - ARG_GAME_MODE.Length);
+                string argValue = arg.Substring(ARG_COMPUTER_LEVEL.Length, arg.Length - ARG_COMPUTER_LEVEL.Length);
 
                 if (!int.TryParse(argValue, out level))
                 {

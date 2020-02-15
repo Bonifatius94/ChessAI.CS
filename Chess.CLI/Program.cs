@@ -56,7 +56,7 @@ namespace Chess.CLI
                 whitePlayer = humanPlayerSide == ChessColor.White ? (IChessPlayer)new HumanChessPlayer(ChessColor.White) : new ArtificialChessPlayer(args.ComputerLevel);
                 blackPlayer = humanPlayerSide != ChessColor.White ? (IChessPlayer)new HumanChessPlayer(ChessColor.Black) : new ArtificialChessPlayer(args.ComputerLevel);
             }
-            else if (args.GameMode == ChessGameMode.PvC)
+            else if (args.GameMode == ChessGameMode.CvC)
             {
                 whitePlayer = new ArtificialChessPlayer(args.ComputerLevel);
                 blackPlayer = new ArtificialChessPlayer(args.ComputerLevel);
