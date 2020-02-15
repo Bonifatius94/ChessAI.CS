@@ -1,0 +1,1 @@
+﻿Chess.CLI.exe --mode=cvc --level=5

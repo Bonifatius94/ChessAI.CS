@@ -17,4 +17,13 @@
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="cvc_simulation.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="README.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

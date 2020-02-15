@@ -109,7 +109,9 @@ namespace Chess.AI
             double maxScore = 0;
             int simDepth = 0;
 
-            Console.WriteLine();
+            #if DEBUG
+                Console.WriteLine();
+            #endif
 
             // increase search depth step by step
             do
@@ -119,7 +121,6 @@ namespace Chess.AI
 
                 #if DEBUG
                     // write aspiration window to console
-                    //Console.WriteLine($"computed new aspiration window ({ minimaxCalls } minimax calls):");
                     Console.WriteLine($"computed new draws with ratings:");
                     drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
                     Console.WriteLine();
@@ -133,7 +134,6 @@ namespace Chess.AI
 
                 #if DEBUG
                     // write aspiration window to console
-                    //Console.WriteLine($"computed new aspiration window ({ minimaxCalls } minimax calls):");
                     Console.WriteLine($"computed new aspiration window:");
                     window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
                     Console.WriteLine();
