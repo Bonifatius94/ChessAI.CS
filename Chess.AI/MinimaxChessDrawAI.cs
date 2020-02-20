@@ -1,8 +1,10 @@
-﻿using Chess.Lib;
+﻿using Chess.AI.Score;
+using Chess.Lib;
 using Chess.Lib.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Chess.AI
 {
@@ -17,9 +19,11 @@ namespace Chess.AI
         private MinimaxChessDrawAI() { }
 
         /// <summary>
-        /// Get of singleton object reference.
+        /// Get the singleton object reference.
         /// </summary>
         public static readonly IChessDrawAI Instance = new MinimaxChessDrawAI();
+
+        private static readonly IChessScoreEstimator _estimator = HeuristicChessScoreEstimator.Instance;
 
         #endregion Singleton
 
@@ -109,22 +113,11 @@ namespace Chess.AI
             double maxScore = 0;
             int simDepth = 0;
 
-            #if DEBUG
-                Console.WriteLine();
-            #endif
-
             // increase search depth step by step
             do
             {
                 // calculate the score for all draws inside the aspiration window
                 drawsScores = getRatedDraws(board, window, simDepth).ToArray();
-
-                #if DEBUG
-                    // write aspiration window to console
-                    Console.WriteLine($"computed new draws with ratings:");
-                    drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
-                    Console.WriteLine();
-                #endif
 
                 // select a new reasonable aspiration window according to the additional information
                 // moreover make sure that the best draw of the previous iteration is at least considered
@@ -132,16 +125,9 @@ namespace Chess.AI
                 var previousBestDraws = drawsScores.Where(x => x.Score == newMaxScore).ToArray();
                 window = selectAspirationWindow(drawsScores).Concat(previousBestDraws).Distinct().ToArray();
 
-                #if DEBUG
-                    // write aspiration window to console
-                    Console.WriteLine($"computed new aspiration window:");
-                    window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
-                    Console.WriteLine();
-                #endif
-
                 // update variables
                 maxScore = newMaxScore;
-                simDepth = simDepth < depth - 1 ? simDepth + 2 : depth;
+                simDepth = (simDepth == depth) ? depth + 1 : ((simDepth < depth - 1) ? simDepth + 2 : depth);
             }
             // termination conditions: 
             //   1. max search depth reached
@@ -160,17 +146,20 @@ namespace Chess.AI
         /// <summary>
         /// Select a reasonable aspiration window from the given chess draws and their scores according to statistic mathods.
         /// </summary>
-        /// <param name="drawsXScores">The chess draws and their previous scores.</param>
+        /// <param name="drawsScores">The chess draws and their previous scores.</param>
         /// <returns>a list of chess draws</returns>
-        private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsXScores)
+        private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsScores)
         {
-            // eliminate too bad scores, so the deviation is not chosen too widely (not more than a queen sacrifice)
-            //var notCatastophicDraws = drawsXScores.Where(x => x.Score >= ChessScoreGenerator.BASE_SCORE_QUEEN);
-            //drawsXScores = ((notCatastophicDraws.Count() > 0) ? notCatastophicDraws : drawsXScores).ToArray();
+            //#if DEBUG
+            // write aspiration window to console
+            Console.WriteLine($"computed new draws with ratings:");
+            drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+            Console.WriteLine();
+            //#endif
 
             // compute standard deviation of the scores and the average score
-            double drawProbability = 1.0 / drawsXScores.Count();
-            var valueXProbTuples = drawsXScores.Select(x => new Tuple<double, double>(x.Score, drawProbability)).ToArray();
+            double drawProbability = 1.0 / drawsScores.Count();
+            var valueXProbTuples = drawsScores.Select(x => new Tuple<double, double>(x.Score, drawProbability)).ToArray();
             double stdDeviation = valueXProbTuples.StandardDeviation();
             double expectation = valueXProbTuples.Expectation();
 
@@ -182,13 +171,20 @@ namespace Chess.AI
             {
                 // select a reasonable aspiration window (make sure the last 'best draw' is always included)
                 double minScore = expectation - (stdDeviation * deviationFactor);
-                window = drawsXScores.Where(x => x.Score >= minScore/* && x.Score <= maxScore*/).ToArray();
+                window = drawsScores.Where(x => x.Score >= minScore/* && x.Score <= maxScore*/).ToArray();
                 deviationFactor *= 2;
 
                 // TODO: rework this logic
             }
             while (window.Count() <= 0);
-            
+
+            //#if DEBUG
+            // write aspiration window to console
+            Console.WriteLine($"computed new aspiration window:");
+            window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+            Console.WriteLine();
+            //#endif
+
             return window;
         }
 
@@ -250,7 +246,7 @@ namespace Chess.AI
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
             // recursion anchor: depth <= 0
-            if (depth <= 0) { return ChessScoreGenerator.Instance.GetScore(board, drawingSide); }
+            if (depth <= 0) { return _estimator.GetScore(board, drawingSide); }
 
             // init max score
             double maxScore = alpha;
@@ -294,7 +290,7 @@ namespace Chess.AI
                 simBoard.ApplyDraw(simDraw);
 
                 // compute the new score of the resulting position
-                double score = ChessScoreGenerator.Instance.GetScore(simBoard, drawingSide);
+                double score = _estimator.GetScore(simBoard, drawingSide);
 
                 // add the (draw, score) tuple to the list
                 drawsXScoreTuples.Add(new ChessDrawScore() { Draw = simDraw, Score = score });

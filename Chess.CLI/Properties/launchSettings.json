@@ -2,7 +2,7 @@
   "profiles": {
     "Chess.CLI": {
       "commandName": "Project",
-      "commandLineArgs": "--mode=cvc --level=5"
+      "commandLineArgs": "--mode=cvc --level=6"
     }
   }
 }

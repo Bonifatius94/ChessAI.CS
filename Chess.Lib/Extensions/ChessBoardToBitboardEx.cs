@@ -42,13 +42,13 @@ namespace Chess.Lib.Extensions
         /// <returns>a new chess board instance containing the data from the bitboard</returns>
         public static ChessBoard ToBoard(this Bitboard bitboard)
         {
-            var board = new ChessBoard();
+            var board = ChessBoard.StartFormation;
 
             for (byte posHash = 0; posHash < 64; posHash++)
             {
                 byte pieceHash = (byte)(bitboard.GetBitsAt(posHash * 5, 5) >> 3);
                 var piece = new ChessPiece(pieceHash);
-                board.UpdatePieceAt(new ChessPosition(posHash), piece/*, (posHash == 63)*/);
+                board.UpdatePieceAt(new ChessPosition(posHash), piece);
             }
 
             return board;
@@ -61,14 +61,14 @@ namespace Chess.Lib.Extensions
         /// <returns>a new chess board instance containing the data from the given bytes</returns>
         public static ChessBoard ToBoard(this byte[] bytes)
         {
-            var board = new ChessBoard();
+            var board = ChessBoard.StartFormation;
             var bitboard = new Bitboard(bytes);
 
             for (byte posHash = 0; posHash < 64; posHash++)
             {
                 byte pieceHash = (byte)(bitboard.GetBitsAt(posHash * 5, 5) >> 3);
                 var piece = new ChessPiece(pieceHash);
-                board.UpdatePieceAt(new ChessPosition(posHash), piece/*, (posHash == 63)*/);
+                board.UpdatePieceAt(new ChessPosition(posHash), piece);
             }
 
             return board;

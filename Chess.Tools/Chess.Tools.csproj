@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Authors>Marco Tröster</Authors>
+    <Company>Marco Tröster Softwareentwicklung</Company>
+    <Copyright>Marco Tröster © 2020</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\Chess.Tools\Chess.Tools.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
+  </ItemGroup>
+
+</Project>

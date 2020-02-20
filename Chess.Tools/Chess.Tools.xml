@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Chess.Tools</name>
+    </assembly>
+    <members>
+        <member name="T:Chess.Tools.ChessGameFileSerializer">
+            <summary>
+            Helps serializing chess games between the chess game format.
+            </summary>
+        </member>
+        <member name="M:Chess.Tools.ChessGameFileSerializer.Serialize(System.String,System.Collections.Generic.IEnumerable{Chess.Lib.ChessGame})">
+            <summary>
+            Write the given chess games to the given file path.
+            </summary>
+            <param name="filePath">The output chess game file path.</param>
+            <param name="games">The games to write to serialize.</param>
+        </member>
+        <member name="M:Chess.Tools.ChessGameFileSerializer.Deserialize(System.String)">
+            <summary>
+            Read games from chess games format.
+            </summary>
+            <param name="filePath">The file path of the chess games file.</param>
+            <returns>a list of chess games</returns>
+        </member>
+        <member name="T:Chess.Tools.PgnParser">
+            <summary>
+            A parser class to extract chess games from PGN (portable game notation) log files.
+            </summary>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.ParsePgnFile(System.String)">
+            <summary>
+            Retrieve the chess games from the given PGN file.
+            </summary>
+            <param name="filePath">The PGN file to be parsed.</param>
+            <returns>a list of chess games</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.extractGameLogs(System.String)">
+            <summary>
+            Divide the raw PGN text content into the content belonging to each game.
+            </summary>
+            <param name="content">The raw PGN text content from a PGN file.</param>
+            <returns>a list of raw PGN game logs, each element's content belongs to another chess game</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseGameLog(System.String)">
+            <summary>
+            Retrieve the chess game data from a single PGN game log.
+            </summary>
+            <param name="log">The PGN game log to be parsed.</param>
+            <returns>The chess game data to was parsed.</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseRound(Chess.Lib.ChessGame,System.String)">
+            <summary>
+            Retrieve a round (white draw and black answer).
+            </summary>
+            <param name="game">The chess game with all previous draws.</param>
+            <param name="content">The PGN game log content to be parsed (content equals two draws).</param>
+            <returns>The draws parsed.</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseDraw(Chess.Lib.ChessGame,System.String)">
+            <summary>
+            Retrieve a single chess draw from the given PGN content.
+            </summary>
+            <param name="game">The chess game with all previous draws.</param>
+            <param name="content">The PGN content to be parsed.</param>
+            <returns>The parsed chess draw or null (if there was a data format error).</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseRochade(Chess.Lib.ChessGame,System.String)">
+            <summary>
+            Parse a rochade draw from the given PGN content.
+            </summary>
+            <param name="game">The chess game with all previous draws.</param>
+            <param name="content">The PGN content to be parsed.</param>
+            <returns>The parsed rochade draw</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseMetadataDraw(Chess.Lib.ChessGame,System.String)">
+            <summary>
+            Parse a metadata draw from the given PGN content.
+            </summary>
+            <param name="game">The chess game with all previous draws.</param>
+            <param name="content">The PGN content to be parsed.</param>
+            <returns>The parsed metadata draw</returns>
+        </member>
+        <member name="M:Chess.Tools.PgnParser.parseType(System.Char)">
+            <summary>
+            Convert the given character into a chess piece type (K=King, Q=Queen, R=Rook, B=Bishop, N=Knight, P=Peasant).
+            </summary>
+            <param name="c">The character to convert.</param>
+            <returns>The parsed chess piece type</returns>
+            <exception cref="T:System.ArgumentException">Throws an argument exception if the given character does not belong to a chess piece type.</exception>
+        </member>
+        <member name="T:Chess.Tools.WinRateInfo">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Chess.Tools.WinPercentagesSerializer">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Chess.Tools.WinPercentagesSerializer.Serialize(System.String,System.Collections.Generic.IEnumerable{Chess.Lib.ChessGame})">
+            <summary>
+            
+            </summary>
+            <param name="filePath"></param>
+            <param name="games"></param>
+        </member>
+        <member name="M:Chess.Tools.WinPercentagesSerializer.Deserialize(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="filePath"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

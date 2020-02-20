@@ -1,12 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
+    <Authors>Marco Tröster</Authors>
+    <Company>Marco Tröster Softwareentwicklung</Company>
+    <Copyright>Marco Tröster © 2020</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\Chess.WebApi\Chess.WebApi.xml</DocumentationFile>
+    <OutputPath>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\build\Release\Chess.WebApi.Server\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\build\Debug\Chess.WebApi.Server\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

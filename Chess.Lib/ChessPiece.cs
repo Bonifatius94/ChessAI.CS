@@ -186,7 +186,7 @@ namespace Chess.Lib
             string color = Color.ToString().ToLower();
             string type = Type.ToString().ToLower();
 
-            return $"{ color } { type }";
+            return Type == ChessPieceType.Invalid ? "piece-null" : $"{ color } { type }";
         }
 
         /// <summary>

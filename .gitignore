@@ -267,3 +267,7 @@ __pycache__/
 /Chess.Doku/Help
 /Chess.WebApi.Server.Interface/Chess.WebApi.Server.Interface.xml
 /Chess.AI.DeepLearning/env
+/Chess.AI.PgnWinPercentages/GameData/zipped
+/Chess.AI.PgnWinPercentages/GameData/pgn
+/Chess.AI.PgnWinPercentages/GameData
+/ext_lib/MT.Tools.Tracing.DotnetCore.dll

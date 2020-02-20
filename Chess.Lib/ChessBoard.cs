@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Chess.Lib.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -312,8 +313,7 @@ namespace Chess.Lib
         public override bool Equals(object obj)
         {
             // make sure that the object types are the same and the pieces on the boards match
-            // pieces match = the count of the intersection of both piece collection needs to be the same as the count of only one collection
-            return (obj != null && obj.GetType() == typeof(ChessBoard)) && (((ChessBoard)obj).AllPieces.Intersect(this.AllPieces).Count() == this.AllPieces.Count());
+            return (obj != null && obj.GetType() == typeof(ChessBoard)) && (this.ToHash().Equals(((ChessBoard)obj).ToHash()));
         }
 
         /// <summary>
@@ -322,35 +322,66 @@ namespace Chess.Lib
         /// <returns>hash of pieces string, may not always be unique</returns>
         public override int GetHashCode()
         {
-            // convert chess pieces into a string and return the hash of the string
-            var temp = new char[64];
-            for (byte pos = 0; pos < 64; pos++) { temp[pos] = (char)_pieces[pos].GetHashCode(); }
-            return new string(temp).GetHashCode();
+            return 0;
+            //return this.ToHash().GetHashCode();
         }
-
-        #endregion Methods
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class ChessBoardEx
-    {
-        #region Methods
 
         /// <summary>
-        /// 
+        /// Implements the '==' operator for comparing chess boards.
         /// </summary>
-        /// <param name="board"></param>
-        /// <param name="precedingEnemyDraw"></param>
-        /// <returns></returns>
-        public static IEnumerable<ChessDraw> GetAllDraws(this ChessBoard board, ChessDraw? precedingEnemyDraw)
+        /// <param name="c1">The first chess board to compare</param>
+        /// <param name="c2">The second chess board to compare</param>
+        /// <returns>a boolean that indicates whether the chess boards are equal</returns>
+        public static bool operator ==(ChessBoard c1, ChessBoard c2)
         {
-            var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
-            var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            return alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
+            return c1.Equals(c2);
+        }
+
+        /// <summary>
+        /// Implements the '!=' operator for comparing chess boards.
+        /// </summary>
+        /// <param name="c1">The first chess board to compare</param>
+        /// <param name="c2">The second chess board to compare</param>
+        /// <returns>a boolean that indicates whether the chess boards are not equal</returns>
+        public static bool operator !=(ChessBoard c1, ChessBoard c2)
+        {
+            return !c1.Equals(c2);
         }
 
         #endregion Methods
     }
+
+    ///// <summary>
+    ///// 
+    ///// </summary>
+    //public static class ChessBoardEx
+    //{
+    //    #region Methods
+
+    //    /// <summary>
+    //    /// 
+    //    /// </summary>
+    //    /// <param name="board"></param>
+    //    /// <param name="precedingEnemyDraw"></param>
+    //    /// <returns></returns>
+    //    public static IEnumerable<ChessDraw> GetAllDraws(this ChessBoard board, ChessDraw? precedingEnemyDraw)
+    //    {
+    //        var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
+    //        var alliedPieces = board.GetPiecesOfColor(drawingSide);
+    //        return alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
+    //    }
+
+    //    /// <summary>
+    //    /// 
+    //    /// </summary>
+    //    /// <param name="board"></param>
+    //    /// <param name="precedingEnemyDraw"></param>
+    //    /// <returns></returns>
+    //    public static IEnumerable<ChessDraw> GetAllDraws(this ChessBoard board, ChessDraw? precedingEnemyDraw, ChessPieceAtPos drawingPiece)
+    //    {
+    //        return ChessDrawGenerator.Instance.GetDraws(board, drawingPiece.Position, precedingEnemyDraw, true).ToArray();
+    //    }
+
+    //    #endregion Methods
+    //}
 }

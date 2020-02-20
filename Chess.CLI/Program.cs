@@ -1,7 +1,11 @@
 ﻿using Chess.CLI.Player;
 using Chess.Lib;
+using Chess.Tools;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace Chess.CLI
 {
@@ -36,6 +40,15 @@ namespace Chess.CLI
 
                 // write game result
                 Console.WriteLine($"Game is over, took { timespan.Minutes }m { timespan.Seconds }s, { game.LastDraw.DrawingSide } player wins!");
+
+                // write gamelog
+                using (var logfile = new StreamWriter("gamelog.txt"))
+                {
+                    logfile.WriteLine("Chess Game Log");
+                    logfile.WriteLine("=================");
+                    game.AllDraws.ForEach(x => logfile.WriteLine(x.ToString()));
+                    logfile.WriteLine($"final game status: { game.GameStatus.ToString() }!");
+                }
             }
         }
 

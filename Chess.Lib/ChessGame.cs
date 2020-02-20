@@ -21,7 +21,7 @@ namespace Chess.Lib
             StartOfGame = DateTime.UtcNow;
             SideToDraw = ChessColor.White;
         }
-        
+
         #endregion Constructor
 
         #region Members
@@ -65,6 +65,12 @@ namespace Chess.Lib
         /// The current status of the chess game.
         /// </summary>
         public ChessGameStatus GameStatus { get { return _drawHistory.Count > 0 ? ChessDrawSimulator.Instance.GetCheckGameStatus(Board, LastDraw) : ChessGameStatus.None; } }
+
+        /// <summary>
+        /// The winner of the chess game (if the is one).
+        /// </summary>
+        public ChessColor? Winner { get; set; }
+        // TODO: maybe rework this attibute as this is quite "quick n dirty"
 
         #endregion Members
 

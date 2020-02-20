@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
+    <Authors>Marco Tröster</Authors>
+    <Company>Marco Tröster Softwareentwicklung</Company>
+    <Copyright>Marco Tröster © 2020</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

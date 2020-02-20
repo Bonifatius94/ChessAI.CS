@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Authors>Marco Tröster</Authors>
+    <Company>Marco Tröster Softwareentwicklung</Company>
+    <Copyright>Marco Tröster © 2020</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -10,11 +13,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
+    <ProjectReference Include="..\Chess.Tools\Chess.Tools.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Microsoft.EntityFrameworkCore">
       <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.entityframeworkcore\2.1.1\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="MT.Tools.Tracing.DotnetCore">
+      <HintPath>..\ext_lib\MT.Tools.Tracing.DotnetCore.dll</HintPath>
     </Reference>
   </ItemGroup>
 

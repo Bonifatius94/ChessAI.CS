@@ -17,7 +17,7 @@
 //        private DeepLearningChessDrawAI() { }
 
 //        /// <summary>
-//        /// Get of singleton object reference.
+//        /// Get the singleton object reference.
 //        /// </summary>
 //        public static readonly IChessDrawAI Instance = new DeepLearningChessDrawAI();
 

@@ -1,5 +1,6 @@
 ﻿using Chess.AI;
 using Chess.Lib;
+using Chess.Tools;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,7 +18,10 @@ namespace Chess.CLI.Player
         /// Initialize a new artificial chess player of the given level.
         /// </summary>
         /// <param name="level">The difficulty level of the new chess player.</param>
-        public ArtificialChessPlayer(int level) { _level = level; }
+        public ArtificialChessPlayer(int level)
+        {
+            _level = level;
+        }
 
         #endregion Constructor
 
@@ -40,7 +44,7 @@ namespace Chess.CLI.Player
         /// <returns>the next chess draw</returns>
         public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? previousDraw)
         {
-            return MinimaxChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
+            return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
         }
 
         #endregion Methods
