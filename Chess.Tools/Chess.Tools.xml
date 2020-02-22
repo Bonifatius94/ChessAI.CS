@@ -89,24 +89,111 @@
             <returns>The parsed chess piece type</returns>
             <exception cref="T:System.ArgumentException">Throws an argument exception if the given character does not belong to a chess piece type.</exception>
         </member>
+        <member name="T:Chess.Tools.SQLite.SqliteDataContextBase">
+            <summary>
+            Provide base functionality to run SQL via a SQLite connection.
+            </summary>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.queryItems(System.String)">
+            <summary>
+            Run a SQL query and retrieve the data as a result set.
+            </summary>
+            <param name="sql">The SQL statement to be queried.</param>
+            <returns>A set of records returned by the SQLite data source.</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.queryItem(System.String)">
+            <summary>
+            Run a SQL query and retrieve a single data record.
+            </summary>
+            <param name="sql">The SQL statement to be queried.</param>
+            <returns>A single data record returned by the SQLite data source.</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.queryItem(System.String,System.String)">
+            <summary>
+            Run a SQL query and retrieve a specific column from a single data record.
+            </summary>
+            <param name="sql">The SQL statement to be queried.</param>
+            <returns>A specific column from a single data record returned by the SQLite data source.</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.executeScript(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="scriptFilePath"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.executeSql(System.String)">
+            <summary>
+            Run a writing SQL statement and retrieve the number of records affected.
+            </summary>
+            <param name="sql">The SQL statement to be executed.</param>
+            <returns>The number of records affected (-1 signals an error).</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.executeSql(System.String,Microsoft.Data.Sqlite.SqliteConnection)">
+            <summary>
+            Run a writing SQL statement and retrieve the number of records affected.
+            </summary>
+            <param name="sql">The SQL statement to be executed.</param>
+            <param name="connection">The database connection to be used.</param>
+            <returns>The number of records affected (-1 signals an error).</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.readItems(System.Data.Common.DbDataReader)">
+            <summary>
+            Help parsing a SQLite result set with multiple records and columns.
+            </summary>
+            <param name="reader">The data reader containing the raw queried data.</param>
+            <returns>A result set of (column name, value) tuples as a dictionary.</returns>
+        </member>
+        <member name="M:Chess.Tools.SQLite.SqliteDataContextBase.readItem(System.Data.Common.DbDataReader)">
+            <summary>
+            Help parsing a single record with multiple columns from a SQLite result set.
+            </summary>
+            <param name="reader">The data reader containing the raw queried data.</param>
+            <returns>A record with all (column name, value) tuples as a dictionary.</returns>
+        </member>
+        <member name="T:Chess.Tools.SQLite.WinRateDataContext">
+            <summary>
+            REpresents a SQLite data conext for writing / retrieving win rates of chess draws.
+            </summary>
+        </member>
+        <member name="M:Chess.Tools.SQLite.WinRateDataContext.#ctor(System.String)">
+            <summary>
+            Create a new instance that handles the SQLite database at the given file path. An empty database is created if the file does not exist.
+            </summary>
+            <param name="dbFilePath">The file path of the SQLite database.</param>
+        </member>
+        <member name="M:Chess.Tools.SQLite.WinRateDataContext.InsertWinRates(System.Collections.Generic.IEnumerable{Chess.Tools.WinRateInfo})">
+            <summary>
+            Insert the given win rates into database.
+            </summary>
+            <param name="winRates">A list of win rates to be inserted into database.</param>
+        </member>
+        <member name="M:Chess.Tools.SQLite.WinRateDataContext.GetBestDraw(Chess.Lib.ChessBoard,System.Nullable{Chess.Lib.ChessDraw})">
+            <summary>
+            Retrieve the best chess draw for the given situation (board + previous draw) from the cache. If the situation is not in the cache, null is returned.
+            </summary>
+            <param name="board">The chess board representing the situation.</param>
+            <param name="predecedingDraw">The previous draw made by the enemy.</param>
+            <returns>The best chess draw (if there is one in the cache)</returns>
+        </member>
         <member name="T:Chess.Tools.WinRateInfo">
             <summary>
             
             </summary>
         </member>
-        <member name="T:Chess.Tools.WinPercentagesSerializer">
+        <member name="T:Chess.Tools.WinRateInfoSerializer">
             <summary>
             
             </summary>
         </member>
-        <member name="M:Chess.Tools.WinPercentagesSerializer.Serialize(System.String,System.Collections.Generic.IEnumerable{Chess.Lib.ChessGame})">
+        <member name="M:Chess.Tools.WinRateInfoSerializer.Serialize(System.String,System.Collections.Generic.IEnumerable{Chess.Lib.ChessGame})">
             <summary>
             
             </summary>
             <param name="filePath"></param>
             <param name="games"></param>
         </member>
-        <member name="M:Chess.Tools.WinPercentagesSerializer.Deserialize(System.String)">
+        <member name="M:Chess.Tools.WinRateInfoSerializer.Deserialize(System.String)">
             <summary>
             
             </summary>

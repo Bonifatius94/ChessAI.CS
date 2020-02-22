@@ -1,8 +1,10 @@
 ﻿using Chess.Lib;
 using Chess.Lib.Extensions;
 using Chess.Tools;
+using Chess.Tools.SQLite;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -23,40 +25,18 @@ namespace Chess.AI
         /// </summary>
         public static readonly IChessDrawAI Instance = new CachedChessDrawAI();
 
+        #endregion Singleton
+
         #region Members
 
         /// <summary>
         /// The cache used for getting good draws.
         /// </summary>
-        private static readonly IDictionary<ChessBoard, IEnumerable<ChessDraw>> _cache = initCache();
+        private static readonly WinRateDataContext _cache = new WinRateDataContext(Path.Combine("Data", "win_rates.db"));
 
         #endregion Members
 
         #region Methods
-
-        private static IDictionary<ChessBoard, IEnumerable<ChessDraw>> initCache(double minWinPercentage = 0.4)
-        {
-            // TODO: make the cache more efficient
-
-            var winRates = new WinRateInfoSerializer().Deserialize("win_percentages_of_draws.xml");
-
-            // init draws cache
-            var cache = new Dictionary<ChessBoard, IEnumerable<ChessDraw>>();
-
-            winRates.Where(x => x.WinRate >= minWinPercentage).GroupBy(x => x.Situation.Item1).AsParallel().Select(group => {
-
-                var board = (ChessBoard)group.Key.Clone();
-                double maxWinRate = group.Max(x => x.WinRate);
-                var drawsWithMaxWinRate = group.Where(x => x.WinRate >= maxWinRate).Select(x => x.Situation.Item2).ToList();
-
-                return new Tuple<ChessBoard, IEnumerable<ChessDraw>>(board, drawsWithMaxWinRate);
-            })
-            .ToList()
-            .ForEach(x => cache.Add(x.Item1, x.Item2));
-
-            GC.Collect();
-            return cache;
-        }
 
         /// <summary>
         /// 
@@ -67,13 +47,8 @@ namespace Chess.AI
         /// <returns></returns>
         public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
         {
-            ChessDraw draw;
-
             // always use the cache if possible, otherwise compute the best draw with minimax algorithm
-            if (_cache.ContainsKey(board)) { draw = _cache[board].ChooseRandom(); }
-            else { draw = MinimaxChessDrawAI.Instance.GetNextDraw(board, precedingEnemyDraw, searchDepth); }
-
-            return draw;
+            return _cache.GetBestDraw(board, precedingEnemyDraw) ?? MinimaxChessDrawAI.Instance.GetNextDraw(board, precedingEnemyDraw, searchDepth);
         }
 
         /// <summary>

@@ -53,9 +53,17 @@ namespace Chess.Tools
     {
         #region Members
 
-        public Tuple<ChessBoard, ChessDraw> Situation { get; set; }
+        //public Tuple<ChessBoard, ChessDraw> Situation { get; set; }
+        public string BoardHash { get; set; }
+        public ChessDraw Draw { get; set; }
         public double WinRate { get; set; }
         public int AnalyzedGames { get; set; }
+
+        public ChessBoard Board
+        {
+            get { return BoardHash.HashToBoard(); }
+            set { BoardHash = value.ToHash(); }
+        }
 
         #endregion Members
     }
@@ -89,7 +97,7 @@ namespace Chess.Tools
         public void Serialize(string filePath, IEnumerable<ChessGame> games)
         {
             // calculate the win rate of each draw
-            var winRateInfos = getWinPercentages(games);
+            var winRateInfos = GamesToWinRates(games);
 
             // write win percentages to XML data file
             using (var writer = XmlWriter.Create(filePath))
@@ -103,8 +111,8 @@ namespace Chess.Tools
                 foreach (var winRateInfo in winRateInfos)
                 {
                     writer.WriteStartElement(NODE_WIN_RATE);
-                    writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_BOARD, winRateInfo.Situation.Item1.ToHash());
-                    writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_DRAW, winRateInfo.Situation.Item2.GetHashCode().ToString());
+                    writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_BOARD, winRateInfo.BoardHash);
+                    writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_DRAW, winRateInfo.Draw.GetHashCode().ToString());
                     writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_PERCENTAGE, winRateInfo.WinRate.ToString(US_FORMAT));
                     writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_TOTAL_GAMES, winRateInfo.AnalyzedGames.ToString());
                     writer.WriteEndElement();
@@ -131,13 +139,14 @@ namespace Chess.Tools
                     // init new win rate info
                     if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals(NODE_WIN_RATE))
                     {
-                        var board = reader.GetAttribute(ATTRIBUTE_WIN_RATE_BOARD).HashToBoard();
+                        var boardHash = reader.GetAttribute(ATTRIBUTE_WIN_RATE_BOARD);
                         var draw = new ChessDraw(int.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_DRAW)));
                         double winRate = double.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_PERCENTAGE), US_FORMAT);
                         int analyzedGames = int.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_TOTAL_GAMES));
 
                         winRateInfos.Add(new WinRateInfo() {
-                            Situation = new Tuple<ChessBoard, ChessDraw>(board, draw),
+                            Draw = draw,
+                            BoardHash = boardHash,
                             WinRate = winRate,
                             AnalyzedGames = analyzedGames
                         });
@@ -150,34 +159,36 @@ namespace Chess.Tools
 
         #region Helpers
 
-        private IEnumerable<WinRateInfo> getWinPercentages(IEnumerable<ChessGame> games)
+        public IEnumerable<WinRateInfo> GamesToWinRates(IEnumerable<ChessGame> games)
         {
-            return
-                games.Where(game => game.Winner != null).AsParallel().SelectMany(game => {
+            var drawsCache = games.Where(game => game.Winner != null).AsParallel().SelectMany(game => {
 
-                    var drawsXWinner = new List<Tuple<Tuple<ChessBoard, ChessDraw>, ChessColor>>();
+                var drawsXWinner = new List<Tuple<Tuple<string, ChessDraw>, ChessColor>>();
 
-                    var winningSide = game.Winner.Value;
-                    var tempGame = new ChessGame();
+                var winningSide = game.Winner.Value;
+                var tempGame = new ChessGame();
 
-                    foreach (var draw in game.AllDraws)
-                    {
-                        var board = (ChessBoard)tempGame.Board.Clone();
-                        drawsXWinner.Add(new Tuple<Tuple<ChessBoard, ChessDraw>, ChessColor>(new Tuple<ChessBoard, ChessDraw>(board, draw), winningSide));
-                        tempGame.ApplyDraw(draw);
-                    }
+                foreach (var draw in game.AllDraws)
+                {
+                    var board = (ChessBoard)tempGame.Board.Clone();
+                    drawsXWinner.Add(new Tuple<Tuple<string, ChessDraw>, ChessColor>(new Tuple<string, ChessDraw>(board.ToHash(), draw), winningSide));
+                    tempGame.ApplyDraw(draw);
+                }
 
-                    return drawsXWinner;
-                })
-                .GroupBy(x => x.Item1).Where(x => x.Count() >= 5).AsParallel().Select(group => {
+                return drawsXWinner;
+            }).ToList();
 
-                    int drawingSideWins = group.Count(x => x.Item2 == group.Key.Item2.DrawingSide);
-                    int totalGames = group.Count();
+            var winRates = drawsCache.GroupBy(x => x.Item1).Where(x => x.Count() >= 5).AsParallel().Select(group => {
 
-                    double winRate = (double)drawingSideWins / totalGames;
-                    return new WinRateInfo() { Situation = group.Key, WinRate = winRate, AnalyzedGames = totalGames };
-                })
-                .ToList();
+                int drawingSideWins = group.Count(x => x.Item2 == group.Key.Item2.DrawingSide);
+                int totalGames = group.Count();
+
+                double winRate = (double)drawingSideWins / totalGames;
+                return new WinRateInfo() { Draw = group.Key.Item2, BoardHash = group.Key.Item1, WinRate = winRate, AnalyzedGames = totalGames };
+            })
+            .ToList();
+
+            return winRates;
         }
 
         #endregion Helpers

@@ -54,7 +54,7 @@ namespace Chess.Lib
         private const int BITS_OF_NEW_POSITION          = 0b_000000000000000000111111; // bits: 00000000 00000000 00111111
 
         // define null value of chess piece type
-        private const byte CHESS_PIECE_TYPE_NULL = 6;
+        private const byte CHESS_PIECE_TYPE_NULL = (byte)ChessPieceType.Invalid;
 
         #endregion Constants
 
@@ -85,6 +85,12 @@ namespace Chess.Lib
             // transform property values to a hash code
             _hashCode = toHashCode(type, drawingSide, drawingPieceType, takenPieceType, peasantPromotionType, oldPos, newPos);
         }
+
+        /// <summary>
+        /// Create a new chess draw instance by passing the given hash code (as string).
+        /// </summary>
+        /// <param name="hashCode">The hash code of the new chess draw instance</param>
+        public ChessDraw(string hashCode) : this(int.Parse(hashCode, System.Globalization.NumberStyles.HexNumber)) { }
 
         /// <summary>
         /// Create a new chess draw instance by passing the given hash code.

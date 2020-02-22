@@ -43,7 +43,7 @@ namespace Chess.Tools
             // parse raw text into chess game format
             var games = logs.AsParallel().Select(log => parseGameLog(log)).ToList();
 
-            Console.WriteLine($"Successfully parsed { games.Count() } games from file '{ filePath }'!");
+            //Console.WriteLine($"Successfully parsed { games.Count() } games from file '{ filePath }'!");
             return games;
         }
 
@@ -116,7 +116,7 @@ namespace Chess.Tools
             int gameSeriesScoreIndex = log.LastIndexOf(" ") + 1;
             string gameSeriesScore = log.Substring(gameSeriesScoreIndex, log.Length - gameSeriesScoreIndex);
             game.Winner = gameSeriesScore.Equals("1-0") ? ChessColor.White : (gameSeriesScore.Equals("0-1") ? (ChessColor?)ChessColor.Black : null);
-            // TODO: extend parser logic for game scores other than '1-0' and '0-1'
+            // TODO: extend parser logic for game scores other than '1-0', '0-1' and '1/2, 1/2'
 
             return game;
         }

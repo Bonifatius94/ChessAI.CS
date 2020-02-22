@@ -25,4 +25,10 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\win_rates.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
