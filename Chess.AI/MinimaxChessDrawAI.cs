@@ -23,6 +23,9 @@ namespace Chess.AI
         /// </summary>
         public static readonly IChessDrawAI Instance = new MinimaxChessDrawAI();
 
+        /// <summary>
+        /// The estimator used to evaluate chess boards.
+        /// </summary>
         private static readonly IChessScoreEstimator _estimator = HeuristicChessScoreEstimator.Instance;
 
         #endregion Singleton
@@ -150,12 +153,12 @@ namespace Chess.AI
         /// <returns>a list of chess draws</returns>
         private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsScores)
         {
-            //#if DEBUG
-            // write aspiration window to console
-            Console.WriteLine($"computed new draws with ratings:");
-            drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
-            Console.WriteLine();
-            //#endif
+            #if DEBUG
+                // write aspiration window to console
+                Console.WriteLine($"computed new draws with ratings:");
+                drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+                Console.WriteLine();
+            #endif
 
             // compute standard deviation of the scores and the average score
             double drawProbability = 1.0 / drawsScores.Count();
@@ -164,7 +167,7 @@ namespace Chess.AI
             double expectation = valueXProbTuples.Expectation();
 
             // init loop variables
-            double deviationFactor = 0.3;
+            double deviationFactor = 0.2;
             ChessDrawScore[] window;
 
             do
@@ -178,12 +181,12 @@ namespace Chess.AI
             }
             while (window.Count() <= 0);
 
-            //#if DEBUG
-            // write aspiration window to console
-            Console.WriteLine($"computed new aspiration window:");
-            window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
-            Console.WriteLine();
-            //#endif
+            #if DEBUG
+                // write aspiration window to console
+                Console.WriteLine($"computed new aspiration window:");
+                window.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
+                Console.WriteLine();
+            #endif
 
             return window;
         }

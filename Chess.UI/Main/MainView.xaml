@@ -1,0 +1,29 @@
+﻿<Window x:Class="Chess.UI.Main.MainView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Chess.UI.Main"
+        xmlns:board="clr-namespace:Chess.UI.Board"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="530" Width="500"
+        DataContext="{StaticResource MainViewModel}" Name="MainWindow">
+
+    <Grid Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="ApplicationScaleTransform"
+                        CenterX="0"
+                        CenterY="0"
+                        ScaleX="{Binding ElementName=MainWindow, Path=ScaleValue}"
+                        ScaleY="{Binding ElementName=MainWindow, Path=ScaleValue}" />
+        </Grid.LayoutTransform>
+        
+        <board:ChessBoardView DataContext="{Binding Board}" Grid.Row="2" />
+    </Grid>
+</Window>

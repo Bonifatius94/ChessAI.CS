@@ -52,6 +52,7 @@ namespace Chess.Tools.SQLite
 
                     var insertValues = winRatesToInsert.Select(x =>
                         $"'{ x.Draw.GetHashCode().ToString("X4") }', " +
+                        $"{ x.Draw.GetHashCode() }, " +
                         $"'{ x.BoardHash }', " +
                         $"'{ char.ToLower(x.Draw.DrawingSide.ToChar()) }', " +
                         $"{ x.WinRate.ToString(US_CULTURE) }, " +
@@ -62,7 +63,7 @@ namespace Chess.Tools.SQLite
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            command.CommandText = $"INSERT INTO WinRateInfo (DrawHash, BoardBeforeHash, DrawingSide, WinRate, AnalyzedGames) VALUES ({ insert });";
+                            command.CommandText = $"INSERT INTO WinRateInfo (DrawHash, DrawHashNumeric, BoardBeforeHash, DrawingSide, WinRate, AnalyzedGames) VALUES ({ insert });";
                             command.ExecuteNonQuery();
                         }
                     }
@@ -83,15 +84,43 @@ namespace Chess.Tools.SQLite
             // get possible draws from database (with win rate)
             var drawingSide = predecedingDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
-            string sql = "WITH DrawsOfSituation AS( "
-            +  "    SELECT * FROM WinRateInfo "
-            + $"    WHERE DrawingSide = '{ char.ToLower(drawingSide.ToChar()) }' AND BoardBeforeHash = '{ board.ToHash() }' "
-            +  ") "
-            + "SELECT DrawHash, WinRate FROM DrawsOfSituation "
-            + "WHERE WinRate = (SELECT MAX(WinRate) FROM DrawsOfSituation) ";
+            string sql =
+                  $"WITH Situation AS( "
+                + $"    SELECT "
+                + $"        DrawHash, "
+                + $"        WinRate, "
+                + $"        AnalyzedGames, "
+                + $"        WinRate * AnalyzedGames AS Score "
+                + $"    FROM WinRateInfo "
+                + $"    WHERE DrawingSide = '{ char.ToLower(drawingSide.ToChar()) }' AND BoardBeforeHash = '{ board.ToHash() }' "
+                + $") "
 
-            var bestDraws = queryItems(sql).Select(x => new Tuple<ChessDraw, double>(new ChessDraw(int.Parse(x["DrawHash"] as string, NumberStyles.HexNumber)), (double)x["WinRate"])).ToList();
+                + $"SELECT "
+                + $"    DrawHash, "
+                + $"    Score "
+                + $"FROM Situation "
+                + $"WHERE Score = (SELECT MAX(Score) FROM Situation)";
+
+            var bestDraws = queryItems(sql).Select(x => new Tuple<ChessDraw, double>(new ChessDraw(int.Parse(x["DrawHash"] as string, NumberStyles.HexNumber)), (double)x["Score"])).ToList();
             return bestDraws?.Count > 0 ? (ChessDraw?)bestDraws.ChooseRandom().Item1 : null;
+
+            // query for testing
+            // ====================================
+            // WITH Situation AS(
+            //     SELECT
+            //         DrawHashMetadata.*,
+            //         WinRate,
+            //         AnalyzedGames
+            //     FROM WinRateInfo
+            //     INNER JOIN DrawHashMetadata ON WinRateInfo.DrawHash = DrawHashMetadata.DrawHash
+            //     WHERE WinRateInfo.DrawingSide = 'w' AND BoardBeforeHash = '19482090A3318C6318C60000000000000000000000000000000000000000B5AD6B5AD69D6928D2B3'
+            // )
+            // 
+            // SELECT
+            //     *,
+            //     WinRate* AnalyzedGames AS Score
+            // FROM Situation
+            // ORDER BY Score DESC
         }
 
         #endregion WinRates

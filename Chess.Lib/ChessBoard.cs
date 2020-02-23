@@ -141,6 +141,26 @@ namespace Chess.Lib
         }
 
         /// <summary>
+        /// Indicates whether the chess field at the given positon is captured by a chess piece.
+        /// </summary>
+        /// <param name="positionHash">The chess field to check</param>
+        /// <returns>A boolean that indicates whether the given chess field is captured</returns>
+        public bool IsCapturedAt(byte positionHash)
+        {
+            return _pieces[positionHash].HasValue;
+        }
+
+        /// <summary>
+        /// Retrieves the chess piece or null according to the given position on the chess board.
+        /// </summary>
+        /// <param name="positionHash">The chess field</param>
+        /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
+        public ChessPiece GetPieceAt(byte positionHash)
+        {
+            return _pieces[positionHash];
+        }
+
+        /// <summary>
         /// Retrieves the chess piece or null according to the given position on the chess board.
         /// </summary>
         /// <param name="position">The chess field</param>

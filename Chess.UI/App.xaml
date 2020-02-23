@@ -1,0 +1,15 @@
+﻿<Application x:Class="Chess.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:main="clr-namespace:Chess.UI.Main"
+             StartupUri="Main\MainView.xaml">
+    <Application.Resources>
+        <!-- create the view model instance that is bound to the main view -->
+        <main:MainViewModel x:Key="MainViewModel" />
+
+        <!-- textblock font -->
+        <Style x:Key="ChessBlock_Font" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+        </Style>
+    </Application.Resources>
+</Application>
