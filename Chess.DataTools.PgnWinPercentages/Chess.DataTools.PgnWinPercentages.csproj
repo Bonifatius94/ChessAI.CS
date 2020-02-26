@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chess.DataTools\Chess.DataTools.csproj" />
+    <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
+  </ItemGroup>
+</Project>

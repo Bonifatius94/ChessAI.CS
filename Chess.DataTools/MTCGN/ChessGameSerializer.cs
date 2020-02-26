@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Chess.Tools
+namespace Chess.DataTools
 {
     /// <summary>
     /// Helps serializing chess games between the chess game format.

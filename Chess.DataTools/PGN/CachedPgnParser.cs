@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Chess.Tools
+namespace Chess.DataTools.PGN
 {
     // source: https://de.wikipedia.org/wiki/Schachnotation
 
     /// <summary>
     /// A parser class to extract chess games from PGN (portable game notation) log files.
     /// </summary>
-    public class PgnParser
+    public class CachedPgnParser : IPgnParser
     {
         #region Constants
 

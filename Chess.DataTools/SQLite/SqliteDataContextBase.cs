@@ -5,7 +5,7 @@ using System.Data.Common;
 using System.IO;
 using System.Text;
 
-namespace Chess.Tools.SQLite
+namespace Chess.DataTools.SQLite
 {
     /// <summary>
     /// Provide base functionality to run SQL via a SQLite connection.

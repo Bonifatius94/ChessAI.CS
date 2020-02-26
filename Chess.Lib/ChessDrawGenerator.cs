@@ -44,11 +44,11 @@ namespace Chess.Lib
         // chess draw generators (one per chess piece type)
         private static readonly Dictionary<ChessPieceType, IChessDrawGenerator> _explicitGenerators = new Dictionary<ChessPieceType, IChessDrawGenerator>()
         {
-            { ChessPieceType.King, new KingChessDrawGenerator() },
-            { ChessPieceType.Queen, new QueenChessDrawGenerator() },
-            { ChessPieceType.Rook, new RookChessDrawGenerator() },
-            { ChessPieceType.Bishop, new BishopChessDrawGenerator() },
-            { ChessPieceType.Knight, new KnightChessDrawGenerator() },
+            { ChessPieceType.King,    new KingChessDrawGenerator()    },
+            { ChessPieceType.Queen,   new QueenChessDrawGenerator()   },
+            { ChessPieceType.Rook,    new RookChessDrawGenerator()    },
+            { ChessPieceType.Bishop,  new BishopChessDrawGenerator()  },
+            { ChessPieceType.Knight,  new KnightChessDrawGenerator()  },
             { ChessPieceType.Peasant, new PeasantChessDrawGenerator() }
         };
 

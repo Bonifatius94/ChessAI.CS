@@ -272,3 +272,7 @@ __pycache__/
 /Chess.AI.PgnWinPercentages/GameData
 /ext_lib/MT.Tools.Tracing.DotnetCore.dll
 /Chess.Tools.PgnImport/all_games.mtcgn
+/Chess.DataTools.PgnWinPercentages/GameData/pgn
+/Chess.DataTools.PgnWinPercentages/GameData/zipped
+/Chess.DataTools.PgnWinPercentages/GameData/all_games.zip
+/Chess.DataTools/Chess.Tools.xml

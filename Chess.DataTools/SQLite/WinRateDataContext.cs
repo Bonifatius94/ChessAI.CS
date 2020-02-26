@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Chess.Tools.SQLite
+namespace Chess.DataTools.SQLite
 {
     /// <summary>
     /// REpresents a SQLite data conext for writing / retrieving win rates of chess draws.
