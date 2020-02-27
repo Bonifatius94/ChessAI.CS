@@ -6,24 +6,17 @@
         xmlns:local="clr-namespace:Chess.UI.Main"
         xmlns:board="clr-namespace:Chess.UI.Board"
         mc:Ignorable="d"
-        Title="MainWindow" Height="530" Width="500"
-        DataContext="{StaticResource MainViewModel}" Name="MainWindow">
+        Title="MainWindow" Height="530" Width="500" ResizeMode="NoResize"
+        DataContext="{StaticResource MainViewModel}">
 
-    <Grid Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="10" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
-        <Grid.LayoutTransform>
-            <ScaleTransform x:Name="ApplicationScaleTransform"
-                        CenterX="0"
-                        CenterY="0"
-                        ScaleX="{Binding ElementName=MainWindow, Path=ScaleValue}"
-                        ScaleY="{Binding ElementName=MainWindow, Path=ScaleValue}" />
-        </Grid.LayoutTransform>
-        
+        <
         <board:ChessBoardView DataContext="{Binding Board}" Grid.Row="2" />
     </Grid>
 </Window>

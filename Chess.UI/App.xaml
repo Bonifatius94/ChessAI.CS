@@ -6,10 +6,5 @@
     <Application.Resources>
         <!-- create the view model instance that is bound to the main view -->
         <main:MainViewModel x:Key="MainViewModel" />
-
-        <!-- textblock font -->
-        <Style x:Key="ChessBlock_Font" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="18" />
-        </Style>
     </Application.Resources>
 </Application>

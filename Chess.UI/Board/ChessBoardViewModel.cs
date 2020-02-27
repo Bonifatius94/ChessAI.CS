@@ -10,17 +10,21 @@ namespace Chess.UI.Board
     {
         #region Constructor
 
-        public ChessBoardViewModel(ChessBoard? board = null) { UpdatePieces(board ?? ChessBoard.StartFormation); }
+        public ChessBoardViewModel(Action<object> onFieldClicked, ChessBoard? board = null)
+        {
+            initFields(onFieldClicked);
+            UpdatePieces(board ?? ChessBoard.StartFormation);
+        }
 
         #endregion Constructor
 
         #region Members
 
-        public Chess.Lib.ChessBoard Board { get; private set; }
+        public ChessBoard Board { get; private set; }
 
         #region Fields
 
-        private readonly ChessFieldViewModel[,] _fields = initFields();
+        private ChessFieldViewModel[,] _fields;
 
         // row 1
         public ChessFieldViewModel Field_A1 { get { return _fields[0, 0]; } }
@@ -108,19 +112,19 @@ namespace Chess.UI.Board
 
         #region Methods
 
-        private static ChessFieldViewModel[,] initFields()
+        private ChessFieldViewModel[,] initFields(Action<object> onFieldClicked)
         {
             var fields = new ChessFieldViewModel[8, 8];
 
             for (byte pos = 0; pos < 64; pos++)
             {
-                fields[pos / 8, pos % 8] = new ChessFieldViewModel(new ChessPosition(pos));
+                fields[pos / 8, pos % 8] = new ChessFieldViewModel(new ChessPosition(pos), onFieldClicked);
             }
 
             return fields;
         }
 
-        public void UpdatePieces(Chess.Lib.ChessBoard board)
+        public void UpdatePieces(ChessBoard board)
         {
             for (byte pos = 0; pos < 64; pos++)
             {

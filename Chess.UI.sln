@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.Lib", "Chess.Lib\Chess.Lib.csproj", "{646F06D6-9078-42B2-B3AA-A4A1B2D01904}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.Tools", "Chess.Tools\Chess.Tools.csproj", "{318C97AE-2DEE-45B8-A4E2-41367CC406DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.Tools", "Chess.DataTools\Chess.DataTools.csproj", "{318C97AE-2DEE-45B8-A4E2-41367CC406DC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chess.AI", "Chess.AI\Chess.AI.csproj", "{2E0950F1-353D-410B-A969-97B0ABA64056}"
 EndProject

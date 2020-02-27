@@ -21,8 +21,8 @@ namespace Chess.UI.Session
         /// <param name="blackPlayer">The second player drawing the black chess pieces.</param>
         public ChessGameSession(IChessPlayer whitePlayer, IChessPlayer blackPlayer)
         {
-            _whitePlayer = whitePlayer;
-            _blackPlayer = blackPlayer;
+            WhitePlayer = whitePlayer;
+            BlackPlayer = blackPlayer;
         }
 
         #endregion Constructor
@@ -32,12 +32,17 @@ namespace Chess.UI.Session
         /// <summary>
         /// The white chess player of this session.
         /// </summary>
-        private IChessPlayer _whitePlayer;
+        public IChessPlayer WhitePlayer { get; private set; }
 
         /// <summary>
         /// The black chess player of this session.
         /// </summary>
-        private IChessPlayer _blackPlayer;
+        public IChessPlayer BlackPlayer { get; private set; }
+
+        /// <summary>
+        /// The chess board representing the current chess position of the game.
+        /// </summary>
+        public ChessBoard Board { get; private set; }
 
         #endregion Members
 
@@ -49,46 +54,32 @@ namespace Chess.UI.Session
         /// <returns>return the chess game log with all draws etc.</returns>
         public ChessGame ExecuteGame()
         {
+            // initialize new chess game
             var game = new ChessGame();
 
-            // print the chess board in start formation
-            Console.WriteLine(game.Board.ToString());
-            Console.WriteLine();
-
+            // continue until the game is over
             while (!game.GameStatus.IsGameOver())
             {
                 // determin the drawing player
-                var drawingPlayer = game.SideToDraw == ChessColor.White ? _whitePlayer : _blackPlayer;
+                var drawingPlayer = game.SideToDraw == ChessColor.White ? WhitePlayer : BlackPlayer;
 
                 // init loop variables
                 bool isDrawValid;
                 ChessDraw draw;
-                Stopwatch drawWatch = new Stopwatch();
 
                 do
                 {
                     // get the draw from the player
-                    drawWatch.Start();
                     draw = drawingPlayer.GetNextDraw(game.Board, game.LastDrawOrDefault);
-                    drawWatch.Stop();
-
-                    // apply the draw to the game (and validate it)
                     isDrawValid = game.ApplyDraw(draw, true);
-                    if (!isDrawValid) { Console.Write("The draw you have put is invalid! "); }
                 }
                 while (!isDrawValid);
 
-                if (isDrawValid)
-                {
-                    // print new chess board
-                    var timespan = new TimeSpan(drawWatch.ElapsedTicks);
-                    Console.WriteLine($"{ game.SideToDraw.Opponent() } player drew { draw }, took { timespan.Minutes }m { timespan.Seconds }s");
-                    Console.WriteLine();
-                    Console.WriteLine(game.Board.ToString());
-                    Console.WriteLine();
-                }
+                // update the board property
+                Board = game.Board;
             }
 
+            // return the chess game, so it can be logged, etc.
             return game;
         }
 

@@ -1,7 +1,7 @@
 ﻿using Chess.Lib;
 using Chess.Lib.Extensions;
-using Chess.Tools;
-using Chess.Tools.SQLite;
+using Chess.DataTools;
+using Chess.DataTools.SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;

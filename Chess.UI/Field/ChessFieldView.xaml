@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <Border Background="{Binding FieldBackground}">
-        <TextBlock Style="{StaticResource ChessBlock_Font}" Text="{Binding PieceText}" TextAlignment="Center" VerticalAlignment="Center" Height="20" Width="20" />
-    </Border>
+    <Button Background="{Binding FieldBackground}" Command="{Binding OnClickCommand}" CommandParameter="{Binding OnClickCommandParameter}">
+        <TextBlock FontSize="18" Text="{Binding PieceText}" TextAlignment="Center" VerticalAlignment="Center" Height="20" Width="20" />
+    </Button>
 </UserControl>

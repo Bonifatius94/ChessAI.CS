@@ -1,6 +1,6 @@
 ﻿using Chess.AI;
 using Chess.Lib;
-using Chess.Tools;
+using Chess.DataTools;
 using System;
 using System.Collections.Generic;
 using System.Text;

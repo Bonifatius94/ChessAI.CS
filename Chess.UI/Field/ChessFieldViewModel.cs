@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Chess.UI.Field
@@ -10,7 +11,11 @@ namespace Chess.UI.Field
     {
         #region Constructor
 
-        public ChessFieldViewModel(ChessPosition position) { _position = position; }
+        public ChessFieldViewModel(ChessPosition position, Action<object> onClickCallback)
+        {
+            _position = position;
+            OnClickCommand = new DelegateCommand(onClickCallback);
+        }
 
         #endregion Constructor
 
@@ -22,6 +27,9 @@ namespace Chess.UI.Field
         public Brush FieldBackground { get { return _position.ColorOfField == ChessColor.White ? Brushes.White : Brushes.Gray; } }
 
         public string PieceText { get { return prepareChessPieceChar(_piece); } }
+
+        public ICommand OnClickCommand { get; private set; }
+        public string OnClickCommandParameter { get { return _position.FieldName; } }
 
         #endregion Members
 

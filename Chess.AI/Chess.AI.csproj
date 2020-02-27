@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Chess.DataTools\Chess.DataTools.csproj" />
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
     <ProjectReference Include="..\Chess.Tools\Chess.Tools.csproj" />
   </ItemGroup>
