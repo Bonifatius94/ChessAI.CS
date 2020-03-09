@@ -4,8 +4,9 @@ using Chess.DataTools;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.Serialization;
 
-namespace Chess.UI.Player
+namespace Chess.GameLib.Player
 {
     /// <summary>
     /// Representing an artificial chess player that uses AI techniques to determine his next draw.
@@ -18,8 +19,9 @@ namespace Chess.UI.Player
         /// Initialize a new artificial chess player of the given level.
         /// </summary>
         /// <param name="level">The difficulty level of the new chess player.</param>
-        public ArtificialChessPlayer(int level)
+        public ArtificialChessPlayer(ChessColor side, ChessDifficultyLevel level)
         {
+            Side = side;
             _level = level;
         }
 
@@ -30,7 +32,12 @@ namespace Chess.UI.Player
         /// <summary>
         /// The level of the artificial player.
         /// </summary>
-        private int _level;
+        private ChessDifficultyLevel _level;
+
+        /// <summary>
+        /// The side the the player is drawing.
+        /// </summary>
+        public ChessColor Side { get; private set; }
 
         #endregion Members
 
@@ -44,7 +51,8 @@ namespace Chess.UI.Player
         /// <returns>the next chess draw</returns>
         public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? previousDraw)
         {
-            return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
+            // TODO: implement difficulty to search depth translation logic
+            return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, (int)_level);
         }
 
         #endregion Methods

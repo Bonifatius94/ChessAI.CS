@@ -1,15 +1,25 @@
 ﻿using Chess.Lib;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
-namespace Chess.UI.Player
+namespace Chess.GameLib.Player
 {
     /// <summary>
     /// Representing a generic chess player.
     /// </summary>
     public interface IChessPlayer
     {
+        #region Members
+
+        /// <summary>
+        /// The side that the player is drawing.
+        /// </summary>
+        ChessColor Side { get; }
+
+        #endregion Members
+
         #region Methods
 
         /// <summary>

@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Chess.UI.Main"
         xmlns:board="clr-namespace:Chess.UI.Board"
+        xmlns:menu="clr-namespace:Chess.UI.Menu"
         mc:Ignorable="d"
-        Title="MainWindow" Height="530" Width="500" ResizeMode="NoResize"
+        Title="MainWindow" Height="556" Width="500" ResizeMode="CanMinimize"
         DataContext="{StaticResource MainViewModel}">
 
     <Grid>
@@ -15,8 +16,8 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
-        <
+
+        <menu:MenuView DataContext="{Binding Menu}" Grid.Row="0" />
         <board:ChessBoardView DataContext="{Binding Board}" Grid.Row="2" />
     </Grid>
 </Window>

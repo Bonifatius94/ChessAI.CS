@@ -5,8 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Chess.UI.NewGame"
         mc:Ignorable="d"
-        Title="NewGameView" Height="450" Width="800">
-    <Grid>
-        
+        Title="NewGameView" Height="150" Width="300"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    
+    <Grid Margin="10" VerticalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- choose side -->
+        <TextBlock Text="Own Side:" Grid.Row="0" Grid.Column="0" />
+        <ComboBox ItemsSource="{Binding DrawingSideModes}" SelectedItem="{Binding SelectedDrawingSideMode}" IsReadOnly="True" Grid.Row="0" Grid.Column="2" />
+
+        <!-- choose difficulty level of AI -->
+        <TextBlock Text="AI Difficulty:" Grid.Row="2" Grid.Column="0" />
+        <ComboBox ItemsSource="{Binding DifficultyModes}" SelectedItem="{Binding Difficulty}" IsReadOnly="True" Grid.Row="2" Grid.Column="2" />
+
+        <!-- OK / Cancel buttons -->
+        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.ColumnSpan="3" HorizontalAlignment="Right">
+            <Button Command="{Binding ConfirmDataCommand}" Content="New Game" Margin="0,0,10,0" MinWidth="80" />
+            <Button Command="{Binding CancelCommand}" Content="Cancel" MinWidth="80" />
+        </StackPanel>
     </Grid>
 </Window>

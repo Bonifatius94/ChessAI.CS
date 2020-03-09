@@ -1,11 +1,11 @@
-﻿using Chess.UI.Player;
+﻿using Chess.GameLib.Player;
 using Chess.Lib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Chess.UI.Session
+namespace Chess.GameLib.Session
 {
     /// <summary>
     /// Represents a chess game session that hosts a chess game between two players. It can also handle the game execution.
@@ -40,9 +40,14 @@ namespace Chess.UI.Session
         public IChessPlayer BlackPlayer { get; private set; }
 
         /// <summary>
+        /// The chess game that this session is currently running.
+        /// </summary>
+        public ChessGame Game { get; private set; }
+
+        /// <summary>
         /// The chess board representing the current chess position of the game.
         /// </summary>
-        public ChessBoard Board { get; private set; }
+        public ChessBoard Board { get { return Game.Board; } }
 
         #endregion Members
 
@@ -55,13 +60,13 @@ namespace Chess.UI.Session
         public ChessGame ExecuteGame()
         {
             // initialize new chess game
-            var game = new ChessGame();
+            Game = new ChessGame();
 
             // continue until the game is over
-            while (!game.GameStatus.IsGameOver())
+            while (!Game.GameStatus.IsGameOver())
             {
                 // determin the drawing player
-                var drawingPlayer = game.SideToDraw == ChessColor.White ? WhitePlayer : BlackPlayer;
+                var drawingPlayer = Game.SideToDraw == ChessColor.White ? WhitePlayer : BlackPlayer;
 
                 // init loop variables
                 bool isDrawValid;
@@ -70,17 +75,14 @@ namespace Chess.UI.Session
                 do
                 {
                     // get the draw from the player
-                    draw = drawingPlayer.GetNextDraw(game.Board, game.LastDrawOrDefault);
-                    isDrawValid = game.ApplyDraw(draw, true);
+                    draw = drawingPlayer.GetNextDraw(Game.Board, Game.LastDrawOrDefault);
+                    isDrawValid = Game.ApplyDraw(draw, true);
                 }
                 while (!isDrawValid);
-
-                // update the board property
-                Board = game.Board;
             }
 
             // return the chess game, so it can be logged, etc.
-            return game;
+            return Game;
         }
 
         #endregion Methods

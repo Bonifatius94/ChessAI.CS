@@ -5,62 +5,6 @@ using System.Text;
 
 namespace Chess.AI
 {
-    ///// <summary>
-    ///// An enumeration of chess game difficulties from easy to godlike. The enumeration values are assigned by numbers between 1 (easy) and 5 (godlike).
-    ///// </summary>
-    //public enum ChessDifficultyLevel
-    //{
-    //    /// <summary>
-    //    /// Representing a completely stupid playstyle (random draws).
-    //    /// </summary>
-    //    Random = 0,
-
-    //    /// <summary>
-    //    /// Representing a completely stupid playstyle (random draws).
-    //    /// </summary>
-    //    VeryStupid = 1,
-
-    //    /// <summary>
-    //    /// Representing a completely stupid playstyle (random draws).
-    //    /// </summary>
-    //    Stupid = 2,
-
-    //    /// <summary>
-    //    /// Representing a somewhat easy playstyle (taking one future draw in consideration).
-    //    /// </summary>
-    //    VeryEasy = 3,
-
-    //    /// <summary>
-    //    /// Representing a somewhat easy playstyle (taking one future draw in consideration).
-    //    /// </summary>
-    //    Easy = 4,
-
-    //    /// <summary>
-    //    /// Representing a beginner playstyle (taking two future draws in consideration).
-    //    /// </summary>
-    //    Medium = 6,
-
-    //    /// <summary>
-    //    /// Representing an experienced playstyle (taking three future draws in consideration).
-    //    /// </summary>
-    //    Hard = 7,
-
-    //    /// <summary>
-    //    /// Representing an experienced playstyle (taking three future draws in consideration).
-    //    /// </summary>
-    //    VeryHard = 8,
-
-    //    /// <summary>
-    //    /// Representing a very experienced playstyle (taking four future draws in consideration).
-    //    /// </summary>
-    //    Extreme = 9,
-
-    //    /// <summary>
-    //    /// Representing a master's playstyle (taking five future draws in consideration).
-    //    /// </summary>
-    //    Godlike = 10
-    //}
-
     /// <summary>
     /// An interface providing operations for optimal chess draw computation.
     /// </summary>
