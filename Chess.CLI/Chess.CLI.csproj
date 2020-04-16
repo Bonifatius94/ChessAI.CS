@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\Chess.CLI\Chess.CLI.xml</DocumentationFile>
-    <OutputPath>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\build\Release\Chess.CLI\</OutputPath>
+    <DocumentationFile></DocumentationFile>
+    <OutputPath>..\build\Release\Chess.CLI\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>D:\Marco-PC\Source-Code\Privat\ChessAI.CS\build\Debug\Chess.CLI\</OutputPath>
+    <OutputPath>..\build\Release\Chess.CLI\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
