@@ -3,6 +3,7 @@ using Chess.GameLib.Player;
 using Chess.GameLib.Session;
 using Chess.Lib;
 using Chess.UI.Board;
+using Chess.UI.Extensions;
 using Chess.UI.Field;
 using Chess.UI.Menu;
 using Chess.UI.NewGame;
@@ -23,9 +24,6 @@ namespace Chess.UI.Main
 
         public MainViewModel()
         {
-            //// init draw mutex (this needs to be first !!!)
-            //initDrawInputMutex();
-
             // init the chess board
             Board = new ChessBoardViewModel(onChessFieldClicked);
             Menu = new MenuViewModel(this);
@@ -45,16 +43,14 @@ namespace Chess.UI.Main
 
         private const string SESSION_CACHE_FILE = "temp-session.cgs";
         private ChessGameSession _session = null;
-        private ChessColor _drawingSide;
+        private UIChessPlayer _player;
 
         #endregion GameSession
 
         #region DrawInput
 
-        private Mutex _drawInputMutex = new Mutex(true);
         private ChessPieceAtPos? _drawingPiece = null;
         private List<ChessDraw> _potentialDraws;
-        private ChessDraw _drawToMake;
 
         #endregion DrawInput
 
@@ -70,8 +66,13 @@ namespace Chess.UI.Main
             if (File.Exists(SESSION_CACHE_FILE))
             {
                 // reload last session from cache
-                _session = ChessGameSessionSerializer.Instance.Deserialize(SESSION_CACHE_FILE);
-                _drawingSide = new List<IChessPlayer>() { _session.WhitePlayer as UIChessPlayer, _session.BlackPlayer as UIChessPlayer }.First(x => x != null).Side;
+                var session = ChessGameSessionSerializer.Instance.Deserialize(SESSION_CACHE_FILE);
+                var humanPlayer = new List<UIChessPlayer>() { session.WhitePlayer as UIChessPlayer, session.BlackPlayer as UIChessPlayer }.First(x => x != null);
+
+                _session = session;
+                _player = humanPlayer;
+
+                _session.BoardChanged += boardChanged;
                 updateIsBoardActive();
             }
         }
@@ -92,12 +93,13 @@ namespace Chess.UI.Main
             if (result == true)
             {
                 // init new game session with user inputs from dialog
-                var humanPlayer = new UIChessPlayer(dlgContext.DrawingSide, getNextDraw);
+                var humanPlayer = new UIChessPlayer(dlgContext.DrawingSide);
                 var artificialPlayer = new ArtificialChessPlayer(dlgContext.DrawingSide.Opponent(), dlgContext.Difficulty);
 
-                _drawingSide = dlgContext.DrawingSide;
                 _session = dlgContext.DrawingSide == ChessColor.White ? new ChessGameSession(humanPlayer, artificialPlayer) : new ChessGameSession(artificialPlayer, humanPlayer);
-
+                _player = humanPlayer;
+                _session.BoardChanged += boardChanged;
+                
                 // tell the player which side he draws if he choose random side
                 if (dlgContext.SelectedDrawingSideMode == DrawingSideMode.Random)
                 {
@@ -115,19 +117,13 @@ namespace Chess.UI.Main
         private void updateIsBoardActive()
         {
             // only enable chess board for receiving user inputs if there is an active game session
-            bool isAEnabled = _session != null;
-            Board.UpdateIsEnabled(isAEnabled);
+            bool isEnabled = _session != null;
+            Board.UpdateIsEnabled(isEnabled);
         }
 
         #endregion GameSession
 
         #region DrawInput
-
-        //private void initDrawInputMutex()
-        //{
-        //    _mutex = new Mutex(false);
-        //    _mutex.WaitOne();
-        //}
 
         private void onChessFieldClicked(object parameter)
         {
@@ -139,7 +135,7 @@ namespace Chess.UI.Main
             var targetPiece = _session.Board.IsCapturedAt(position) ? (ChessPieceAtPos?)new ChessPieceAtPos(position, _session.Board.GetPieceAt(position)) : null;
 
             // set drawing piece (if an allied piece is selected)
-            if (targetPiece?.Piece.Color == _drawingSide)
+            if (targetPiece?.Piece.Color == _player.Side)
             {
                 // remember the drawing piece
                 _drawingPiece = targetPiece;
@@ -150,47 +146,25 @@ namespace Chess.UI.Main
                 // highlight the target fields of the draws (first reset all highlightings, just for good measure)
                 foreach (var field in Board.Fields) { field.UpdateHighlight(false); }
                 foreach (var field in Board.Fields) { if (_potentialDraws.Any(x => x.NewPosition == field.Position)) { field.UpdateHighlight(true); }  }
-                Board.Fields[position.GetHashCode()].UpdateHighlight(true);
+                if (_potentialDraws?.Count > 0) { Board.Fields[position.GetHashCode()].UpdateHighlight(true); }
             }
             // only continue if an allied piece was selected before
             else if (_drawingPiece != null && _potentialDraws?.Count > 0 && _potentialDraws.Any(x => x.NewPosition == position))
             {
                 // get the selected draw
-                _drawToMake = _potentialDraws.First(x => x.NewPosition == position);
-
-                // 1) release the mutex, so the draw gets passed to the chess session (this automatically applies the draw to the game session)
-                // 2) wait 50 ms to ensure that the mutex can be captured by the other thread
-                // 3) recapture the mutex, so the wait mechanism can be repeated
-                _drawInputMutex.ReleaseMutex();
-                Thread.Sleep(100);
-                _drawInputMutex.WaitOne();
-
-                // apply the draw to the UI
-                Board.UpdatePieces(_session.Game.Board);
-
-                // reset the temp variables and highlightings
-                _drawingPiece = null;
-                _potentialDraws = null;
-                foreach (var field in Board.Fields) { field.UpdateHighlight(false); }
+                var drawToMake = _potentialDraws.First(x => x.NewPosition == position);
+                _player.PassDraw(drawToMake);
             }
         }
 
-        private ChessDraw getNextDraw(ChessBoard board, ChessDraw? predecedingDraw)
+        private void boardChanged(ChessBoard newBoard)
         {
-            // update the board (show opponent's draw)
-            Board.UpdatePieces(_session.Game.Board);
+            // apply the draw to the UI
+            Board.UpdatePieces(newBoard);
 
-            // wait until the player put his draw via UI
-            _drawInputMutex.WaitOne();
-            var draw = _drawToMake;
-            _drawInputMutex.ReleaseMutex();
-
-            // return the draw
-            return draw;
+            // reset highlightings
+            foreach (var field in Board.Fields) { field.UpdateHighlight(false); }
         }
-
-        // TODO: add a menu bar
-        // TODO: implement start game logic etc.
 
         #endregion DrawInput
 

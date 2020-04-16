@@ -51,6 +51,21 @@ namespace Chess.GameLib.Session
 
         #endregion Members
 
+        #region Events
+
+        /// <summary>
+        /// A delegate for implementations of board changed handlers.
+        /// </summary>
+        /// <param name="newBoard">The new chess board.</param>
+        public delegate void BoardChangedHandler(ChessBoard newBoard);
+
+        /// <summary>
+        /// An event that is signaled when the chess board changed (due to a player making a draw).
+        /// </summary>
+        public event BoardChangedHandler BoardChanged;
+
+        #endregion Events
+
         #region Methods
 
         /// <summary>
@@ -79,6 +94,9 @@ namespace Chess.GameLib.Session
                     isDrawValid = Game.ApplyDraw(draw, true);
                 }
                 while (!isDrawValid);
+
+                // raise board changed event
+                BoardChanged?.Invoke(Game.Board);
             }
 
             // return the chess game, so it can be logged, etc.

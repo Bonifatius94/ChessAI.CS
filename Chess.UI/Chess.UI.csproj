@@ -11,7 +11,6 @@
     <ProjectReference Include="..\Chess.AI\Chess.AI.csproj" />
     <ProjectReference Include="..\Chess.GameLib\Chess.GameLib.csproj" />
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
-    <ProjectReference Include="..\Chess.Tools\Chess.Tools.csproj" />
   </ItemGroup>
 
 </Project>

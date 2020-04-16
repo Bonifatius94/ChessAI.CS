@@ -32,7 +32,7 @@ namespace Chess.Lib
     /// <summary>
     /// Represents a chess draw made by a chess player.
     /// </summary>
-    public readonly struct ChessDraw
+    public readonly struct ChessDraw : ICloneable
     {
         #region Constants
 
@@ -291,6 +291,15 @@ namespace Chess.Lib
         public override int GetHashCode()
         {
             return _hashCode;
+        }
+
+        /// <summary>
+        /// Create a new chess draw instance representing the same draw.
+        /// </summary>
+        /// <returns>a new chess draw instance</returns>
+        public object Clone()
+        {
+            return new ChessDraw(this._hashCode);
         }
 
         /// <summary>
