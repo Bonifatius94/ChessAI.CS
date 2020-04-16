@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Chess.UI.NewGame"
         mc:Ignorable="d"
-        Title="NewGameView" Height="150" Width="300"
+        Title="NewGameView" Height="160" Width="300"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
     
     <Grid Margin="10" VerticalAlignment="Center">

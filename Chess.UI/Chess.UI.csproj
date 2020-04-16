@@ -7,6 +7,14 @@
     <StartupObject>Chess.UI.App</StartupObject>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\build\Debug\Chess.UI\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\build\Release\Chess.UI\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Chess.AI\Chess.AI.csproj" />
     <ProjectReference Include="..\Chess.GameLib\Chess.GameLib.csproj" />
