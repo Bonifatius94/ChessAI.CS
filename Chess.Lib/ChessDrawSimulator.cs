@@ -71,8 +71,7 @@ namespace Chess.Lib
             // TODO: remove clone operation if it causes performance issues
 
             // clone chess board and simulate the draw
-            var simulatedBoard = (ChessBoard)board.Clone();
-            simulatedBoard.ApplyDraw(draw);
+            var simulatedBoard = board.ApplyDraw(draw);
 
             // get all enemy chess pieces and their possible answers
             var enemyPieces = simulatedBoard.GetPiecesOfColor(draw.DrawingSide.Opponent());

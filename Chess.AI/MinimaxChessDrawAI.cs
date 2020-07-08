@@ -65,8 +65,7 @@ namespace Chess.AI
         public double RateDraw(ChessBoard board, ChessDraw draw, int searchDepth)
         {
             // simulate the given draw
-            var simulatedBoard = (ChessBoard)board.Clone();
-            simulatedBoard.ApplyDraw(draw);
+            var simulatedBoard = board.ApplyDraw(draw);
 
             // use the minimax algorithm to rate the score of the given draw
             double score = negamax(simulatedBoard, draw, searchDepth - 1, double.MinValue, double.MaxValue, false) * -1;
@@ -153,12 +152,23 @@ namespace Chess.AI
         /// <returns>a list of chess draws</returns>
         private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsScores)
         {
+            // TODO: replace this by a real logging tool that uses different run configs for Debug/Release mode
+
             #if DEBUG
                 // write aspiration window to console
                 Console.WriteLine($"computed new draws with ratings:");
                 drawsScores.ToList().ForEach(x => Console.WriteLine($" - { x.ToString() }"));
                 Console.WriteLine();
             #endif
+
+            // handle draws leading to win / loss of game because associated scores double.MaxValue / double.MinValue ruin the relevance of deviation / expectation
+
+            // abort if there is at least one draw that wins the game (and return only one of the winning draws to save calculation time)
+            if (drawsScores.Any(x => x.Score == double.MaxValue)) { return new List<ChessDrawScore>() { drawsScores.Where(x => x.Score == double.MaxValue).First() }; }
+
+            // remove draws leading to defeat (and if there are only losing draws, just draw rather randomly because the game is lost anyways)
+            if (drawsScores.All(x => x.Score == double.MinValue)) { return new List<ChessDrawScore>() { drawsScores.First() }; }
+            else { drawsScores = drawsScores.Where(x => x.Score > double.MinValue); }
 
             // compute standard deviation of the scores and the average score
             double drawProbability = 1.0 / drawsScores.Count();
@@ -177,7 +187,7 @@ namespace Chess.AI
                 window = drawsScores.Where(x => x.Score >= minScore/* && x.Score <= maxScore*/).ToArray();
                 deviationFactor *= 2;
 
-                // TODO: rework this logic
+                // TODO: make sure that there is optimized performance at the cost of minimal error in draw selection
             }
             while (window.Count() <= 0);
 
@@ -265,8 +275,7 @@ namespace Chess.AI
             foreach (var simDraw in preorderedDraws)
             {
                 // simulate draw
-                var simBoard = (ChessBoard)board.Clone();
-                simBoard.ApplyDraw(simDraw);
+                var simBoard = board.ApplyDraw(simDraw);
 
                 // start recursion
                 double score = negamax(simBoard, simDraw, depth - 1, -beta, -maxScore, !isMaximizing) * -1;
@@ -289,8 +298,7 @@ namespace Chess.AI
             foreach (var simDraw in draws)
             {
                 // simulate draw
-                var simBoard = (ChessBoard)board.Clone();
-                simBoard.ApplyDraw(simDraw);
+                var simBoard = board.ApplyDraw(simDraw);
 
                 // compute the new score of the resulting position
                 double score = _estimator.GetScore(simBoard, drawingSide);

@@ -92,7 +92,7 @@ namespace Chess.Lib
             if (isDrawValid)
             {
                 // draw the chess piece
-                Board.ApplyDraw(draw);
+                Board = Board.ApplyDraw(draw);
 
                 // apply the chess draw to the chess draws history
                 _drawHistory.Push(draw);
@@ -116,8 +116,7 @@ namespace Chess.Lib
             _drawHistory.Pop();
 
             // create a new chess board and apply all previous chess draws (-> this results in the situation before the last chess draw was applied)
-            var board = new ChessBoard();
-            _drawHistory.Reverse().ToList().ForEach(x => board.ApplyDraw(x));
+            Board = ChessBoard.StartFormation.ApplyDraws(_drawHistory.Reverse().ToList());
             
             // change the side that has to draw
             SideToDraw = SideToDraw.Opponent();
@@ -142,6 +141,8 @@ namespace Chess.Lib
         /// <returns></returns>
         public bool ContainsLoop()
         {
+            // TODO: move this function to an extension class as it's not required as a base functionality
+
             int loopSize = 4;
             var draws = _drawHistory.ToArray();
 

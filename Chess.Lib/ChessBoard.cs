@@ -9,7 +9,7 @@ namespace Chess.Lib
     /// <summary>
     /// This class represents a chess board and all fields / pieces on it.
     /// </summary>
-    public struct ChessBoard : ICloneable
+    public readonly struct ChessBoard : ICloneable
     {
         #region Constants
         
@@ -59,6 +59,16 @@ namespace Chess.Lib
         /// <summary>
         /// Create a new instance of a chess board with the given chess pieces.
         /// </summary>
+        /// <param name="pieces">The chess pieces to be applied to the chess board</param>
+        public ChessBoard(ChessPiece[] pieces)
+        {
+            // apply pieces array
+            _pieces = pieces;
+        }
+
+        /// <summary>
+        /// Create a new instance of a chess board with the given chess pieces.
+        /// </summary>
         /// <param name="piecesAtPos">The chess pieces to be applied to the chess board</param>
         public ChessBoard(IEnumerable<ChessPieceAtPos> piecesAtPos)
         {
@@ -77,9 +87,11 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// An array of all chess pieces at the index of their position's hash code. (value is null if there is no chess piece at the position)
+        /// An array of all chess pieces at the index of their position's hash code. The piece value is zero - or more precisely 0x00 - if there is no chess piece at the position.
+        /// The array consists of the ChessPiece struct which represents all possible chess pieces with a single byte. Therefore this array is just a specialized byte[] array of size 64.
+        /// As the ChessPiece struct does not store the piece's position on the board, accessing the piece is implemented by the ChessPosition struct's 6-bit position index (0b_rrrccc).
         /// </summary>
-        private ChessPiece[] _pieces;
+        private readonly ChessPiece[] _pieces;
         
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
@@ -93,6 +105,8 @@ namespace Chess.Lib
         {
             get
             {
+                // TODO: cache the AllPieces value and only recompute it when necessary
+
                 // determine the pieces count
                 byte piecesCount = 0;
                 for (byte pos = 0; pos < 64; pos++) { if (_pieces[pos].HasValue) { piecesCount++; } }
@@ -120,11 +134,13 @@ namespace Chess.Lib
         /// Selects the white king from the chess pieces list. (computed operation)
         /// </summary>
         public ChessPieceAtPos WhiteKing { get { return WhitePieces.First(x => x.Piece.Type == ChessPieceType.King); } }
+        // TODO: add yield whiteKingPos for faster lookups
 
         /// <summary>
         /// Selects the black king from the chess pieces list. (computed operation)
         /// </summary>
         public ChessPieceAtPos BlackKing { get { return BlackPieces.First(x => x.Piece.Type == ChessPieceType.King); } }
+        // TODO: add yield blackKingPos for faster lookups
 
         #endregion Members
 
@@ -171,18 +187,6 @@ namespace Chess.Lib
         }
 
         /// <summary>
-        /// Update the chess piece at the given position.
-        /// </summary>
-        /// <param name="position">The position of the chess piece to be updated</param>
-        /// <param name="newPiece">The new chess piece data</param>
-        ///// <param name="updateCache">Indicates whether the cached pieces list should be updated</param>
-        public void UpdatePieceAt(ChessPosition position, ChessPiece newPiece/*, bool updateCache = true*/)
-        {
-            // update main pieces list
-            _pieces[position.GetHashCode()] = newPiece;
-        }
-        
-        /// <summary>
         /// Retrieve all chess pieces of the given player's side.
         /// </summary>
         /// <param name="side">The player's side</param>
@@ -192,12 +196,39 @@ namespace Chess.Lib
             return AllPieces.Where(x => x.Piece.Color == side).ToArray();
         }
 
+        ///// <summary>
+        ///// Update the chess piece at the given position.
+        ///// </summary>
+        ///// <param name="position">The position of the chess piece to be updated</param>
+        ///// <param name="newPiece">The new chess piece data</param>
+        ///// <returns>the new chess board containing the updated pieces</returns>
+        //public ChessBoard UpdatePieceAt(ChessPosition position, ChessPiece newPiece)
+        //{
+        //    var pieces = (ChessPiece[])_pieces.Clone();
+        //    pieces[position.GetHashCode()] = newPiece;
+        //    return new ChessBoard(pieces);
+        //}
+
+        /// <summary>
+        /// Update the chess piece at the given position.
+        /// </summary>
+        /// <param name="piecesToUpdate">The list of pieces to apply to the new board.</param>
+        /// <returns>the new chess board containing the updated pieces</returns>
+        public ChessBoard UpdatePiecesAt(IEnumerable<ChessPieceAtPos> piecesToUpdate)
+        {
+            var pieces = (ChessPiece[])_pieces.Clone();
+            foreach (var pieceAtPos in piecesToUpdate) { pieces[pieceAtPos.Position.GetHashCode()] = pieceAtPos.Piece; }
+            return new ChessBoard(pieces);
+        }
+
         /// <summary>
         /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draw">The chess draw to be executed</param>
-        public void ApplyDraw(ChessDraw draw)
+        public ChessBoard ApplyDraw(ChessDraw draw)
         {
+            var piecesToUpdate = new List<ChessPieceAtPos>();
+
             // get the destination chess field instance of the chess board
             var drawingPiece = GetPieceAt(draw.OldPosition);
             //var pieceToTake = GetPieceAt(draw.NewPosition);
@@ -206,10 +237,7 @@ namespace Chess.Lib
             drawingPiece.WasMoved = true;
 
             // handle peasant promotion
-            if (draw.Type == ChessDrawType.PeasantPromotion)
-            {
-                drawingPiece.Type = draw.PeasantPromotionPieceType.Value;
-            }
+            if (draw.Type == ChessDrawType.PeasantPromotion) { drawingPiece.Type = draw.PeasantPromotionPieceType.Value; }
 
             // handle rochade
             if (draw.Type == ChessDrawType.Rochade)
@@ -220,8 +248,8 @@ namespace Chess.Lib
                 var drawingRook = GetPieceAt(oldRookPosition);
 
                 // move the tower
-                UpdatePieceAt(oldRookPosition, ChessPiece.NULL);
-                UpdatePieceAt(newRookPosition, drawingRook);
+                piecesToUpdate.Add(new ChessPieceAtPos(oldRookPosition, ChessPiece.NULL));
+                piecesToUpdate.Add(new ChessPieceAtPos(newRookPosition, drawingRook));
             }
 
             // handle en-passant
@@ -229,12 +257,26 @@ namespace Chess.Lib
             {
                 // get position of the taken enemy peasant and remove it
                 var takenPeasantPosition = new ChessPosition((draw.DrawingSide == ChessColor.White) ? 4 : 3, draw.NewPosition.Column);
-                UpdatePieceAt(takenPeasantPosition, ChessPiece.NULL);
+                piecesToUpdate.Add(new ChessPieceAtPos(takenPeasantPosition, ChessPiece.NULL));
             }
 
             // apply data to the chess board
-            UpdatePieceAt(draw.OldPosition, ChessPiece.NULL);
-            UpdatePieceAt(draw.NewPosition, drawingPiece);
+            piecesToUpdate.Add(new ChessPieceAtPos(draw.OldPosition, ChessPiece.NULL));
+            piecesToUpdate.Add(new ChessPieceAtPos(draw.NewPosition, drawingPiece));
+
+            // apply changes to the new immutable chess board
+            return UpdatePiecesAt(piecesToUpdate);
+        }
+
+        /// <summary>
+        /// Draw the chess pieces to the given positions on the chess board. Also handle enemy pieces that get taken and special draws.
+        /// </summary>
+        /// <param name="draws">The chess draws to be executed</param>
+        public ChessBoard ApplyDraws(IList<ChessDraw> draws)
+        {
+            ChessBoard board = this;
+            foreach (var draw in draws) { board = board.ApplyDraw(draw); }
+            return board;
         }
 
         ///// <summary>
@@ -332,6 +374,7 @@ namespace Chess.Lib
         /// <returns>a boolean indicating whether the objects are equal</returns>
         public override bool Equals(object obj)
         {
+            // TODO: use BigInteger compare
             // make sure that the object types are the same and the pieces on the boards match
             return (obj != null && obj.GetType() == typeof(ChessBoard)) && (this.ToHash().Equals(((ChessBoard)obj).ToHash()));
         }
@@ -342,6 +385,7 @@ namespace Chess.Lib
         /// <returns>hash of pieces string, may not always be unique</returns>
         public override int GetHashCode()
         {
+            // TODO: use BigInteger compare
             return 0;
             //return this.ToHash().GetHashCode();
         }
@@ -354,6 +398,7 @@ namespace Chess.Lib
         /// <returns>a boolean that indicates whether the chess boards are equal</returns>
         public static bool operator ==(ChessBoard c1, ChessBoard c2)
         {
+            // TODO: use BigInteger compare
             return c1.Equals(c2);
         }
 
@@ -365,6 +410,7 @@ namespace Chess.Lib
         /// <returns>a boolean that indicates whether the chess boards are not equal</returns>
         public static bool operator !=(ChessBoard c1, ChessBoard c2)
         {
+            // TODO: use BigInteger compare
             return !c1.Equals(c2);
         }
 

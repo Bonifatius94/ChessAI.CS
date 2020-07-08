@@ -73,7 +73,7 @@ namespace Chess.UnitTest
             // test no check
             var board = ChessBoard.StartFormation;
             var enemyDraw = new ChessDraw(board, new ChessPosition(0, 0), new ChessPosition(0, 0));
-            board.ApplyDraw(enemyDraw);
+            board = board.ApplyDraw(enemyDraw);
             Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.None);
 
             // test simple check
@@ -87,7 +87,7 @@ namespace Chess.UnitTest
             
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(7, 3), new ChessPosition(6, 4));
-            board.ApplyDraw(enemyDraw);
+            board = board.ApplyDraw(enemyDraw);
             Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Check);
 
             // test checkmate
@@ -108,7 +108,7 @@ namespace Chess.UnitTest
 
                 board = new ChessBoard(pieces);
                 enemyDraw = new ChessDraw(board, new ChessPosition(2, 3), new ChessPosition(1, 4));
-                board.ApplyDraw(enemyDraw);
+                board = board.ApplyDraw(enemyDraw);
 
                 Assert.True(
                     (!putSavingPiece && ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Checkmate)
@@ -129,7 +129,7 @@ namespace Chess.UnitTest
 
             board = new ChessBoard(pieces);
             enemyDraw = new ChessDraw(board, new ChessPosition(3, 5), new ChessPosition(2, 5));
-            board.ApplyDraw(enemyDraw);
+            board = board.ApplyDraw(enemyDraw);
             Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.Stalemate);
         }
 

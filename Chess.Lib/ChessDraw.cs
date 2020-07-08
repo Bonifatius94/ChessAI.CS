@@ -45,13 +45,13 @@ namespace Chess.Lib
         private const int OLD_POSITION_TRAILING_BITS         =  6;
 
         // define which bits of the hash code store the data
-        private const int BITS_OF_DRAWING_SIDE          = 0b_100000000000000000000000; // bits: 10000000 00000000 00000000
-        private const int BITS_OF_DRAW_TYPE             = 0b_011000000000000000000000; // bits: 01100000 00000000 00000000
-        private const int BITS_OF_DRAWING_PIECE_TYPE    = 0b_000111000000000000000000; // bits: 00011100 00000000 00000000
-        private const int BITS_OF_TAKEN_PIECE_TYPE      = 0b_000000111000000000000000; // bits: 00000011 10000000 00000000
-        private const int BITS_OF_PROMOTION_PIECE_TYPE  = 0b_000000000111000000000000; // bits: 00000000 01110000 00000000
-        private const int BITS_OF_OLD_POSITION          = 0b_000000000000111111000000; // bits: 00000000 00001111 11000000
-        private const int BITS_OF_NEW_POSITION          = 0b_000000000000000000111111; // bits: 00000000 00000000 00111111
+        private const int BITS_OF_DRAWING_SIDE          = 0b_100000000000000000000000;
+        private const int BITS_OF_DRAW_TYPE             = 0b_011000000000000000000000;
+        private const int BITS_OF_DRAWING_PIECE_TYPE    = 0b_000111000000000000000000;
+        private const int BITS_OF_TAKEN_PIECE_TYPE      = 0b_000000111000000000000000;
+        private const int BITS_OF_PROMOTION_PIECE_TYPE  = 0b_000000000111000000000000;
+        private const int BITS_OF_OLD_POSITION          = 0b_000000000000111111000000;
+        private const int BITS_OF_NEW_POSITION          = 0b_000000000000000000111111;
 
         // define null value of chess piece type
         private const byte CHESS_PIECE_TYPE_NULL = (byte)ChessPieceType.Invalid;

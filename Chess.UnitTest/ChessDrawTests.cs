@@ -29,17 +29,17 @@ namespace Chess.UnitTest
                 {
                     var drawType = (ChessDrawType)drawTypeValue;
 
-                    for (int drawingPieceTypeValue = 0; drawingPieceTypeValue < 6; drawingPieceTypeValue++)
+                    for (int drawingPieceTypeValue = 1; drawingPieceTypeValue < 7; drawingPieceTypeValue++)
                     {
                         var drawingPieceType = (ChessPieceType)drawingPieceTypeValue;
 
                         for (int takenPieceTypeValue = 0; takenPieceTypeValue < 7; takenPieceTypeValue++)
                         {
-                            var takenPieceType = (takenPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)takenPieceTypeValue) : null;
+                            var takenPieceType = (takenPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)takenPieceTypeValue) : null;
 
                             for (int promotionPieceTypeValue = 0; promotionPieceTypeValue < 7; promotionPieceTypeValue++)
                             {
-                                var promotionPieceType = (promotionPieceTypeValue != 6) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
+                                var promotionPieceType = (promotionPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
 
                                 for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
                                 {

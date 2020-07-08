@@ -20,9 +20,6 @@
     <Reference Include="Microsoft.EntityFrameworkCore">
       <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.entityframeworkcore\2.1.1\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
     </Reference>
-    <Reference Include="MT.Tools.Tracing.DotnetCore">
-      <HintPath>..\ext_lib\MT.Tools.Tracing.DotnetCore.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
