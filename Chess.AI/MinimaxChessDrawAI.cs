@@ -266,7 +266,8 @@ namespace Chess.AI
 
             // compute possible draws
             var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).Shuffle().ToArray();
+            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true))./*Shuffle().*/ToArray();
+            // TODO: test if shuffle improves performance
 
             // order draws by possible gain, so alpha-beta prune can achieve more cut-offs
             var preorderedDraws = getPreorderedDrawsByPossibleGain(board, draws, drawingSide);

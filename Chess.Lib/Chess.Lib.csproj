@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <Authors>Marco Tröster</Authors>
     <Company>Marco Tröster Softwareentwicklung</Company>
     <Copyright>Marco Tröster © 2020</Copyright>

@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace Chess.Lib
 {
-    // TODO: use multiple threads to calculate the possible draws (=> already tested, but was actually slower than the single-thread approach)
-
     /// <summary>
     /// An interface specifying operations for generating chess draws.
     /// </summary>

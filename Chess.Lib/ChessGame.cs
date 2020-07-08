@@ -67,7 +67,7 @@ namespace Chess.Lib
         public ChessGameStatus GameStatus { get { return _drawHistory.Count > 0 ? ChessDrawSimulator.Instance.GetCheckGameStatus(Board, LastDraw) : ChessGameStatus.None; } }
 
         /// <summary>
-        /// The winner of the chess game (if the is one).
+        /// The winner of the chess game (if there is one).
         /// </summary>
         public ChessColor? Winner { get; set; }
         // TODO: maybe rework this attibute as this is quite "quick n dirty"

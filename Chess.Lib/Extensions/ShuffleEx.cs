@@ -24,7 +24,7 @@ namespace Chess.Lib.Extensions
         /// <typeparam name="T">the element type of the list</typeparam>
         /// <param name="items">the list containing the elements</param>
         /// <returns>a new list with the same elements in a different order</returns>
-        public static IList<T> Shuffle<T>(this IEnumerable<T> items)
+        public static IList<T> Shuffle<T>(this IList<T> items)
         {
             // make sure the overloaded list is not null
             if (items == null) { throw new ArgumentException("items must not be null"); }
@@ -32,7 +32,7 @@ namespace Chess.Lib.Extensions
             IList<T> results;
 
             // make sure the overloaded list is not empty
-            if (items?.Count() > 0)
+            if (items?.Count > 0)
             {
                 // fix the order of the given elements by converting the enumerable to a list
                 var tempItems = items.ToArray();
@@ -87,7 +87,7 @@ namespace Chess.Lib.Extensions
         /// <param name="list">the list containing the elements</param>
         /// <param name="range">the number of elements to select</param>
         /// <returns>a subset of the given list</returns>
-        public static IList<T> ChooseRandom<T>(this IEnumerable<T> list, int range)
+        public static IList<T> ChooseRandom<T>(this IList<T> list, int range)
         {
             // get the count of the list safely
             int count = list != null ? Enumerable.Count(list) : 0;
