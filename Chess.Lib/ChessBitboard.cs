@@ -1,12 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace Chess.Lib
 {
     public struct ChessBitboard
     {
+        #region Constants
+
+        // row masks
+        private const ulong ROW_1 = 0x00000000000000FFuL;
+        private const ulong ROW_2 = 0x000000000000FF00uL;
+        private const ulong ROW_3 = 0x0000000000FF0000uL;
+        private const ulong ROW_4 = 0x00000000FF000000uL;
+        private const ulong ROW_5 = 0x000000FF00000000uL;
+        private const ulong ROW_6 = 0x0000FF0000000000uL;
+        private const ulong ROW_7 = 0x00FF000000000000uL;
+        private const ulong ROW_8 = 0xFF00000000000000uL;
+
+        // column masks
+        private const ulong COL_A = 0x0101010101010101uL;
+        private const ulong COL_B = 0x0202020202020202uL;
+        private const ulong COL_C = 0x0404040404040404uL;
+        private const ulong COL_D = 0x0808080808080808uL;
+        private const ulong COL_E = 0x1010101010101010uL;
+        private const ulong COL_F = 0x2020202020202020uL;
+        private const ulong COL_G = 0x4040404040404040uL;
+        private const ulong COL_H = 0x8080808080808080uL;
+
+        #endregion Constants
+
         #region Constructor
 
         public ChessBitboard(ChessBoard board)
@@ -146,10 +171,10 @@ namespace Chess.Lib
         /// <param name="lastDraw"></param>
         /// <param name="analyzeDrawIntoCheck"></param>
         /// <returns></returns>
-        public IEnumerable<ChessDraw> GetAllDraws(ChessDraw? lastDraw = null, bool analyzeDrawIntoCheck = false)
+        public ulong[] GetAllDraws(ChessDraw? lastDraw = null, bool analyzeDrawIntoCheck = false)
         {
             // initialize draws with empty list
-            var draws = new List<ChessDraw>();
+            var draws = new List<ulong>();
 
             // determine the drawing side
             var drawingSide = lastDraw?.DrawingSide ?? ChessColor.White;
@@ -165,14 +190,16 @@ namespace Chess.Lib
                 // check if the bitboard contains pieces (otherwise skip)
                 if (bitboard != 0uL)
                 {
+                    ulong[] tempDraws;
+
                     switch (pieceType)
                     {
-                        case ChessPieceType.King:    draws.AddRange(getKingDraws(drawingSide));              break;
-                        case ChessPieceType.Queen:   draws.AddRange(getQueenDraws(drawingSide));             break;
-                        case ChessPieceType.Rook:    draws.AddRange(getRookDraws(drawingSide));              break;
-                        case ChessPieceType.Bishop:  draws.AddRange(getBishopDraws(drawingSide));            break;
-                        case ChessPieceType.Knight:  draws.AddRange(getKnightDraws(drawingSide));            break;
-                        case ChessPieceType.Peasant: draws.AddRange(getPeasantDraws(drawingSide, lastDraw)); break;
+                        case ChessPieceType.King:    tempDraws = getKingDraws(drawingSide);              break;
+                        case ChessPieceType.Queen:   tempDraws = getQueenDraws(drawingSide);             break;
+                        case ChessPieceType.Rook:    tempDraws = getRookDraws(drawingSide);              break;
+                        case ChessPieceType.Bishop:  tempDraws = getBishopDraws(drawingSide);            break;
+                        case ChessPieceType.Knight:  tempDraws = getKnightDraws(drawingSide);            break;
+                        case ChessPieceType.Peasant: tempDraws = getPeasantDraws(drawingSide, lastDraw); break;
                         default: throw new ArgumentException($"Invalid chess piece type '{ pieceType }' detected! Cannot compute draws for this unknown piece type!");
                     }
                 }
@@ -193,17 +220,23 @@ namespace Chess.Lib
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[offset];
 
+            // determine the position of the piece onto the bitboard
+            byte oldPos = (byte)BitOperations.Log2(bitboard);
+            // TODO: check if this is too costly
+
             // get king draws
-            ulong forewardRight  = (side == ChessColor.White) ? bitboard << 9 : bitboard >> 7;
-            ulong forewardMiddle = (side == ChessColor.White) ? bitboard << 8 : bitboard >> 8;
-            ulong forewardLeft   = (side == ChessColor.White) ? bitboard << 7 : bitboard >> 9;
-            ulong sideRight      = (side == ChessColor.White) ? bitboard << 1 : bitboard >> 1;
-            ulong sideLeft       = (side == ChessColor.White) ? bitboard >> 1 : bitboard << 1;
-            ulong backwardRight  = (side == ChessColor.White) ? bitboard >> 9 : bitboard << 7;
-            ulong backwardMiddle = (side == ChessColor.White) ? bitboard >> 8 : bitboard << 8;
-            ulong backwardLeft   = (side == ChessColor.White) ? bitboard >> 7 : bitboard << 9;
-            // TODO: implement validation of board edge overflows
+            //ulong forewardRight  = (side == ChessColor.White) ? bitboard << 9 : bitboard >> 7;
+            //ulong forewardMiddle = (side == ChessColor.White) ? bitboard << 8 : bitboard >> 8;
+            //ulong forewardLeft   = (side == ChessColor.White) ? bitboard << 7 : bitboard >> 9;
+            //ulong sideRight      = (side == ChessColor.White) ? bitboard << 1 : bitboard >> 1;
+            //ulong sideLeft       = (side == ChessColor.White) ? bitboard >> 1 : bitboard << 1;
+            //ulong backwardRight  = (side == ChessColor.White) ? bitboard >> 9 : bitboard << 7;
+            //ulong backwardMiddle = (side == ChessColor.White) ? bitboard >> 8 : bitboard << 8;
+            //ulong backwardLeft   = (side == ChessColor.White) ? bitboard >> 7 : bitboard << 9;
             // TODO: think of removing the checks for drawing side as draw bitboards are mirrored anyways
+
+            // TODO: implement validation of board edge overflows (e.g. use something like greater than / smaller than comparison
+            // 1) do line check with the position
 
             // TODO: implement logic
             return new List<ChessDraw>();
@@ -231,7 +264,7 @@ namespace Chess.Lib
 
             // use even / uneven bitmasks
             ulong evenMask = 0x55AA55AA55AA55AAuL;
-            ulong unevenMask = ~evenMask;
+            ulong unevenMask = 0xAA55AA55AA55AA55uL;
 
             // TODO: implement logic
             return new List<ChessDraw>();
@@ -243,50 +276,118 @@ namespace Chess.Lib
             return new List<ChessDraw>();
         }
 
-        private IEnumerable<ChessDraw> getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
+        private ulong[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
         {
             // get peasants bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[5 + offset];
 
             // get all fields captured by enemy pieces as bitboard
-            ulong enemyPieces = getAllCapturedFields(side.Opponent());
+            ulong alliedPieces = getCapturedFields(side);
+            ulong enemyPieces = getCapturedFields(side.Opponent());
+            ulong blockingPieces = alliedPieces & enemyPieces;
 
-            // get one-foreward draws
-            ulong bitboardOneFordward = (side == ChessColor.White) ? bitboard << 8 : bitboard >> 8;
+            // get en-passant mask (mask has bits set at level=6, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
+            bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
+                && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
+            int epOffset = ;
+            ulong epRow = (side == ChessColor.White ? ROW_3 : ROW_5);
+            ulong enPassantMask = checkForEnPassant ? ((epRow & (COL_A & COL_C)) << epOffset) & epRow : 0uL;
 
-            // get two-foreward draws
-            ulong bitboardTwoFordward = (side == ChessColor.White) ? (bitboard & 0x00FF000000000000L) << 16 : (bitboard & 0x000000000000FF00L) >> 16;
-            // TODO: implement error handling: peasant already at board's edge => apply a mask with bits only set for the given line, too far or too short draws get eliminated
+            if (side == ChessColor.White)
+            {
+                // get one-foreward / two-foreward draws
+                ulong drawsOneFordward = (bitboard << 8) & ~blockingPieces;
+                ulong drawsTwoFordward = ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
 
-            // get right catch draws
-            ulong bitboardCatchRight = (side == ChessColor.White) ? bitboard << 9 : bitboard >> 7;
+                // get right / left catch draws
+                ulong drawsCatchRight = (bitboard << 9) & ~COL_H & enemyPieces;
+                ulong drawsCatchLeft = (bitboard << 7) & ~COL_A & enemyPieces;
 
-            // get left catch draws
-            ulong bitboardCatchLeft = (side == ChessColor.White) ? bitboard << 7 : bitboard >> 9;
+                // get en-passant draws
+
+
+                // TODO: evaluate the computed draws
+            }
+            else
+            {
+                // get one-foreward / two-foreward draws
+                ulong drawsOneFordward = (bitboard >> 8) & ~blockingPieces;
+                ulong drawsTwoFordward = ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
+
+                // get right / left catch draws
+                ulong drawsCatchRight = (bitboard >> 7) & ~COL_A & enemyPieces;
+                ulong drawsCatchLeft = (bitboard >> 9) & ~COL_H & enemyPieces;
+
+                // get en-passant draws
+
+            }
 
             // TODO: implement logic
             return new List<ChessDraw>();
         }
 
-        private ulong getAllCapturedFields(ChessColor side)
+        private ulong getCapturedFields(ChessColor side)
         {
-            // init result with bitboard of false values
-            ulong ret = 0;
             byte offset = (byte)((byte)side * 6);
-
-            // loop through all bitboards of the given side
-            for (byte i = 0; i < 6; i++)
-            {
-                // apply occupied fields to the output by bitwise OR
-                ret |= _bitboards[i + offset];
-            }
-
-            return ret;
+            return _bitboards[offset] | _bitboards[offset + 1] | _bitboards[offset + 2] | _bitboards[offset + 3] | _bitboards[offset + 4] | _bitboards[offset + 5];
         }
+
+        //private ulong getAllCapturedFields(ChessColor side)
+        //{
+            // init result with bitboard of false values
+            //byte offset = (byte)((byte)side * 6);
+            //ulong ret = 0;
+
+            //// loop through all bitboards of the given side
+            //for (byte i = 0; i < 6; i++)
+            //{
+            //    // apply occupied fields to the output by bitwise OR
+            //    ret |= _bitboards[i + offset];
+            //}
+
+            //return ret;
+        //}
 
         #endregion DrawGen
 
         #endregion Methods
     }
+
+    //public static class MathEx
+    //{
+    //    #region ulongLog2
+
+    //    // snippet source: https://stackoverflow.com/questions/11376288/fast-computing-of-log2-for-64-bit-integers
+
+    //    // a magic cache table of log2-powers
+    //    private static readonly byte[] tab64 = new byte[] {
+    //        63,  0, 58,  1, 59, 47, 53,  2,
+    //        60, 39, 48, 27, 54, 33, 42,  3,
+    //        61, 51, 37, 40, 49, 18, 28, 20,
+    //        55, 30, 34, 11, 43, 14, 22,  4,
+    //        62, 57, 46, 52, 38, 26, 32, 41,
+    //        50, 36, 17, 19, 29, 10, 13, 21,
+    //        56, 45, 25, 31, 35, 16,  9, 12,
+    //        44, 24, 15,  8, 23,  7,  6,  5
+    //    };
+
+    //    /// <summary>
+    //    /// Compute the log2(x) function for the given ulong value.
+    //    /// </summary>
+    //    /// <param name="value"></param>
+    //    /// <returns></returns>
+    //    public static byte Log2(ulong value)
+    //    {
+    //        value |= value >> 1;
+    //        value |= value >> 2;
+    //        value |= value >> 4;
+    //        value |= value >> 8;
+    //        value |= value >> 16;
+    //        value |= value >> 32;
+    //        return tab64[(value - (value >> 1)) * 0x07EDD5E59A4E28C2 >> 58];
+    //    }
+
+    //    #endregion ulongLog2
+    //}
 }

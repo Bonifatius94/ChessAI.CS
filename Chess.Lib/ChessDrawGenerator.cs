@@ -153,6 +153,8 @@ namespace Chess.Lib
 
         private IEnumerable<ChessDraw> getRochadeDraws(ChessBoard board, ChessColor drawingSide)
         {
+            // TODO: do optimizations!!!
+
             // get enemy capturable positions
             var enemyKing = (drawingSide == ChessColor.White) ? board.BlackKing : board.WhiteKing;
             var enemyCapturablePositions =
