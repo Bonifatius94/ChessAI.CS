@@ -7,7 +7,7 @@ using System.Text;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This class represents a chess board and all fields / pieces on it.
+    /// This class represents a chess board and all fields / pieces on it. It is designed in a human-readable / understandable manner.
     /// </summary>
     public readonly struct ChessBoard : ICloneable
     {
@@ -79,20 +79,6 @@ namespace Chess.Lib
             var pieces = new ChessPiece[64];
             foreach (var pieceAtPos in piecesAtPos) { pieces[pieceAtPos.Position.GetHashCode()] = pieceAtPos.Piece; }
             return pieces;
-        }
-
-        private static IEnumerable<ChessPieceAtPos> prepareAllPieces(ChessPiece[] pieces)
-        {
-            // determine the pieces count
-            byte piecesCount = 0;
-            for (byte pos = 0; pos < 64; pos++) { if (pieces[pos].HasValue) { piecesCount++; } }
-
-            // fill the pieces array
-            byte i = 0;
-            var piecesAtPos = new ChessPieceAtPos[piecesCount];
-            for (byte pos = 0; pos < 64; pos++) { if (pieces[pos].HasValue) { piecesAtPos[i++] = new ChessPieceAtPos(new ChessPosition(pos), pieces[pos]); } }
-
-            return piecesAtPos;
         }
 
         #endregion Preparation
