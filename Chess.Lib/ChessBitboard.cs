@@ -278,6 +278,8 @@ namespace Chess.Lib
 
         private ulong[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
         {
+            var draws = new ulong[4];
+
             // get peasants bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[5 + offset];
@@ -286,45 +288,47 @@ namespace Chess.Lib
             ulong alliedPieces = getCapturedFields(side);
             ulong enemyPieces = getCapturedFields(side.Opponent());
             ulong blockingPieces = alliedPieces & enemyPieces;
+            ulong enemyPeasants = _bitboards[5 + (byte)side.Opponent() * 6];
 
-            // get en-passant mask (mask has bits set at level=6, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
             bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
                 && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
-            int epOffset = ;
-            ulong epRow = (side == ChessColor.White ? ROW_3 : ROW_5);
-            ulong enPassantMask = checkForEnPassant ? ((epRow & (COL_A & COL_C)) << epOffset) & epRow : 0uL;
 
             if (side == ChessColor.White)
             {
+                // 1) get en-passant mask (mask has bits set at level=5, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
+                // 2) add an additional enemy peasant one field backwards, so the en-passant gets handled by the standard catch logic
+                ulong enPassantMask = checkForEnPassant ? ((ROW_5 & (COL_A & COL_C)) << (lastDraw.Value.NewPosition.Column - 1)) & ROW_5 : 0uL;
+                bool isEnPassant = (bitboard & enPassantMask) > 0;
+                ulong additionalPeasantMask = isEnPassant ? (enemyPeasants >> 8) & (COL_A << lastDraw.Value.NewPosition.Column) & ROW_3 : 0L;
+                enemyPieces |= additionalPeasantMask;
+
                 // get one-foreward / two-foreward draws
-                ulong drawsOneFordward = (bitboard << 8) & ~blockingPieces;
-                ulong drawsTwoFordward = ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
+                draws[0] = (bitboard << 8) & ~blockingPieces;
+                draws[1] = ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
 
-                // get right / left catch draws
-                ulong drawsCatchRight = (bitboard << 9) & ~COL_H & enemyPieces;
-                ulong drawsCatchLeft = (bitboard << 7) & ~COL_A & enemyPieces;
-
-                // get en-passant draws
-
-
-                // TODO: evaluate the computed draws
+                // get right / left catch draws (including en-passant)
+                draws[2] = (bitboard << 9) & ~COL_H & enemyPieces;
+                draws[3] = (bitboard << 7) & ~COL_A & enemyPieces;
             }
             else
             {
+                // 1) get en-passant mask (mask has bits set at level=5, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
+                // 2) add an additional enemy peasant one field backwards, so the en-passant gets handled by the standard catch logic
+                ulong enPassantMask = checkForEnPassant ? ((ROW_4 & (COL_A & COL_C)) << (lastDraw.Value.NewPosition.Column - 1)) & ROW_4 : 0uL;
+                bool isEnPassant = (bitboard & enPassantMask) > 0;
+                ulong additionalPeasantMask = isEnPassant ? (enemyPeasants << 8) & (COL_A << lastDraw.Value.NewPosition.Column) & ROW_6 : 0L;
+                enemyPieces |= additionalPeasantMask;
+
                 // get one-foreward / two-foreward draws
-                ulong drawsOneFordward = (bitboard >> 8) & ~blockingPieces;
-                ulong drawsTwoFordward = ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
+                draws[0] = (bitboard >> 8) & ~blockingPieces;
+                draws[1] = ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
 
-                // get right / left catch draws
-                ulong drawsCatchRight = (bitboard >> 7) & ~COL_A & enemyPieces;
-                ulong drawsCatchLeft = (bitboard >> 9) & ~COL_H & enemyPieces;
-
-                // get en-passant draws
-
+                // get right / left catch draws (including en-passant)
+                draws[2] = (bitboard >> 7) & ~COL_A & enemyPieces;
+                draws[3] = (bitboard >> 9) & ~COL_H & enemyPieces;
             }
 
-            // TODO: implement logic
-            return new List<ChessDraw>();
+            return draws;
         }
 
         private ulong getCapturedFields(ChessColor side)
