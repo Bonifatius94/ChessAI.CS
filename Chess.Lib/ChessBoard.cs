@@ -7,9 +7,9 @@ using System.Text;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This class represents a chess board and all fields / pieces on it. It is designed in a human-readable / understandable manner.
+    /// This struct represents a chess board and all fields / pieces on it. It is designed in a human-readable / understandable manner.
     /// </summary>
-    public readonly struct ChessBoard : ICloneable
+    public readonly struct ChessBoard : IChessBoard, ICloneable
     {
         #region Constants
         
@@ -88,9 +88,12 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// An array of all chess pieces at the index of their position's hash code. The piece value is zero - or more precisely 0x00 - if there is no chess piece at the position.
-        /// The array consists of the ChessPiece struct which represents all possible chess pieces with a single byte. Therefore this array is just a specialized byte[] array of size 64.
-        /// As the ChessPiece struct does not store the piece's position on the board, accessing the piece is implemented by the ChessPosition struct's 6-bit position index (0b_rrrccc).
+        /// <para>An array of all chess pieces at the index of their position's hash code. 
+        /// The piece value is zero - or more precisely 0x00 - if there is no chess piece at the position.</para>
+        /// <para>The array consists of the ChessPiece struct which represents all possible chess pieces with a single byte. 
+        /// Therefore this array is just a specialized byte[] array of size 64.</para>
+        /// <para>As the ChessPiece struct does not store the piece's position on the board, 
+        /// accessing the piece is implemented by the ChessPosition struct's 6-bit position index (0b_rrrccc).</para>
         /// </summary>
         private readonly ChessPiece[] _pieces;
 
