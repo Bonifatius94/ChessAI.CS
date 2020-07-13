@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Chess.Lib.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -62,6 +63,7 @@ namespace Chess.Lib
         /// <para>Was Moved: index 12, one bit of each chess piece at the position of the start formation whether the piece was moved. Addressing uses normalized ChessPosition hashes as well.</para>
         /// </summary>
         private ulong[] _bitboards;
+        // TODO: think about adding another 2 entries for a cached summary of all white and all black pieces (this saves 6 bitwise OR operations)
 
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
@@ -73,26 +75,45 @@ namespace Chess.Lib
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> WhitePieces => throw new NotImplementedException(); // TODO: implement logic
+        public IEnumerable<ChessPieceAtPos> WhitePieces => GetPiecesOfColor(ChessColor.White);
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> BlackPieces => throw new NotImplementedException(); // TODO: implement logic
+        public IEnumerable<ChessPieceAtPos> BlackPieces => GetPiecesOfColor(ChessColor.Black);
 
         /// <summary>
         /// Selects the white king from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPieceAtPos WhiteKing => throw new NotImplementedException(); // TODO: implement logic
+        public ChessPieceAtPos WhiteKing => getKing(ChessColor.White);
 
         /// <summary>
         /// Selects the black king from the chess pieces list. (computed operation)
         /// </summary>
-        public ChessPieceAtPos BlackKing => throw new NotImplementedException(); // TODO: implement logic
+        public ChessPieceAtPos BlackKing => getKing(ChessColor.Black);
 
         #endregion IChessBoard
 
         #endregion Members
+
+        #region Methods
+
+        private byte getPosition(ulong bitboard)
+        {
+            // this returns the numeric value of the highest bit set on the given bitboard
+            // if the given bitboard has multiple bits set, only the position of the highest bit is returned
+            return (byte)BitOperations.Log2(bitboard);
+        }
+
+        private ChessPieceAtPos getKing(ChessColor side)
+        {
+            // get the position of the king and whether he was already moved
+            byte pos = getPosition(_bitboards[6]);
+            bool wasMoved = isSetAt(_bitboards[12], pos);
+
+            // put everything together (this already uses bitwise operations, so no further optimizations required)
+            return new ChessPieceAtPos(new ChessPosition(pos), new ChessPiece(ChessPieceType.King, side, wasMoved));
+        }
 
         private bool isSetAt(ulong bitboard, byte pos)
         {
@@ -106,10 +127,16 @@ namespace Chess.Lib
         //    return bitboard | mask;
         //}
 
-        #region Methods
-
-        private ChessPieceAtPos getPiecesAtPos(ulong bitboard)
+        private ChessPieceAtPos[] getPiecesAtPos(ChessPieceType type, ChessColor color)
         {
+            // get bitboard
+            byte index = (byte)(((int)type - 1) + ((int)color * 6));
+            ulong bitboard = _bitboards[index];
+
+            // get all positions containing pieces from the bitboard (max. 8 pieces)
+            var posCache = new CachedChessPositions(bitboard);
+            var positions = posCache.Positions;
+
             // TODO: implement logic
             throw new NotImplementedException();
         }
@@ -187,31 +214,26 @@ namespace Chess.Lib
             // init pieces array with empty fields
             var pieces = new ChessPiece[64];
 
-            // use this naive approach to simplify logic
-            for (byte pos = 0; pos < 64; pos++) { pieces[pos] = getPieceAt(pos); }
+            // loop through all bitboards
+            for (byte i = 0; i < 12; i++)
+            {
+                // determine the chess piece type and color of the iteration
+                var pieceType = (ChessPieceType)((i % 6) + 1);
+                var color = (ChessColor)(i / 6);
 
-            // TODO: check if the following optimized code is really faster, otherwise drop it
+                // cache bitboard for shifting bitwise
+                ulong bitboard = _bitboards[i];
 
-            //// loop through all bitboards
-            //for (byte i = 0; i < 12; i++)
-            //{
-            //    // determine the chess piece type and color of the iteration
-            //    var pieceType = (ChessPieceType)((i % 6) + 1);
-            //    var color = (ChessColor)(i / 6);
+                // loop through all positions
+                for (byte pos = 0; pos < 64; pos++)
+                {
+                    // write piece to array if there is one
+                    if ((bitboard & 0x0000000000000001uL) > 0) { pieces[pos] = new ChessPiece(pieceType, color, isSetAt(_bitboards[12], pos)); }
 
-            //    // cache bitboard for shifting bitwise
-            //    ulong bitboard = _bitboards[i];
-
-            //    // loop through all positions
-            //    for (byte pos = 0; pos < 64; pos++)
-            //    {
-            //        // write piece to array if there is one
-            //        if ((bitboard & 0x0000000000000001uL) > 0) { pieces[pos] = new ChessPiece(pieceType, color, isCapturedAt(_bitboards[12], pos)); }
-
-            //        // shift bitboard
-            //        bitboard >>= 1;
-            //    }
-            //}
+                    // shift bitboard
+                    bitboard >>= 1;
+                }
+            }
 
             // return a new chess board with the converted chess pieces
             return new ChessBoard(pieces);
@@ -488,110 +510,13 @@ namespace Chess.Lib
             // optimized approach for boards with max. 10 pieces
             else
             {
-                // get positions as compact format
-                ulong posCache = getPositionsCache(bitboard);
-
-                // extract count and initialize result array
-                byte count = (byte)(posCache & 0xFuL);
-                var positions = new ChessPosition[count];
-
-                // shift the cache to the first position
-                posCache >>= 4;
-
-                // loop through positions
-                for (byte i = 0; i < count; i++)
-                {
-                    // extract the position and apply it to the result array
-                    byte pos = (byte)(posCache & 0x3FuL);
-                    positions[i] = new ChessPosition(pos);
-
-                    // shift the cache to the next position
-                    posCache >>= 6;
-                }
-
-                return positions;
+                // get positions using the compact positions format
+                var posCache = new CachedChessPositions(bitboard);
+                return posCache.Positions;
             }
-        }
-
-        /// <summary>
-        /// Retrieve all positions of the chess board.
-        /// <para>The positions are encoded as 64-bit unsigned long (max. 10 positions).
-        /// The lowest 4 bits contain the amount of positions -> count can be retrieved using 'value &amp; 0xFuL' statement.
-        /// The leading high bytes contain the normalized ChessPosition bits concatenated (6 bits per position).</para>
-        /// <para>e.g. a code for 3 positions: ... xxxxxx|xxxxxx|xxxxxx|011</para>
-        /// </summary>
-        /// <param name="bitboard">The bitboard the be evaluated.</param>
-        /// <returns>a 64-bit integer containing encoded positions of the pieces onto the input board</returns>
-        private ulong getPositionsCache(ulong bitboard)
-        {
-            ulong positions = 0uL;
-            byte offset = 4;
-            byte count = 0;
-
-            // as long as there are unidentified pieces onto the bitboard (max. 10 pieces)
-            while (bitboard > 0 && count++ < 10)
-            {
-                // find highest piece's position (2^pos)
-                byte pos = (byte)BitOperations.Log2(bitboard);
-                // TODO: check if just shifting through all 64 bits of the board would be more efficient
-
-                // update positions result
-                positions |= (ulong)pos << offset;
-                positions++;
-
-                // clear the identified piece on bitboard (this ensures termination)
-                bitboard ^= 0x1uL << pos;
-            }
-
-            // make sure that no result with a bit overflow is returned (an overflow occurs with bitboards having more than 10 bits set)
-            if (count > 10) { throw new ArgumentException("Invalid bitboard! The bitboard contains more than 10 chess pieces!"); }
-            
-            return positions;
         }
 
         #endregion DrawGen
-
-        #endregion Methods
-    }
-
-    /// <summary>
-    /// An extension class for efficient array operations.
-    /// </summary>
-    public static class ArrayEx
-    {
-        #region Methods
-
-        /// <summary>
-        /// Concatenate the two given arrays efficiently.
-        /// </summary>
-        /// <typeparam name="T">The type of the arrays.</typeparam>
-        /// <param name="first">The first array to concatenate.</param>
-        /// <param name="second">The second array to concatenate.</param>
-        /// <returns>a new array with concatenated array contents of the two given arrays.</returns>
-        public static T[] ArrayConcat<T>(this T[] first, T[] second)
-        {
-            // TODO: check if empty arrays are concatenated correctly
-
-            var ret = new T[first.Length + second.Length];
-            first.CopyTo(ret, 0);
-            second.CopyTo(ret, first.Length);
-            return ret;
-        }
-
-        /// <summary>
-        /// Cut parts from the given array of the given start index and length and apply them to a new array.
-        /// </summary>
-        /// <typeparam name="T">The type of the array.</typeparam>
-        /// <param name="input">The input array to be cut.</param>
-        /// <param name="index">The start index of the array content to be cut.</param>
-        /// <param name="length">The length of the array content to be cut.</param>
-        /// <returns>a new array containing the content to be cut</returns>
-        public static T[] SubArray<T>(this T[] input, int index, int length)
-        {
-            var result = new T[length];
-            Array.Copy(input, index, result, 0, length);
-            return result;
-        }
 
         #endregion Methods
     }

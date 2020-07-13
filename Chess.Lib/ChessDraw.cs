@@ -67,7 +67,7 @@ namespace Chess.Lib
         /// <param name="oldPos">The old position of the drawing chess piece</param>
         /// <param name="newPos">The new position of the drawing chess piece</param>
         /// <param name="peasantPromotionType">The new type of the peasant after its promotion (only relevant for peasant promotion)</param>
-        public ChessDraw(ChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType = null)
+        public ChessDraw(IChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType = null)
         {
             // get the drawing piece
             var piece = board.GetPieceAt(oldPos);
@@ -191,7 +191,7 @@ namespace Chess.Lib
             return hashCode;
         }
 
-        private static ChessDrawType getDrawType(ChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType)
+        private static ChessDrawType getDrawType(IChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType)
         {
             var piece = board.GetPieceAt(oldPos);
             var type = ChessDrawType.Standard;

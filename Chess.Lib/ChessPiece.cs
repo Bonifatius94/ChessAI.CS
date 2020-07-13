@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Chess.Lib
 {
@@ -167,6 +168,26 @@ namespace Chess.Lib
         #endregion Members
 
         #region Methods
+
+        /// <summary>
+        /// Determine in an optimized manner whether the chess piece is not null and of the given side.
+        /// </summary>
+        /// <param name="side">The side used to compare to.</param>
+        /// <returns>a boolean indicating whether the chess piece is not null and of the given side</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsNonNullablePieceOfSide(ChessColor side)
+        {
+            // optimized bitwise condition computation (check if type code is other than ChessPieceType.Invalid,
+            // then check for the color bit to be the given side and biswise AND both conditions)
+            // cond. 1: Get the type bits (last 3 bits), invert them and add +1, so 000 bits would run into an overflow.
+            //          Then, check if the overflow occurred and flip bits again, so all bits are set if the piece is not null
+            // cond. 2: Get the color bit, shift it to the lowest bit and compare it to the given side by bitwise XOR.
+            //          Sides being equal results into the lowest bit being 0, which is flipped to 1.
+
+            int isNotNull = ~(((~_hashCode & BITS_OF_TYPE) + 1) >> 3);
+            int isOfSide = ~((byte)side ^ ((_hashCode & BITS_OF_COLOR) >> 4)) & 0x1;
+            return (isNotNull & isOfSide) > 0;
+        }
 
         /// <summary>
         /// Create a deep copy of the current instance.

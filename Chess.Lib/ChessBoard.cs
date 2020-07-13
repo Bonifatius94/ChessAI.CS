@@ -68,8 +68,31 @@ namespace Chess.Lib
         /// <param name="pieces">The chess pieces to be applied to the chess board</param>
         public ChessBoard(ChessPiece[] pieces)
         {
-            // apply pieces array
+            // init pieces array
             _pieces = pieces;
+
+            //_whiteKingPos = new ChessPosition(0);
+            //_blackKingPos = new ChessPosition(0);
+
+            //byte whiteKingPos = 0;
+            //byte blackKingPos = 0;
+
+            //// find kings and assign them
+            //for (byte pos = 0; pos < 64; pos++)
+            //{
+            //    var piece = _pieces[pos];
+            //    byte hash = (byte)piece.GetHashCode();
+
+            //    uint isKingPiece = (uint)(((byte)ChessPieceType.King ^ (hash & 0x7)) - 1) >> 26;
+            //    uint isOfWhiteSide = (uint)(((byte)ChessColor.White ^ ((hash & 0x10) >> 4)) - 1) >> 26;
+            //    uint isOfBlackSide = (uint)(((byte)ChessColor.Black ^ ((hash & 0x10) >> 4)) - 1) >> 26;
+
+            //    whiteKingPos |= (byte)(isKingPiece & isOfWhiteSide & pos);
+            //    blackKingPos |= (byte)(isKingPiece & isOfBlackSide & pos);
+            //}
+
+            //_whiteKingPos = new ChessPosition(whiteKingPos);
+            //_blackKingPos = new ChessPosition(blackKingPos);
         }
 
         #region Preparation
@@ -97,50 +120,48 @@ namespace Chess.Lib
         /// </summary>
         private readonly ChessPiece[] _pieces;
 
+        //private readonly ChessPosition _whiteKingPos;
+        //private readonly ChessPosition _blackKingPos;
+
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
         /// </summary>
-        public static ChessBoard StartFormation { get { return new ChessBoard(START_FORMATION); } }
+        public static ChessBoard StartFormation => new ChessBoard(START_FORMATION);
 
         /// <summary>
         /// A list of all chess pieces (and their position) that are currently on the chess board.
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> AllPieces
-        {
-            get
-            {
-                // determine the pieces count
-                byte piecesCount = 0;
-                for (byte pos = 0; pos < 64; pos++) { if (_pieces[pos].HasValue) { piecesCount++; } }
-
-                // fill the pieces array
-                byte i = 0;
-                var pieces = new ChessPieceAtPos[piecesCount];
-                for (byte pos = 0; pos < 64; pos++) { if (_pieces[pos].HasValue) { pieces[i++] = new ChessPieceAtPos(new ChessPosition(pos), _pieces[pos]); } }
-
-                return pieces;
-            }
-        }
+        public IEnumerable<ChessPieceAtPos> AllPieces => ((ChessPieceAtPos[])WhitePieces).ArrayConcat((ChessPieceAtPos[])BlackPieces);
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> WhitePieces { get { return GetPiecesOfColor(ChessColor.White); } }
+        public IEnumerable<ChessPieceAtPos> WhitePieces => GetPiecesOfColor(ChessColor.White);
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> BlackPieces { get { return GetPiecesOfColor(ChessColor.Black); } }
+        public IEnumerable<ChessPieceAtPos> BlackPieces => GetPiecesOfColor(ChessColor.Black);
 
         /// <summary>
-        /// Selects the white king from the chess pieces list. (computed operation)
+        /// Selects the white king from the chess pieces list (computed operation).
         /// </summary>
-        public ChessPieceAtPos WhiteKing { get { return WhitePieces.First(x => x.Piece.Type == ChessPieceType.King); } }
+        public readonly ChessPieceAtPos WhiteKing => WhitePieces.First(x => x.Piece.Type == ChessPieceType.King);
 
         /// <summary>
-        /// Selects the black king from the chess pieces list. (computed operation)
+        /// Selects the black king from the chess pieces list (computed operation).
         /// </summary>
-        public ChessPieceAtPos BlackKing { get { return BlackPieces.First(x => x.Piece.Type == ChessPieceType.King); } }
+        public readonly ChessPieceAtPos BlackKing => BlackPieces.First(x => x.Piece.Type == ChessPieceType.King);
+
+        ///// <summary>
+        ///// Selects the white king from the chess pieces list.
+        ///// </summary>
+        //public readonly ChessPieceAtPos WhiteKing => new ChessPieceAtPos(_whiteKingPos, GetPieceAt(_whiteKingPos));
+
+        ///// <summary>
+        ///// Selects the black king from the chess pieces list.
+        ///// </summary>
+        //public readonly ChessPieceAtPos BlackKing => new ChessPieceAtPos(_blackKingPos, GetPieceAt(_blackKingPos));
 
         #endregion Members
 
@@ -193,7 +214,27 @@ namespace Chess.Lib
         /// <returns>a list of all chess pieces of the given player's side</returns>
         public IEnumerable<ChessPieceAtPos> GetPiecesOfColor(ChessColor side)
         {
-            return AllPieces.Where(x => x.Piece.Color == side).ToArray();
+            // initialize the pieces array for worst-case
+            var pieces = new ChessPieceAtPos[16];
+
+            // init pieces index with 0
+            byte i = 0;
+
+            // loop through pieces
+            for (byte pos = 0; pos < 64; pos++)
+            {
+                // standard condition computation
+                //bool containsPieceOfSide = _pieces[pos].HasValue && _pieces[pos].Color == side;
+
+                // optimized condition computation
+                bool containsPieceOfSide = _pieces[pos].IsNonNullablePieceOfSide(side);
+                // TODO: check if this bitwise implementation is really faster
+
+                if (containsPieceOfSide) { pieces[i++] = new ChessPieceAtPos(new ChessPosition(pos), _pieces[pos]); }
+            }
+
+            // return only the actually existing pieces (cut result array)
+            return pieces.SubArray(0, i);
         }
 
         /// <summary>
@@ -218,7 +259,6 @@ namespace Chess.Lib
 
             // get the destination chess field instance of the chess board
             var drawingPiece = GetPieceAt(draw.OldPosition);
-            //var pieceToTake = GetPieceAt(draw.NewPosition);
             
             // update drawing piece data
             drawingPiece.WasMoved = true;
@@ -354,6 +394,11 @@ namespace Chess.Lib
             // unfortunately the most compact chess board representation requires 40 bytes instead of 4 bytes,
             // so returning the leading 4 bytes of the board may already be a good equality indicator.
             return BitConverter.ToInt32(this.ToBitboard().BinaryData.Take(4).ToArray());
+
+            // TODO: use a int-32 bitboard instead, indicating which of the possible 32 pieces are currently on the board
+            //       encoding: bitwise OR all bitboards of the bitboard implementation
+            //       edge cases: ignore cases like more than one queen
+            //       collisions: apply a unified hash function to those int-32 values, so similar values map to different hashes
         }
 
         /// <summary>

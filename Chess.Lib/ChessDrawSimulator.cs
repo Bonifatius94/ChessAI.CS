@@ -66,7 +66,7 @@ namespace Chess.Lib
         /// <param name="board">The chess board with the game situation to evaluate</param>
         /// <param name="draw">The chess draw to be evaluated</param>
         /// <returns>boolean that indicates whether the draw would cause an allied check situation</returns>
-        public bool IsDrawIntoCheck(ChessBoard board, ChessDraw draw)
+        public bool IsDrawIntoCheck(IChessBoard board, ChessDraw draw)
         {
             // TODO: remove clone operation if it causes performance issues
 

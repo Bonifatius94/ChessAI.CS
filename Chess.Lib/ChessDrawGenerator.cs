@@ -17,7 +17,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false);
+        IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             // determine the drawing piece and the required draw generator
             var piece = board.GetPieceAt(drawingPiecePosition);
@@ -92,7 +92,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -151,7 +151,7 @@ namespace Chess.Lib
         private static readonly ChessPosition[] blackKingBigRochadePassagePositions   = new ChessPosition[] { new ChessPosition(7, 2), new ChessPosition(7, 3), new ChessPosition(7, 4) };
         private static readonly ChessPosition[] blackKingSmallRochadePassagePositions = new ChessPosition[] { new ChessPosition(7, 4), new ChessPosition(7, 5), new ChessPosition(7, 6) };
 
-        private IEnumerable<ChessDraw> getRochadeDraws(ChessBoard board, ChessColor drawingSide)
+        private IEnumerable<ChessDraw> getRochadeDraws(IChessBoard board, ChessColor drawingSide)
         {
             // TODO: do optimizations!!!
 
@@ -217,7 +217,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -250,7 +250,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -338,7 +338,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -426,7 +426,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -482,7 +482,7 @@ namespace Chess.Lib
         /// <param name="precedingEnemyDraw">The last draw made by the opponent</param>
         /// <param name="analyzeDrawIntoCheck">Indicates whether drawing into a check situation should be analyzed</param>
         /// <returns>a list of all possible chess draws</returns>
-        public IEnumerable<ChessDraw> GetDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
+        public IEnumerable<ChessDraw> GetDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null, bool analyzeDrawIntoCheck = false)
         {
             var piece = board.GetPieceAt(drawingPiecePosition);
 
@@ -521,7 +521,7 @@ namespace Chess.Lib
             return draws;
         }
 
-        private IEnumerable<ChessDraw> getForewardDraws(ChessBoard board, ChessPosition drawingPiecePosition)
+        private IEnumerable<ChessDraw> getForewardDraws(IChessBoard board, ChessPosition drawingPiecePosition)
         {
             var draws = new List<ChessDraw>();
             var piece = board.GetPieceAt(drawingPiecePosition);
@@ -553,7 +553,7 @@ namespace Chess.Lib
             return draws;
         }
 
-        private IEnumerable<ChessDraw> getCatchDraws(ChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null)
+        private IEnumerable<ChessDraw> getCatchDraws(IChessBoard board, ChessPosition drawingPiecePosition, ChessDraw? precedingEnemyDraw = null)
         {
             var draws = new List<ChessDraw>();
             var piece = board.GetPieceAt(drawingPiecePosition);
