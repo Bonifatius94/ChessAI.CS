@@ -34,6 +34,10 @@ namespace Chess.Lib
         private const ulong COL_G = 0x4040404040404040uL;
         private const ulong COL_H = 0x8080808080808080uL;
 
+        // diagonal masks
+        private const ulong WHITE_FIELDS = 0x55AA55AA55AA55AAuL;
+        private const ulong BLACK_FIELDS = 0xAA55AA55AA55AA55uL;
+
         #endregion Constants
 
         #region Constructor
@@ -336,47 +340,41 @@ namespace Chess.Lib
 
         private ulong[] getKingDraws(ChessColor side)
         {
-            // get the kings bitboard
+            var draws = new ulong[3];
+
+            // get the king bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[offset];
 
-            // determine the position of the piece onto the bitboard
-            byte oldPos = (byte)BitOperations.Log2(bitboard);
-            // TODO: check if this is too costly
+            // separate knights into knights standing on white / black fields
+            ulong wfKing = bitboard & WHITE_FIELDS;
+            ulong bfKing = bitboard & BLACK_FIELDS;
 
-            // get king draws
-            ulong standardDraws = 0x0uL;
+            // compute all possible draws using bit-shift, moreover eliminate the overflow draws by applying
+            ulong wfDraws =
+                  ((wfKing << 1 | wfKing >> 1) & BLACK_FIELDS)
+                | ((wfKing << 7 | wfKing >> 7) & WHITE_FIELDS)
+                | ((wfKing << 8 | wfKing >> 8) & BLACK_FIELDS)
+                | ((wfKing << 9 | wfKing >> 9) & WHITE_FIELDS);
 
-            if (side == ChessColor.White)
-            {
-                // TODO: add validation
-                standardDraws |= bitboard << 9;
-                standardDraws |= bitboard << 8;
-                standardDraws |= bitboard << 7;
-                standardDraws |= bitboard << 1;
-                standardDraws |= bitboard >> 1;
-                standardDraws |= bitboard >> 9;
-                standardDraws |= bitboard >> 8;
-                standardDraws |= bitboard >> 7;
-            }
-            else
-            {
-                // TODO: add validation
-                standardDraws |= bitboard << 9;
-                standardDraws |= bitboard << 8;
-                standardDraws |= bitboard << 7;
-                standardDraws |= bitboard << 1;
-                standardDraws |= bitboard >> 1;
-                standardDraws |= bitboard >> 9;
-                standardDraws |= bitboard >> 8;
-                standardDraws |= bitboard >> 7;
-            }
+            ulong bfDraws =
+                  ((bfKing << 1 | bfKing >> 1) & WHITE_FIELDS)
+                | ((bfKing << 7 | bfKing >> 7) & BLACK_FIELDS)
+                | ((bfKing << 8 | bfKing >> 8) & WHITE_FIELDS)
+                | ((bfKing << 9 | bfKing >> 9) & BLACK_FIELDS);
+
+            // TODO: handle overflows!!!
+
+            // determine allied pieces to eliminate blocked draws
+            ulong alliedPieces = getCapturedFields(side);
+            draws[0] = wfDraws & ~alliedPieces;
+            draws[1] = bfDraws & ~alliedPieces;
 
             // TODO: implement validation of board edge overflows (e.g. use something like greater than / smaller than comparison
             // 1) do line check with the position
 
             // TODO: implement logic
-            return new ulong[0];
+            return draws;
         }
 
         #endregion King
@@ -392,25 +390,56 @@ namespace Chess.Lib
 
         private ulong[] getRookDraws(ChessColor side, byte bitboardIndex = 2)
         {
+            // get the bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[bitboardIndex + offset];
 
-            // TODO: implement logic
+            // get rook positions (efficiently)
+            var positions = new CachedChessPositions(bitboard);
+
+            // TODO: use ROW / COL masks to compute the draws for multiple pieces at once
+
             return new ulong[0];
         }
 
         private ulong[] getBishopDraws(ChessColor side, byte bitboardIndex = 3)
         {
-            // get bishops bitboard
+            var draws = new ulong[2];
+
+            // get the bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[bitboardIndex + offset];
 
-            // use even / uneven bitmasks
-            ulong evenMask = 0x55AA55AA55AA55AAuL;
-            ulong unevenMask = 0xAA55AA55AA55AA55uL;
+            // determine allied and enemy pieces (for collision / catch handling)
+            ulong enemyPieces = getCapturedFields(side.Opponent());
+            ulong alliedPieces = getCapturedFields(side);
 
-            // TODO: implement logic
-            return new ulong[0];
+            // init empty draws bitboards, separated by field color
+            ulong wfBishops = bitboard & WHITE_FIELDS;
+            ulong bfBishops = bitboard & BLACK_FIELDS;
+            ulong wfDraws = 0;
+            ulong bfDraws = 0;
+
+            // compute right-to-left draws
+            for (byte i = 1; i < 8; i++)
+            {
+                byte right = (byte)(i * 9);
+                byte left = (byte)(i * 7);
+
+                // compute draws using diagonal bit-shift (7 bits for right-to-left and 9 bits for left-to-right, from white-side view)
+                // apply white / black field filters again, so overflow draws get eliminated
+                wfDraws |= (wfBishops << right | wfBishops >> right | wfBishops << left | wfBishops >> left) & WHITE_FIELDS;
+                bfDraws |= (bfBishops << right | bfBishops >> right | bfBishops << left | bfBishops >> left) & BLACK_FIELDS;
+
+                // TODO: handle collisions / catches
+                // e.g. apply a mask that forbids all smaller / greater bits on the same lane to be set
+            }
+
+            // assign draws to result array
+            draws[0] = wfDraws;
+            draws[1] = bfDraws;
+
+            return draws;
         }
 
         private ulong[] getKnightDraws(ChessColor side)
@@ -419,16 +448,40 @@ namespace Chess.Lib
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[4 + offset];
 
-            // determine the positions of the knights
-            var positions = getPositions(bitboard);
+            // separate knights into knights standing on white / black fields
+            ulong wfKnights = bitboard & WHITE_FIELDS;
+            ulong bfKnights = bitboard & BLACK_FIELDS;
 
-            // TODO: compute all knight draws
+            // compute all possible draws using bit-shift, moreover eliminate illegal draws by using
+            // the assumption that all knight draws end on a field of the opposite color
+            ulong wfDraws = 
+                  wfKnights << 10 | wfKnights >> 10 
+                | wfKnights << 15 | wfKnights >> 15
+                | wfKnights << 17 | wfKnights >> 17
+                | wfKnights <<  6 | wfKnights >>  6
+                | BLACK_FIELDS;
 
-            return new ulong[0];
+            ulong bfDraws = 
+                  bfKnights << 10 | bfKnights >> 10 
+                | bfKnights << 15 | bfKnights >> 15
+                | bfKnights << 17 | bfKnights >> 17
+                | bfKnights <<  6 | bfKnights >>  6
+                | WHITE_FIELDS;
+
+            // TODO: handle overflows!!!
+
+            // determine allied pieces to eliminate blocked draws
+            ulong alliedPieces = getCapturedFields(side);
+            wfDraws &= ~alliedPieces;
+            bfDraws &= ~alliedPieces;
+
+            return new ulong[] { wfDraws, bfDraws };
         }
 
         private ulong[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
         {
+            // info: this function is ready for testing
+
             var draws = new ulong[4];
 
             // get peasants bitboard
@@ -444,6 +497,8 @@ namespace Chess.Lib
             bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
                 && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
 
+            // TODO: eliminate the if/else for side-dependent logic, e.g. using the diagonal masks
+
             if (side == ChessColor.White)
             {
                 // 1) get en-passant mask (mask has bits set at level=5, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
@@ -458,8 +513,8 @@ namespace Chess.Lib
                 draws[1] = ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
 
                 // get right / left catch draws (including en-passant)
-                draws[2] = (bitboard << 9) & ~COL_H & enemyPieces;
-                draws[3] = (bitboard << 7) & ~COL_A & enemyPieces;
+                draws[2] = ((bitboard & ~COL_H) << 9) & enemyPieces;
+                draws[3] = ((bitboard & ~COL_A) << 7) & enemyPieces;
             }
             else
             {
@@ -475,8 +530,8 @@ namespace Chess.Lib
                 draws[1] = ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
 
                 // get right / left catch draws (including en-passant)
-                draws[2] = (bitboard >> 7) & ~COL_A & enemyPieces;
-                draws[3] = (bitboard >> 9) & ~COL_H & enemyPieces;
+                draws[2] = ((bitboard & ~COL_A) << 7) & enemyPieces;
+                draws[3] = ((bitboard & ~COL_H) << 9) & enemyPieces;
             }
 
             return draws;
@@ -488,32 +543,21 @@ namespace Chess.Lib
             return _bitboards[offset] | _bitboards[offset + 1] | _bitboards[offset + 2] | _bitboards[offset + 3] | _bitboards[offset + 4] | _bitboards[offset + 5];
         }
 
-        private ChessPosition[] getPositions(ulong bitboard, bool unlimited = false)
+        private ChessPosition[] getPositions(ulong bitboard)
         {
-            // generic approach for boards with more than 10 pieces
-            if (unlimited)
-            {
-                // init position cache for worst-case
-                var posCache = new ChessPosition[32];
-                byte count = 0;
+            // init position cache for worst-case
+            var posCache = new ChessPosition[32];
+            byte count = 0;
 
-                // loop through all bits of the board
-                for (byte pos = 0; pos < 64; pos++)
-                {
-                    bool isSet = (bitboard & 0x1uL) > 0;
-                    if (isSet) { posCache[count++] = new ChessPosition(pos); }
-                }
-
-                // return the resulting array (without empty entries)
-                return posCache.SubArray(0, count);
-            }
-            // optimized approach for boards with max. 10 pieces
-            else
+            // loop through all bits of the board
+            for (byte pos = 0; pos < 64; pos++)
             {
-                // get positions using the compact positions format
-                var posCache = new CachedChessPositions(bitboard);
-                return posCache.Positions;
+                bool isSet = (bitboard & 0x1uL) > 0;
+                if (isSet) { posCache[count++] = new ChessPosition(pos); }
             }
+
+            // return the resulting array (without empty entries)
+            return posCache.SubArray(0, count);
         }
 
         #endregion DrawGen

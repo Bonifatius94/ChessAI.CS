@@ -7,7 +7,8 @@ using System.Text;
 namespace Chess.Lib
 {
     /// <summary>
-    /// Represents an efficient type for storing up to 10 chess positions as a single unsigned long (64-bit).
+    /// <para>Represents an efficient type for storing up to 10 chess positions as a single unsigned long (64-bit).</para>
+    /// This type is meant to retrieve positions from sparse bitboards.
     /// </summary>
     // TODO: implement IEnumerable<ChessPositions> to efficiently iterate over chess positions
     public readonly struct CachedChessPositions
@@ -88,7 +89,7 @@ namespace Chess.Lib
                 bitboard ^= 0x1uL << pos;
             }
 
-            // make sure that no result with a bit overflow is returned (an overflow occurs with bitboards having more than 10 bits set)
+            // make sure that bitboards are rejected if they have more than 10 bits set
             if (count > 10) { throw new ArgumentException("Invalid bitboard! The bitboard contains more than 10 chess pieces!"); }
 
             return positions;
