@@ -232,7 +232,7 @@ namespace Chess.Lib
                 for (byte pos = 0; pos < 64; pos++)
                 {
                     // write piece to array if there is one
-                    if ((bitboard & 0x0000000000000001uL) > 0) { pieces[pos] = new ChessPiece(pieceType, color, isSetAt(_bitboards[12], pos)); }
+                    if ((bitboard & 0x1) > 0) { pieces[pos] = new ChessPiece(pieceType, color, isSetAt(_bitboards[12], pos)); }
 
                     // shift bitboard
                     bitboard >>= 1;
@@ -260,9 +260,8 @@ namespace Chess.Lib
                 for (byte pos = 0; pos < 64; pos++)
                 {
                     // set piece bit if the position is captured
-                    ulong mask = 0x1uL << pos;
                     bool setBit = board.IsCapturedAt(pos) && board.GetPieceAt(pos).Type == pieceType && board.GetPieceAt(pos).Color == color;
-                    bitboard |= setBit ? mask : 0x0uL;
+                    bitboard |= setBit ? 0x1uL << pos : 0x0uL;
                 }
 
                 // apply converted bitboard
@@ -340,41 +339,28 @@ namespace Chess.Lib
 
         private ulong[] getKingDraws(ChessColor side)
         {
-            var draws = new ulong[3];
-
             // get the king bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[offset];
 
-            // separate knights into knights standing on white / black fields
-            ulong wfKing = bitboard & WHITE_FIELDS;
-            ulong bfKing = bitboard & BLACK_FIELDS;
-
-            // compute all possible draws using bit-shift, moreover eliminate the overflow draws by applying
-            ulong wfDraws =
-                  ((wfKing << 1 | wfKing >> 1) & BLACK_FIELDS)
-                | ((wfKing << 7 | wfKing >> 7) & WHITE_FIELDS)
-                | ((wfKing << 8 | wfKing >> 8) & BLACK_FIELDS)
-                | ((wfKing << 9 | wfKing >> 9) & WHITE_FIELDS);
-
-            ulong bfDraws =
-                  ((bfKing << 1 | bfKing >> 1) & WHITE_FIELDS)
-                | ((bfKing << 7 | bfKing >> 7) & BLACK_FIELDS)
-                | ((bfKing << 8 | bfKing >> 8) & WHITE_FIELDS)
-                | ((bfKing << 9 | bfKing >> 9) & BLACK_FIELDS);
-
-            // TODO: handle overflows!!!
-
             // determine allied pieces to eliminate blocked draws
             ulong alliedPieces = getCapturedFields(side);
-            draws[0] = wfDraws & ~alliedPieces;
-            draws[1] = bfDraws & ~alliedPieces;
 
-            // TODO: implement validation of board edge overflows (e.g. use something like greater than / smaller than comparison
-            // 1) do line check with the position
+            // compute all possible draws using bit-shift, moreover eliminate illegal overflow draws
+            ulong standardDraws =
+                  ((bitboard << 7) & ~(ROW_1 | COL_H | alliedPieces))  // top left
+                | ((bitboard << 8) & ~(ROW_1         | alliedPieces))  // top mid
+                | ((bitboard << 9) & ~(ROW_1 | COL_A | alliedPieces))  // top right
+                | ((bitboard >> 1) & ~(COL_H         | alliedPieces))  // side left
+                | ((bitboard << 1) & ~(COL_A         | alliedPieces))  // side right
+                | ((bitboard >> 9) & ~(ROW_8 | COL_H | alliedPieces))  // bottom left
+                | ((bitboard >> 8) & ~(ROW_8         | alliedPieces))  // bottom mid
+                | ((bitboard >> 7) & ~(ROW_8 | COL_A | alliedPieces)); // bottom right
 
-            // TODO: implement logic
-            return draws;
+            // TODO: implement rochade logic
+            ulong rochadeDraws = 0;
+
+            return new ulong[] { standardDraws, rochadeDraws };
         }
 
         #endregion King
@@ -390,21 +376,9 @@ namespace Chess.Lib
 
         private ulong[] getRookDraws(ChessColor side, byte bitboardIndex = 2)
         {
-            // get the bitboard
-            byte offset = (byte)((byte)side * 6);
-            ulong bitboard = _bitboards[bitboardIndex + offset];
+            // TODO: test this logic!!!
 
-            // get rook positions (efficiently)
-            var positions = new CachedChessPositions(bitboard);
-
-            // TODO: use ROW / COL masks to compute the draws for multiple pieces at once
-
-            return new ulong[0];
-        }
-
-        private ulong[] getBishopDraws(ChessColor side, byte bitboardIndex = 3)
-        {
-            var draws = new ulong[2];
+            ulong draws = 0;
 
             // get the bitboard
             byte offset = (byte)((byte)side * 6);
@@ -415,72 +389,111 @@ namespace Chess.Lib
             ulong alliedPieces = getCapturedFields(side);
 
             // init empty draws bitboards, separated by field color
-            ulong wfBishops = bitboard & WHITE_FIELDS;
-            ulong bfBishops = bitboard & BLACK_FIELDS;
-            ulong wfDraws = 0;
-            ulong bfDraws = 0;
+            ulong bRooks = bitboard;
+            ulong lRooks = bitboard;
+            ulong rRooks = bitboard;
+            ulong tRooks = bitboard;
 
-            // compute right-to-left draws
+            // compute draws (try to apply 1-7 shifts in each direction)
             for (byte i = 1; i < 8; i++)
             {
-                byte right = (byte)(i * 9);
-                byte left = (byte)(i * 7);
+                // simulate the computing of all draws:
+                // if there would be one or more overflows / collisions with allied pieces, remove certain rooks 
+                // from the rooks bitboard, so the overflow won't occur on the real draw computation afterwards
+                bRooks ^= ((bRooks >> (i * 8)) & (ROW_8 | alliedPieces)) << (i * 8); // bottom
+                lRooks ^= ((lRooks >> (i * 1)) & (COL_H | alliedPieces)) << (i * 1); // left
+                rRooks ^= ((rRooks << (i * 1)) & (COL_A | alliedPieces)) >> (i * 1); // right
+                tRooks ^= ((tRooks << (i * 8)) & (ROW_1 | alliedPieces)) >> (i * 8); // top
 
-                // compute draws using diagonal bit-shift (7 bits for right-to-left and 9 bits for left-to-right, from white-side view)
-                // apply white / black field filters again, so overflow draws get eliminated
-                wfDraws |= (wfBishops << right | wfBishops >> right | wfBishops << left | wfBishops >> left) & WHITE_FIELDS;
-                bfDraws |= (bfBishops << right | bfBishops >> right | bfBishops << left | bfBishops >> left) & BLACK_FIELDS;
+                // compute all legal draws and apply them to the result bitboard
+                draws |= bRooks >> (i * 8) | lRooks >> (i * 1) | rRooks << (i * 1) | tRooks << (i * 8);
+                // TODO: think about splitting draws by direction, so they can be reversed by draw-into-chess detection
 
-                // TODO: handle collisions / catches
-                // e.g. apply a mask that forbids all smaller / greater bits on the same lane to be set
+                // handle catches the same way as overflow / collision detection (this has to be done afterwards 
+                // as the catches are legal draws that need to occur onto the result bitboard)
+                bRooks ^= ((bRooks >> (i * 8)) & enemyPieces) << (i * 8); // bottom
+                lRooks ^= ((lRooks >> (i * 1)) & enemyPieces) << (i * 1); // left
+                rRooks ^= ((rRooks << (i * 1)) & enemyPieces) >> (i * 1); // right
+                tRooks ^= ((tRooks << (i * 8)) & enemyPieces) >> (i * 8); // top
             }
 
-            // assign draws to result array
-            draws[0] = wfDraws;
-            draws[1] = bfDraws;
+            return new ulong[] { draws };
+        }
 
-            return draws;
+        private ulong[] getBishopDraws(ChessColor side, byte bitboardIndex = 3)
+        {
+            // TODO: test this logic!!!
+
+            ulong draws = 0;
+
+            // get the bitboard
+            byte offset = (byte)((byte)side * 6);
+            ulong bitboard = _bitboards[bitboardIndex + offset];
+
+            // determine allied and enemy pieces (for collision / catch handling)
+            ulong enemyPieces = getCapturedFields(side.Opponent());
+            ulong alliedPieces = getCapturedFields(side);
+
+            // init empty draws bitboards, separated by field color
+            ulong brBishops = bitboard;
+            ulong blBishops = bitboard;
+            ulong trBishops = bitboard;
+            ulong tlBishops = bitboard;
+
+            // compute draws (try to apply 1-7 shifts in each direction)
+            for (byte i = 1; i < 8; i++)
+            {
+                // simulate the computing of all draws:
+                // if there would be one or more overflows / collisions with allied pieces, remove certain bishops 
+                // from the bishops bitboard, so the overflow won't occur on the real draw computation afterwards
+                brBishops ^= ((brBishops >> (i * 7)) & (ROW_8 | COL_H | alliedPieces)) << (i * 7); // bottom right
+                blBishops ^= ((blBishops >> (i * 9)) & (ROW_8 | COL_A | alliedPieces)) << (i * 9); // bottom left
+                trBishops ^= ((trBishops << (i * 9)) & (ROW_1 | COL_A | alliedPieces)) >> (i * 9); // top right
+                tlBishops ^= ((tlBishops << (i * 7)) & (ROW_1 | COL_H | alliedPieces)) >> (i * 7); // top left
+
+                // compute all legal draws and apply them to the result bitboard
+                draws |= brBishops >> (i * 7) | blBishops >> (i * 9) | trBishops << (i * 9) | tlBishops << (i * 7);
+                // TODO: think about splitting draws by direction, so they can be reversed by draw-into-chess detection
+
+                // handle catches the same way as overflow / collision detection (this has to be done afterwards 
+                // as the catches are legal draws that need to occur onto the result bitboard)
+                brBishops ^= ((brBishops >> (i * 7)) & enemyPieces) << (i * 7); // bottom right
+                blBishops ^= ((blBishops >> (i * 9)) & enemyPieces) << (i * 9); // bottom left
+                trBishops ^= ((trBishops << (i * 9)) & enemyPieces) >> (i * 9); // top right
+                tlBishops ^= ((tlBishops << (i * 7)) & enemyPieces) >> (i * 7); // top left
+            }
+
+            return new ulong[] { draws };
         }
 
         private ulong[] getKnightDraws(ChessColor side)
         {
+            // TODO: test this logic!!!
+
             // get bishops bitboard
             byte offset = (byte)((byte)side * 6);
             ulong bitboard = _bitboards[4 + offset];
 
-            // separate knights into knights standing on white / black fields
-            ulong wfKnights = bitboard & WHITE_FIELDS;
-            ulong bfKnights = bitboard & BLACK_FIELDS;
-
-            // compute all possible draws using bit-shift, moreover eliminate illegal draws by using
-            // the assumption that all knight draws end on a field of the opposite color
-            ulong wfDraws = 
-                  wfKnights << 10 | wfKnights >> 10 
-                | wfKnights << 15 | wfKnights >> 15
-                | wfKnights << 17 | wfKnights >> 17
-                | wfKnights <<  6 | wfKnights >>  6
-                | BLACK_FIELDS;
-
-            ulong bfDraws = 
-                  bfKnights << 10 | bfKnights >> 10 
-                | bfKnights << 15 | bfKnights >> 15
-                | bfKnights << 17 | bfKnights >> 17
-                | bfKnights <<  6 | bfKnights >>  6
-                | WHITE_FIELDS;
-
-            // TODO: handle overflows!!!
-
             // determine allied pieces to eliminate blocked draws
             ulong alliedPieces = getCapturedFields(side);
-            wfDraws &= ~alliedPieces;
-            bfDraws &= ~alliedPieces;
 
-            return new ulong[] { wfDraws, bfDraws };
+            // compute all possible draws using bit-shift, moreover eliminate illegal overflow draws
+            ulong draws =
+                  ((bitboard <<  6) & ~(ROW_1 | COL_H | COL_G | alliedPieces))  // top left  (1-2)
+                | ((bitboard << 10) & ~(ROW_1 | COL_A | COL_B | alliedPieces))  // top right (1-2)
+                | ((bitboard << 15) & ~(ROW_1 | COL_H | ROW_2 | alliedPieces))  // top left  (2-1)
+                | ((bitboard << 17) & ~(ROW_1 | COL_A | ROW_2 | alliedPieces))  // top right (2-1)
+                | ((bitboard >> 10) & ~(ROW_8 | COL_H | COL_G | alliedPieces))  // bottom left  (1-2)
+                | ((bitboard >>  6) & ~(ROW_8 | COL_A | COL_B | alliedPieces))  // bottom right (1-2)
+                | ((bitboard >> 17) & ~(ROW_8 | COL_H | ROW_7 | alliedPieces))  // bottom left  (2-1)
+                | ((bitboard >> 15) & ~(ROW_8 | COL_A | ROW_7 | alliedPieces)); // bottom right (2-1)
+
+            return new ulong[] { draws };
         }
 
         private ulong[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
         {
-            // info: this function is ready for testing
+            // TODO: test this logic!!!
 
             var draws = new ulong[4];
 

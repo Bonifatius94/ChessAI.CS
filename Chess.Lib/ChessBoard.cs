@@ -399,6 +399,8 @@ namespace Chess.Lib
             //       encoding: bitwise OR all bitboards of the bitboard implementation
             //       edge cases: ignore cases like more than one queen
             //       collisions: apply a unified hash function to those int-32 values, so similar values map to different hashes
+
+            // alternative for hash implementation: use minHash / jaccard similarity with 
         }
 
         /// <summary>
