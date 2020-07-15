@@ -112,7 +112,7 @@ namespace Chess.Lib
         private ChessPieceAtPos getKing(ChessColor side)
         {
             // get the position of the king and whether he was already moved
-            byte pos = getPosition(_bitboards[6]);
+            byte pos = getPosition(_bitboards[(byte)side * 6]);
             bool wasMoved = isSetAt(_bitboards[12], pos);
 
             // put everything together (this already uses bitwise operations, so no further optimizations required)
