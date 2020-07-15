@@ -89,8 +89,8 @@ namespace Chess.Lib
         /// <summary>
         /// Create a new chess draw instance by passing the given hash code (as string).
         /// </summary>
-        /// <param name="hashCode">The hash code of the new chess draw instance</param>
-        public ChessDraw(string hashCode) : this(int.Parse(hashCode, System.Globalization.NumberStyles.HexNumber)) { }
+        /// <param name="hex">The hash code of the new chess draw instance as hexadecimal string representation.</param>
+        public ChessDraw(string hex) : this(int.Parse(hex, System.Globalization.NumberStyles.HexNumber)) { }
 
         /// <summary>
         /// Create a new chess draw instance by passing the given hash code.
@@ -223,6 +223,8 @@ namespace Chess.Lib
         /// <returns>boolean whether the draw is valid</returns>
         public bool IsValid(ChessBoard board, ChessDraw? predecedingEnemyDraw = null)
         {
+            // TODO: refactor this function!!!
+
             // get the piece to be drawn
             var piece = board.GetPieceAt(OldPosition);
 

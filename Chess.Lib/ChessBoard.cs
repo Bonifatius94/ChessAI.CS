@@ -295,6 +295,8 @@ namespace Chess.Lib
             return updatePiecesAt(piecesToUpdate);
         }
 
+        // TODO: figure out whether a revert draw function is possible
+
         /// <summary>
         /// Draw the chess pieces to the given positions on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>

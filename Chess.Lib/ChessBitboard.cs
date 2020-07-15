@@ -10,7 +10,7 @@ namespace Chess.Lib
     /// <summary>
     /// This struct represents a chess board and all fields / pieces on it. It is designed for high performance draw computations which may be non-intuitive but efficient.
     /// </summary>
-    public struct ChessBitboard : IChessBoard
+    public struct ChessBitboard : IChessBoard, ICloneable
     {
         #region Constants
 
@@ -53,6 +53,19 @@ namespace Chess.Lib
 
             // apply board data to the bitboards
             FromBoard(board);
+        }
+
+        /// <summary>
+        /// Create a new chess board instance from the given bitboards.
+        /// </summary>
+        /// <param name="bitboards">The bitboards containing the board data.</param>
+        public ChessBitboard(ulong[] bitboards)
+        {
+            // initialize empty bitboards
+            _bitboards = new ulong[13];
+
+            // copy bitboards
+            bitboards.CopyTo(_bitboards, 0);
         }
 
         #endregion Constructor
@@ -194,6 +207,9 @@ namespace Chess.Lib
             throw new NotImplementedException();
         }
 
+        // TODO: implement an apply draw function that works onto the local instance, no immutable copy
+        // TODO: implement a revert draw function (if this is even possible) -> speeds up draw-into-check validation a lot
+
         public ChessBoard ApplyDraw(ChessDraw draw)
         {
             // TODO: implement logic
@@ -289,47 +305,41 @@ namespace Chess.Lib
         #region DrawGen
 
         /// <summary>
-        /// Generate all draws given the last draw and 
+        /// Generate all draws of the given side. For validation purposes, the last draw made by the opponent and a flag
+        /// whether legal checks for drawing into a check position should be considered can be passed as additional parameters.
         /// </summary>
-        /// <param name="lastDraw"></param>
-        /// <param name="analyzeDrawIntoCheck"></param>
-        /// <returns></returns>
-        public ulong[] GetAllDraws(ChessDraw? lastDraw = null, bool analyzeDrawIntoCheck = false)
+        /// <param name="drawingSide">The side to draw.</param>
+        /// <param name="lastDraw">The predeceding draw made by the opponent (null on game start).</param>
+        /// <param name="analyzeDrawIntoCheck">Indicates whether legal checks for drawing into a check 
+        /// position should be considered (if not set, illegal draws may be returned).</param>
+        /// <returns>all possible chess draws for the given side</returns>
+        public ChessDraw[] GetAllDraws(ChessColor drawingSide, ChessDraw? lastDraw = null, bool analyzeDrawIntoCheck = false)
         {
-            // initialize draws with empty list
-            var draws = new ulong[0];
-
             // determine the drawing side
-            var drawingSide = lastDraw?.DrawingSide ?? ChessColor.White;
-            byte offset = (byte)((byte)drawingSide * 6);
+            byte sideOffset = (byte)((byte)drawingSide * 6);
 
-            // compute the draws for each chess piece type
-            for (byte i = 0; i < 6; i++)
-            {
-                // get chess piece type and bitboard
-                var pieceType = (ChessPieceType)(i + 1);
-                ulong bitboard = _bitboards[i + offset];
+            // compute the draws for the pieces of each type
+            var kingDraws    = getKingDraws(drawingSide, analyzeDrawIntoCheck);
+            var queenDraws   = (_bitboards[sideOffset + 1] != 0x0uL) ? getQueenDraws(drawingSide)             : new ChessDraw[0];
+            var rookDraws    = (_bitboards[sideOffset + 2] != 0x0uL) ? getRookDraws(drawingSide)              : new ChessDraw[0];
+            var bishopDraws  = (_bitboards[sideOffset + 3] != 0x0uL) ? getBishopDraws(drawingSide)            : new ChessDraw[0];
+            var knightDraws  = (_bitboards[sideOffset + 4] != 0x0uL) ? getKnightDraws(drawingSide)            : new ChessDraw[0];
+            var peasantDraws = (_bitboards[sideOffset + 5] != 0x0uL) ? getPeasantDraws(drawingSide, lastDraw) : new ChessDraw[0];
 
-                // check if the bitboard contains pieces (otherwise skip)
-                if (bitboard != 0uL)
-                {
-                    switch (pieceType)
-                    {
-                        case ChessPieceType.King:    draws = draws.ArrayConcat(getKingDraws(drawingSide));              break;
-                        case ChessPieceType.Queen:   draws = draws.ArrayConcat(getQueenDraws(drawingSide));             break;
-                        case ChessPieceType.Rook:    draws = draws.ArrayConcat(getRookDraws(drawingSide));              break;
-                        case ChessPieceType.Bishop:  draws = draws.ArrayConcat(getBishopDraws(drawingSide));            break;
-                        case ChessPieceType.Knight:  draws = draws.ArrayConcat(getKnightDraws(drawingSide));            break;
-                        case ChessPieceType.Peasant: draws = draws.ArrayConcat(getPeasantDraws(drawingSide, lastDraw)); break;
-                        default: throw new ArgumentException($"Invalid chess piece type '{ pieceType }' detected! Cannot compute draws for this unknown piece type!");
-                    }
-                }
-            }
+            // concat draws to one array
+            var draws = kingDraws.ArrayConcat(queenDraws).ArrayConcat(rookDraws)
+                .ArrayConcat(bishopDraws).ArrayConcat(knightDraws).ArrayConcat(peasantDraws);
 
             // if flag is active, filter only draws that do not cause draws into check
             if (analyzeDrawIntoCheck)
             {
-                // TODO: implement logic (this needs to be very efficient, e.g. use getAllCapturedFields() to fasten up enemy draw calculation)
+                // put all draws together to one 
+                for (byte i = 0; i < draws.Length; i++)
+                {
+                    var draw = draws[i];
+                }
+
+                // TODO: fasten up as good as possible
             }
 
             return draws;
@@ -337,7 +347,18 @@ namespace Chess.Lib
 
         #region King
 
-        private ulong[] getKingDraws(ChessColor side)
+        private ChessDraw[] getKingDraws(ChessColor side, bool rochade)
+        {
+            // determine standard and rochade draws
+            ulong standardDraws = getStandardKingDraws(side);
+            ulong rochadeDraws = rochade ? getRochadeKingDraws(side) : 0x0uL;
+
+            // TODO: convert bitboard draws to ChessDraw format
+
+            return new ChessDraw[0];
+        }
+
+        private ulong getStandardKingDraws(ChessColor side)
         {
             // get the king bitboard
             byte offset = (byte)((byte)side * 6);
@@ -357,28 +378,54 @@ namespace Chess.Lib
                 | ((bitboard >> 8) & ~(ROW_8         | alliedPieces))  // bottom mid
                 | ((bitboard >> 7) & ~(ROW_8 | COL_A | alliedPieces)); // bottom right
 
-            // TODO: implement rochade logic
-            ulong rochadeDraws = 0;
+            return standardDraws;
+        }
 
-            return new ulong[] { standardDraws, rochadeDraws };
+        private ulong getRochadeKingDraws(ChessColor side)
+        {
+            // init the masks for standard positions of kings and rooks
+            const ulong MASK_A1 = 0x0000000000000001uL;
+            const ulong MASK_E1 = MASK_A1 << 4;
+            const ulong MASK_H1 = MASK_A1 << 7;
+            const ulong MASK_A8 = MASK_A1 << 56;
+            const ulong MASK_E8 = MASK_A1 << 60;
+            const ulong MASK_H8 = MASK_A1 << 63;
+
+            // get the king and rook bitboard
+            byte offset = (byte)((byte)side * 6);
+            ulong king = _bitboards[offset];
+            ulong rooks = _bitboards[offset + 2];
+            ulong wasMoved = _bitboards[12];
+
+            // filter by side
+            ulong whiteMask = (ulong)((byte)side - 1);
+            ulong blackMask = ~whiteMask;
+
+            ulong draws =
+                  (((king & MASK_E1 & ~wasMoved) >> 2) & ((rooks & MASK_A1 & ~wasMoved) << 3) & whiteMask)  // white big rochade
+                | (((king & MASK_E1 & ~wasMoved) << 2) & ((rooks & MASK_H1 & ~wasMoved) >> 2) & whiteMask)  // white small rochade
+                | (((king & MASK_E8 & ~wasMoved) >> 2) & ((rooks & MASK_A8 & ~wasMoved) << 3) & blackMask)  // black big rochade
+                | (((king & MASK_E8 & ~wasMoved) >> 2) & ((rooks & MASK_H8 & ~wasMoved) >> 2) & blackMask); // black small rochade
+
+            return draws;
         }
 
         #endregion King
 
         #region Queen
 
-        private ulong[] getQueenDraws(ChessColor side)
+        private ChessDraw[] getQueenDraws(ChessColor side)
         {
             return getRookDraws(side, 1).ArrayConcat(getBishopDraws(side, 1));
         }
 
         #endregion Queen
 
-        private ulong[] getRookDraws(ChessColor side, byte bitboardIndex = 2)
+        private ChessDraw[] getRookDraws(ChessColor side, byte bitboardIndex = 2)
         {
             // TODO: test this logic!!!
 
-            ulong draws = 0;
+            var draws = new ulong[4];
 
             // get the bitboard
             byte offset = (byte)((byte)side * 6);
@@ -406,7 +453,10 @@ namespace Chess.Lib
                 tRooks ^= ((tRooks << (i * 8)) & (ROW_1 | alliedPieces)) >> (i * 8); // top
 
                 // compute all legal draws and apply them to the result bitboard
-                draws |= bRooks >> (i * 8) | lRooks >> (i * 1) | rRooks << (i * 1) | tRooks << (i * 8);
+                draws[0] |= bRooks >> (i * 8);
+                draws[1] |= lRooks >> (i * 1);
+                draws[2] |= rRooks << (i * 1);
+                draws[3] |= tRooks << (i * 8);
                 // TODO: think about splitting draws by direction, so they can be reversed by draw-into-chess detection
 
                 // handle catches the same way as overflow / collision detection (this has to be done afterwards 
@@ -417,10 +467,12 @@ namespace Chess.Lib
                 tRooks ^= ((tRooks << (i * 8)) & enemyPieces) >> (i * 8); // top
             }
 
-            return new ulong[] { draws };
+            // TODO: convert bitboard draws to  ChessDraw format
+
+            return new ChessDraw[0];
         }
 
-        private ulong[] getBishopDraws(ChessColor side, byte bitboardIndex = 3)
+        private ChessDraw[] getBishopDraws(ChessColor side, byte bitboardIndex = 3)
         {
             // TODO: test this logic!!!
 
@@ -463,10 +515,12 @@ namespace Chess.Lib
                 tlBishops ^= ((tlBishops << (i * 7)) & enemyPieces) >> (i * 7); // top left
             }
 
-            return new ulong[] { draws };
+            // TODO: convert bitboard draws to  ChessDraw format
+
+            return new ChessDraw[0];
         }
 
-        private ulong[] getKnightDraws(ChessColor side)
+        private ChessDraw[] getKnightDraws(ChessColor side)
         {
             // TODO: test this logic!!!
 
@@ -488,10 +542,12 @@ namespace Chess.Lib
                 | ((bitboard >> 17) & ~(ROW_8 | COL_H | ROW_7 | alliedPieces))  // bottom left  (2-1)
                 | ((bitboard >> 15) & ~(ROW_8 | COL_A | ROW_7 | alliedPieces)); // bottom right (2-1)
 
-            return new ulong[] { draws };
+            // TODO: convert bitboard draws to  ChessDraw format
+
+            return new ChessDraw[0];
         }
 
-        private ulong[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
+        private ChessDraw[] getPeasantDraws(ChessColor side, ChessDraw? lastDraw = null)
         {
             // TODO: test this logic!!!
 
@@ -510,7 +566,10 @@ namespace Chess.Lib
             bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
                 && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
 
-            // TODO: eliminate the if/else for side-dependent logic, e.g. using the diagonal masks
+            // TODO: eliminate the if/else for side-dependent logic: use side mask, shift bits depending on side value (0 / 1), ...
+            // filter by side
+            //ulong whiteMask = (ulong)((byte)side - 1);
+            //ulong blackMask = ~whiteMask;
 
             if (side == ChessColor.White)
             {
@@ -547,7 +606,9 @@ namespace Chess.Lib
                 draws[3] = ((bitboard & ~COL_H) << 9) & enemyPieces;
             }
 
-            return draws;
+            // TODO: convert bitboard draws to  ChessDraw format
+
+            return new ChessDraw[0];
         }
 
         private ulong getCapturedFields(ChessColor side)
@@ -574,6 +635,19 @@ namespace Chess.Lib
         }
 
         #endregion DrawGen
+
+        #region Clone
+
+        /// <summary>
+        /// Create a deep clone of this bitboard instance.
+        /// </summary>
+        /// <returns>a deep clone of this instance.</returns>
+        public object Clone()
+        {
+            return new ChessBitboard(_bitboards);
+        }
+
+        #endregion Clone
 
         #endregion Methods
     }
