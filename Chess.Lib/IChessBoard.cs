@@ -74,13 +74,15 @@ namespace Chess.Lib
         /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draw">The chess draw to be executed</param>
-        ChessBoard ApplyDraw(ChessDraw draw);
+        IChessBoard ApplyDraw(ChessDraw draw);
 
         /// <summary>
         /// Draw the chess pieces to the given positions on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draws">The chess draws to be executed</param>
-        ChessBoard ApplyDraws(IList<ChessDraw> draws);
+        IChessBoard ApplyDraws(IList<ChessDraw> draws);
+
+        // TODO: figure out whether a revert draw function is possible and add it here in case
 
         #endregion Methods
     }

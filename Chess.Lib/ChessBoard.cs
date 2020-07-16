@@ -123,6 +123,9 @@ namespace Chess.Lib
         //private readonly ChessPosition _whiteKingPos;
         //private readonly ChessPosition _blackKingPos;
 
+        // TODO: add aggressive inlining option to each computed getter
+        // [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
         /// </summary>
@@ -253,7 +256,7 @@ namespace Chess.Lib
         /// Draw the chess piece to the given position on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draw">The chess draw to be executed</param>
-        public ChessBoard ApplyDraw(ChessDraw draw)
+        public IChessBoard ApplyDraw(ChessDraw draw)
         {
             var piecesToUpdate = new List<ChessPieceAtPos>();
 
@@ -295,16 +298,14 @@ namespace Chess.Lib
             return updatePiecesAt(piecesToUpdate);
         }
 
-        // TODO: figure out whether a revert draw function is possible
-
         /// <summary>
         /// Draw the chess pieces to the given positions on the chess board. Also handle enemy pieces that get taken and special draws.
         /// </summary>
         /// <param name="draws">The chess draws to be executed</param>
-        public ChessBoard ApplyDraws(IList<ChessDraw> draws)
+        public IChessBoard ApplyDraws(IList<ChessDraw> draws)
         {
-            ChessBoard board = this;
-            foreach (var draw in draws) { board = board.ApplyDraw(draw); }
+            IChessBoard board = this;
+            for (int i = 0; i < draws.Count; i++) { board = board.ApplyDraw(draws[i]); }
             return board;
         }
 

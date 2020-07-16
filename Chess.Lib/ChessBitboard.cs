@@ -59,13 +59,24 @@ namespace Chess.Lib
         /// Create a new chess board instance from the given bitboards.
         /// </summary>
         /// <param name="bitboards">The bitboards containing the board data.</param>
-        public ChessBitboard(ulong[] bitboards)
+        /// <param name="ownsBitboard">Indicates whether the given bitboards copy is exclusively used by this instance. 
+        /// If so, the copy operation can be saved by directly using the bitboards handed in.</param>
+        // TODO: think about flagging this constructor private, so it cannot be used in the wrong way
+        public ChessBitboard(ulong[] bitboards, bool ownsBitboard = false)
         {
-            // initialize empty bitboards
-            _bitboards = new ulong[13];
+            if (ownsBitboard)
+            {
+                // directly assign the bitboards, as this instance owns the copy that was handed in
+                _bitboards = bitboards;
+            }
+            else
+            {
+                // initialize empty bitboards
+                _bitboards = new ulong[13];
 
-            // copy bitboards
-            bitboards.CopyTo(_bitboards, 0);
+                // copy bitboards
+                bitboards.CopyTo(_bitboards, 0);
+            }
         }
 
         #endregion Constructor
@@ -88,6 +99,9 @@ namespace Chess.Lib
         public static ChessBitboard StartFormation => new ChessBitboard(ChessBoard.StartFormation);
 
         #region IChessBoard
+
+        // TODO: add aggressive inlining option to each computed getter
+        // [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
@@ -210,16 +224,38 @@ namespace Chess.Lib
         // TODO: implement an apply draw function that works onto the local instance, no immutable copy
         // TODO: implement a revert draw function (if this is even possible) -> speeds up draw-into-check validation a lot
 
-        public ChessBoard ApplyDraw(ChessDraw draw)
+        public IChessBoard ApplyDraw(ChessDraw draw)
         {
-            // TODO: implement logic
-            throw new NotImplementedException();
+            // clone bitboards
+            ulong[] bitboards = new ulong[13];
+            _bitboards.CopyTo(bitboards, 0);
+
+            // apply the draw to the cloned bitboard
+            applyDrawToBitboards(bitboards, draw);
+
+            // return a new bitboard instance using the cloned bitboards
+            return new ChessBitboard(bitboards, true);
         }
 
-        public ChessBoard ApplyDraws(IList<ChessDraw> draws)
+        public IChessBoard ApplyDraws(IList<ChessDraw> draws)
         {
-            // TODO: implement logic
-            throw new NotImplementedException();
+            // clone bitboards
+            ulong[] bitboards = new ulong[13];
+            _bitboards.CopyTo(bitboards, 0);
+
+            // apply all draws to the bitboards copy
+            for (int i = 0; i < draws.Count; i++)
+            {
+                applyDrawToBitboards(bitboards, draws[i]);
+            }
+
+            // return a new bitboard instance using the cloned bitboards
+            return new ChessBitboard(bitboards, true);
+        }
+
+        private void applyDrawToBitboards(ulong[] bitboards, ChessDraw draw)
+        {
+            // TODO: implement non-immutable logic here ...
         }
 
         #endregion IChessBoard
@@ -333,10 +369,20 @@ namespace Chess.Lib
             // if flag is active, filter only draws that do not cause draws into check
             if (analyzeDrawIntoCheck)
             {
-                // put all draws together to one 
+                // make a working copy of all bitboards
+                var simBitboards = new ulong[13];
+                _bitboards.CopyTo(simBitboards, 0);
+                
+                // loop through draws and simulate each draw
                 for (byte i = 0; i < draws.Length; i++)
                 {
-                    var draw = draws[i];
+                    // simulate the draw
+                    applyDrawToBitboards(simBitboards, draws[i]);
+
+                    // calculate enemy answer draws (only fields that could be captured as one bitboard)
+                    var simBoard = new ChessBitboard(simBitboards, true);
+
+                    // check if one of those draws would catch the king (bitwise AND
                 }
 
                 // TODO: fasten up as good as possible
@@ -346,6 +392,9 @@ namespace Chess.Lib
         }
 
         #region King
+
+        // TODO: add a signature for each piece type that only returns a bitboard with all capturable fields instead of nicely arranged ChessDraw list
+        // moreover allow passing the bitboards array as an argument, so those functions can be used to simulate draw-into-check
 
         private ChessDraw[] getKingDraws(ChessColor side, bool rochade)
         {
