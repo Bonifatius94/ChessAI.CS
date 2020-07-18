@@ -230,9 +230,6 @@ namespace Chess.Lib
             return piecesAtPos.SubArray(0, count);
         }
 
-        // TODO: implement an apply draw function that works onto the local instance, no immutable copy
-        // TODO: implement a revert draw function (if this is even possible) -> speeds up draw-into-check validation a lot
-
         public IChessBoard ApplyDraw(ChessDraw draw)
         {
             // clone bitboards
@@ -262,6 +259,11 @@ namespace Chess.Lib
             return new ChessBitboard(bitboards, true);
         }
 
+        /// <summary>
+        /// Flip all bits on the given bitboards to apply the given draw (calling this again with the same draw reverts everything).
+        /// </summary>
+        /// <param name="bitboards"></param>
+        /// <param name="draw"></param>
         private void applyDraw(ulong[] bitboards, ChessDraw draw)
         {
             // determine bitboard masks of the drawing piece's old and new position
@@ -324,8 +326,6 @@ namespace Chess.Lib
                 bitboards[promotionBoardIndex] ^= newPos;
             }
         }
-
-        // TODO: add also a revert draw function
 
         #endregion IChessBoard
 
@@ -474,8 +474,6 @@ namespace Chess.Lib
 
                 // remove illegal draws
                 draws = draws.SubArray(0, legalDrawsCount);
-
-                // TODO: fasten up as good as possible
             }
 
             return draws;
@@ -601,7 +599,6 @@ namespace Chess.Lib
                 draws[1] |= lRooks >> (i * 1);
                 draws[2] |= rRooks << (i * 1);
                 draws[3] |= tRooks << (i * 8);
-                // TODO: think about splitting draws by direction, so they can be reversed by draw-into-chess detection
 
                 // handle catches the same way as overflow / collision detection (this has to be done afterwards 
                 // as the catches are legal draws that need to occur onto the result bitboard)
@@ -659,7 +656,6 @@ namespace Chess.Lib
                 draws[1] |= blBishops >> (i * 9);
                 draws[2] |= trBishops << (i * 9);
                 draws[3] |= tlBishops << (i * 7);
-                // TODO: think about splitting draws by direction, so they can be reversed by draw-into-chess detection
 
                 // handle catches the same way as overflow / collision detection (this has to be done afterwards 
                 // as the catches are legal draws that need to occur onto the result bitboard)
@@ -731,6 +727,7 @@ namespace Chess.Lib
             ulong blockingPieces = alliedPieces | enemyPieces;
             ulong enemyPeasants = bitboards[side.Opponent().SideOffset() + 5];
 
+            // TODO: express this using bitwise operations, e.g. shifting COL_A to the column of the column of the last drawing peasant that is standing onto level 4 and drew 2 levels
             bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
                 && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
 
