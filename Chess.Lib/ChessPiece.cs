@@ -86,6 +86,7 @@ namespace Chess.Lib
         /// <param name="type">The type of the chess piece</param>
         /// <param name="color">The color of the chess piece</param>
         /// <param name="wasMoved">Indicates whether the chess piece was already moved</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPiece(ChessPieceType type, ChessColor color, bool wasMoved)
         {
             byte colorBits = (byte)(((int)color) << COLOR_TRAILING_BITS);
@@ -100,6 +101,7 @@ namespace Chess.Lib
         /// Creates a chess piece instance from hash code.
         /// </summary>
         /// <param name="hashCode">The hash code containing the chess piece data</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPiece(int hashCode)
         {
             // make sure the hash code is within the expected value range
@@ -128,7 +130,9 @@ namespace Chess.Lib
         /// </summary>
         public ChessColor Color
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return (ChessColor)((_hashCode & BITS_OF_COLOR) >> COLOR_TRAILING_BITS); }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { _hashCode = (byte)((_hashCode & ~BITS_OF_COLOR) | (((byte)value) << COLOR_TRAILING_BITS)); }
         }
 
@@ -137,7 +141,9 @@ namespace Chess.Lib
         /// </summary>
         public bool WasMoved
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return ((_hashCode & BITS_OF_WAS_MOVED_FLAG) >> WAS_MOVED_TRAILING_BITS) == 1; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { _hashCode = (byte)((_hashCode & ~BITS_OF_WAS_MOVED_FLAG) | (((byte)(value ? 1 : 0)) << WAS_MOVED_TRAILING_BITS)); }
         }
 
@@ -146,14 +152,20 @@ namespace Chess.Lib
         /// </summary>
         public ChessPieceType Type
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return (ChessPieceType)(_hashCode & BITS_OF_TYPE); }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { _hashCode = (byte)((_hashCode & ~BITS_OF_TYPE) | ((byte)value)); }
         }
 
         /// <summary>
         /// Indicates whether the chess piece is not null.
         /// </summary>
-        public bool HasValue { get { return Type != ChessPieceType.Invalid; } }
+        public bool HasValue
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return Type != ChessPieceType.Invalid; }
+        }
 
         ///// <summary>
         ///// The value of this nullable chess piece implementation.
@@ -193,6 +205,7 @@ namespace Chess.Lib
         /// Create a deep copy of the current instance.
         /// </summary>
         /// <returns>a deep copy of the current instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Clone()
         {
             return new ChessPiece(_hashCode);
@@ -224,6 +237,7 @@ namespace Chess.Lib
         /// Override of GetHashCode() is required for Equals() method. Therefore the hash code of the instance is returned.
         /// </summary>
         /// <returns>a hash code that is unique for each chess piece</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return _hashCode;
@@ -235,6 +249,7 @@ namespace Chess.Lib
         /// <param name="c1">The first chess piece to compare</param>
         /// <param name="c2">The second chess piece to compare</param>
         /// <returns>a boolean that indicates whether the chess pieces are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(ChessPiece c1, ChessPiece c2)
         {
             return c1.GetHashCode() == c2.GetHashCode();
@@ -246,6 +261,7 @@ namespace Chess.Lib
         /// <param name="c1">The first chess piece to compare</param>
         /// <param name="c2">The second chess piece to compare</param>
         /// <returns>a boolean that indicates whether the chess pieces are not equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(ChessPiece c1, ChessPiece c2)
         {
             return c1.GetHashCode() != c2.GetHashCode();
@@ -310,8 +326,10 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="color">The allied chess color</param>
         /// <returns>the opponent's chess color</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ChessColor Opponent(this ChessColor color)
         {
+            // TODO: implement this bitwise for better performance
             return (color == ChessColor.White) ? ChessColor.Black : ChessColor.White;
         }
     }

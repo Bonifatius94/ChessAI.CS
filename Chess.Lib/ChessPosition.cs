@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Chess.Lib
 {
@@ -9,11 +10,12 @@ namespace Chess.Lib
     public readonly struct ChessPosition : ICloneable
     {
         #region Constructor
-        
+
         /// <summary>
         /// Create a new field position instance from the given field name.
         /// </summary>
         /// <param name="fieldName">the chess field name (e.g. E5)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPosition(string fieldName)
         {
             // parse row and column
@@ -31,6 +33,7 @@ namespace Chess.Lib
         /// Create a new field position instance from the given (row, column) tuple.
         /// </summary>
         /// <param name="coords">The (row, column) tuple</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPosition(Tuple<int, int> coords) : this(coords.Item1, coords.Item2) { }
 
         /// <summary>
@@ -38,12 +41,14 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="row">The row of the new chess position instance</param>
         /// <param name="column">The column of the new chess position instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPosition(int row, int column) : this((byte)((row << 3) | column)) { }
 
         /// <summary>
         /// Create a new field position instance from the given hash code.
         /// </summary>
         /// <param name="hashCode">The hash code of the new chess position instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPosition(byte hashCode)
         {
             // make sure the given hash code is within value range
@@ -65,22 +70,38 @@ namespace Chess.Lib
         /// <summary>
         /// The row index of the chess position, starting with 0.
         /// </summary>
-        public int Row { get { return _hashCode >> 3; } }
+        public int Row
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _hashCode >> 3; }
+        }
 
         /// <summary>
         /// The column index of the chess position, starting with 0.
         /// </summary>
-        public int Column { get { return _hashCode & 7; } }
+        public int Column
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _hashCode & 7; }
+        }
 
         /// <summary>
         /// Generates the chess field name out of Row and Column property (e.g. 'A1', 'H8').
         /// </summary>
-        public string FieldName { get { return $"{ (char)('A' + Column) }{ (char)('1' + Row) }"; } }
+        public string FieldName
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return $"{ (char)('A' + Column) }{ (char)('1' + Row) }"; }
+        }
 
         /// <summary>
         /// Generates the color of the chess field at the given position on the chess board.
         /// </summary>
-        public ChessColor ColorOfField { get { return (((Row + Column) % 2) == 1) ? ChessColor.White : ChessColor.Black; } }
+        public ChessColor ColorOfField
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return (((Row + Column) % 2) == 1) ? ChessColor.White : ChessColor.Black; }
+        }
 
         #endregion Members
 
@@ -91,6 +112,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="fieldName">The name of the field (with the coords)</param>
         /// <returns>a boolean whether the coords are valid</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AreCoordsValid(string fieldName)
         {
             bool ret = false;
@@ -112,6 +134,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="coords">The (row, column) tuple to be checked</param>
         /// <returns>a boolean whether the coords are valid</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AreCoordsValid(Tuple<int, int> coords)
         {
             return AreCoordsValid(coords.Item1, coords.Item2);
@@ -123,6 +146,7 @@ namespace Chess.Lib
         /// <param name="row">The row to be checked</param>
         /// <param name="column">The column to be checked</param>
         /// <returns>a boolean whether the coords are valid</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AreCoordsValid(int row, int column)
         {
             return row >= 0 && row < 8 && column >= 0 && column < 8;
@@ -151,6 +175,7 @@ namespace Chess.Lib
         /// Override of GetHashCode() is required for Equals() method. Therefore the hash code of the instance is returned.
         /// </summary>
         /// <returns>a hash code that is unique for each (row, column) tuple</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return _hashCode;
@@ -160,6 +185,7 @@ namespace Chess.Lib
         /// Create a deep copy of the current instance.
         /// </summary>
         /// <returns>a deep copy of the current instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Clone()
         {
             return new ChessPosition(_hashCode);
@@ -171,6 +197,7 @@ namespace Chess.Lib
         /// <param name="c1">The first position to compare</param>
         /// <param name="c2">The second position to compare</param>
         /// <returns>a boolean that indicates whether the positions are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(ChessPosition c1, ChessPosition c2)
         {
             return c1.GetHashCode() == c2.GetHashCode();
@@ -182,6 +209,7 @@ namespace Chess.Lib
         /// <param name="c1">The first position to compare</param>
         /// <param name="c2">The second position to compare</param>
         /// <returns>a boolean that indicates whether the positions are not equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(ChessPosition c1, ChessPosition c2)
         {
             return c1.GetHashCode() != c2.GetHashCode();

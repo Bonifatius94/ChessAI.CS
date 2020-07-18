@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Chess.Lib
 {
@@ -37,6 +38,7 @@ namespace Chess.Lib
         #region Constants
 
         // define the trailing bits after the data bits
+        private const int IS_FIRST_MOVE_TRAILING_BITS        = 24;
         private const int DRAWING_SIDE_TRAILING_BITS         = 23;
         private const int DRAW_TYPE_TRAILING_BITS            = 21;
         private const int DRAWING_PIECE_TYPE_TRAILING_BITS   = 18;
@@ -45,13 +47,14 @@ namespace Chess.Lib
         private const int OLD_POSITION_TRAILING_BITS         =  6;
 
         // define which bits of the hash code store the data
-        private const int BITS_OF_DRAWING_SIDE          = 0b_100000000000000000000000;
-        private const int BITS_OF_DRAW_TYPE             = 0b_011000000000000000000000;
-        private const int BITS_OF_DRAWING_PIECE_TYPE    = 0b_000111000000000000000000;
-        private const int BITS_OF_TAKEN_PIECE_TYPE      = 0b_000000111000000000000000;
-        private const int BITS_OF_PROMOTION_PIECE_TYPE  = 0b_000000000111000000000000;
-        private const int BITS_OF_OLD_POSITION          = 0b_000000000000111111000000;
-        private const int BITS_OF_NEW_POSITION          = 0b_000000000000000000111111;
+        private const int BITS_OF_IS_FIRST_MOVE         = 0b_1000000000000000000000000;
+        private const int BITS_OF_DRAWING_SIDE          = 0b_0100000000000000000000000;
+        private const int BITS_OF_DRAW_TYPE             = 0b_0011000000000000000000000;
+        private const int BITS_OF_DRAWING_PIECE_TYPE    = 0b_0000111000000000000000000;
+        private const int BITS_OF_TAKEN_PIECE_TYPE      = 0b_0000000111000000000000000;
+        private const int BITS_OF_PROMOTION_PIECE_TYPE  = 0b_0000000000111000000000000;
+        private const int BITS_OF_OLD_POSITION          = 0b_0000000000000111111000000;
+        private const int BITS_OF_NEW_POSITION          = 0b_0000000000000000000111111;
 
         // define null value of chess piece type
         private const byte CHESS_PIECE_TYPE_NULL = (byte)ChessPieceType.Invalid;
@@ -67,6 +70,7 @@ namespace Chess.Lib
         /// <param name="oldPos">The old position of the drawing chess piece</param>
         /// <param name="newPos">The new position of the drawing chess piece</param>
         /// <param name="peasantPromotionType">The new type of the peasant after its promotion (only relevant for peasant promotion)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessDraw(IChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType = null)
         {
             // get the drawing piece
@@ -83,19 +87,21 @@ namespace Chess.Lib
                     : (board.IsCapturedAt(newPos) ? (ChessPieceType?)board.GetPieceAt(newPos).Type : null);
 
             // transform property values to a hash code
-            _hashCode = toHashCode(type, drawingSide, drawingPieceType, takenPieceType, peasantPromotionType, oldPos, newPos);
+            _hashCode = toHashCode(type, drawingSide, drawingPieceType, takenPieceType, peasantPromotionType, oldPos, newPos, !piece.WasMoved);
         }
 
         /// <summary>
         /// Create a new chess draw instance by passing the given hash code (as string).
         /// </summary>
         /// <param name="hex">The hash code of the new chess draw instance as hexadecimal string representation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessDraw(string hex) : this(int.Parse(hex, System.Globalization.NumberStyles.HexNumber)) { }
 
         /// <summary>
         /// Create a new chess draw instance by passing the given hash code.
         /// </summary>
         /// <param name="hashCode">The hash code of the new chess draw instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessDraw(int hashCode)
         {
             // make sure the hash code is within value range
@@ -109,37 +115,64 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
-        /// The binary representation containing the chess draw data.
-        /// 
-        /// The code consists of 24 bits: 
-        /// 1 bit for drawing side, 2 bits for draw type, 3 bits for each drawing piece type, taken piece type and promotion piece type, 6 bits for each old and new position.
+        /// <para>The binary representation containing the chess draw data.</para>
+        /// <para>
+        /// The code consists of 25 bits: 
+        /// 1 bit for is-first-move flag, 1 bit for drawing side, 2 bits for draw type, 3 bits for each drawing piece type, taken piece type 
+        /// and promotion piece type, 6 bits for each old and new position.
         /// (taken piece type and promotion type use 6 as null)
-        /// 
-        /// |   unused  | side | draw type | piece type | taken piece type | promotion type | old position | new position |
-        /// |  xxxxxxxx |    x |        xx |        xxx |              xxx |            xxx |       xxxxxx |       xxxxxx |
+        /// </para>
+        /// <para>
+        /// |   unused | is first move | side | draw type | piece type | taken piece type | promotion type | old position | new position |
+        /// |  xxxxxxx |             x |    x |        xx |        xxx |              xxx |            xxx |       xxxxxx |       xxxxxx |
+        /// </para>
         /// </summary>
         private readonly int _hashCode;
-        
+
+        // TODO: add one bit indicating whether the moving piece was already drawn before (this is required for reverting a draw properly)
+
+        /// <summary>
+        /// A flag indicating whether the chess piece is moving for the first time.
+        /// </summary>
+        public bool IsFirstMove
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return ((_hashCode & BITS_OF_IS_FIRST_MOVE) >> IS_FIRST_MOVE_TRAILING_BITS) == 1; }
+        }
+
         /// <summary>
         /// The type of the draw.
         /// </summary>
-        public ChessDrawType Type { get { return (ChessDrawType)((_hashCode & BITS_OF_DRAW_TYPE) >> DRAW_TYPE_TRAILING_BITS); } }
+        public ChessDrawType Type
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return (ChessDrawType)((_hashCode & BITS_OF_DRAW_TYPE) >> DRAW_TYPE_TRAILING_BITS); }
+        }
 
         /// <summary>
         /// The side that is drawing.
         /// </summary>
-        public ChessColor DrawingSide { get { return (ChessColor)((_hashCode & BITS_OF_DRAWING_SIDE) >> DRAWING_SIDE_TRAILING_BITS); } }
+        public ChessColor DrawingSide
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return (ChessColor)((_hashCode & BITS_OF_DRAWING_SIDE) >> DRAWING_SIDE_TRAILING_BITS); }
+        }
 
         /// <summary>
         /// The piece type that is drawing.
         /// </summary>
-        public ChessPieceType DrawingPieceType { get { return (ChessPieceType)((_hashCode & BITS_OF_DRAWING_PIECE_TYPE) >> DRAWING_PIECE_TYPE_TRAILING_BITS); } }
+        public ChessPieceType DrawingPieceType
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return (ChessPieceType)((_hashCode & BITS_OF_DRAWING_PIECE_TYPE) >> DRAWING_PIECE_TYPE_TRAILING_BITS); }
+        }
         
         /// <summary>
         /// The chess piece type of the enemy chess piece being taken.
         /// </summary>
         public ChessPieceType? TakenPieceType
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int digits = (_hashCode & BITS_OF_TAKEN_PIECE_TYPE) >> TAKEN_PIECE_TYPE_TRAILING_BITS;
@@ -150,8 +183,10 @@ namespace Chess.Lib
         /// <summary>
         /// The chess piece type that the peasant is promoting to.
         /// </summary>
+        // TODO: make this piece type not nullable, use invalid type as null
         public ChessPieceType? PeasantPromotionPieceType
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int digits = (_hashCode & BITS_OF_PROMOTION_PIECE_TYPE) >> PROMOTION_PIECE_TYPE_TRAILING_BITS;
@@ -162,21 +197,33 @@ namespace Chess.Lib
         /// <summary>
         /// The old position of the chess piece to be moved.
         /// </summary>
-        public ChessPosition OldPosition { get { return new ChessPosition((byte)((_hashCode & BITS_OF_OLD_POSITION) >> OLD_POSITION_TRAILING_BITS)); } }
+        public ChessPosition OldPosition
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return new ChessPosition((byte)((_hashCode & BITS_OF_OLD_POSITION) >> OLD_POSITION_TRAILING_BITS)); }
+        }
 
         /// <summary>
         /// The new position of the chess piece to be moved.
         /// </summary>
-        public ChessPosition NewPosition { get { return new ChessPosition((byte)(_hashCode & BITS_OF_NEW_POSITION)); } }
+        public ChessPosition NewPosition
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return new ChessPosition((byte)(_hashCode & BITS_OF_NEW_POSITION)); }
+        }
 
         #endregion Members
 
         #region Methods
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int toHashCode(ChessDrawType drawType, ChessColor drawingSide, ChessPieceType drawingPieceType, ChessPieceType? takenPieceType,
-            ChessPieceType? promotionPieceType, ChessPosition oldPosition, ChessPosition newPosition)
+            ChessPieceType? promotionPieceType, ChessPosition oldPosition, ChessPosition newPosition, bool isFirstMove)
         {
+            // TODO: try to remove if/else branchings to make this more efficient
+
             // shift the bits to the right position (preparation for bitwise OR)
+            int isFirstMoveBits = (isFirstMove ? 1 : 0) << DRAW_TYPE_TRAILING_BITS;
             int drawTypeBits = ((int)drawType) << DRAW_TYPE_TRAILING_BITS;
             int drawingSideBits = ((int)drawingSide) << DRAWING_SIDE_TRAILING_BITS;
             int drawingPieceTypeBits = ((int)drawingPieceType) << DRAWING_PIECE_TYPE_TRAILING_BITS;
@@ -186,18 +233,23 @@ namespace Chess.Lib
             int newPositionBits = newPosition.GetHashCode();
 
             // fuse the shifted bits to the hash code (by bitwise OR)
-            int hashCode = (drawTypeBits | drawingSideBits | drawingPieceTypeBits | takenPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
+            int hashCode = (isFirstMoveBits | drawTypeBits | drawingSideBits | drawingPieceTypeBits 
+                | takenPieceTypeBits | promotionPieceTypeBits | oldPositionBits | newPositionBits);
 
             return hashCode;
         }
 
-        private static ChessDrawType getDrawType(IChessBoard board, ChessPosition oldPos, ChessPosition newPos, ChessPieceType? peasantPromotionType)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ChessDrawType getDrawType(IChessBoard board, ChessPosition oldPos, 
+            ChessPosition newPos, ChessPieceType? peasantPromotionType)
         {
             var piece = board.GetPieceAt(oldPos);
             var type = ChessDrawType.Standard;
 
             // check for a peasant promotion
-            if (peasantPromotionType != null && piece.Type == ChessPieceType.Peasant && ((newPos.Row == 7 && piece.Color == ChessColor.White) || (newPos.Row == 0 && piece.Color == ChessColor.Black)))
+            if (peasantPromotionType != null && piece.Type == ChessPieceType.Peasant 
+                && ((newPos.Row == 7 && piece.Color == ChessColor.White) 
+                || (newPos.Row == 0 && piece.Color == ChessColor.Black)))
             {
                 type = ChessDrawType.PeasantPromotion;
             }
@@ -207,7 +259,8 @@ namespace Chess.Lib
                 type = ChessDrawType.Rochade;
             }
             // check for an en-passant
-            else if (piece.Type == ChessPieceType.Peasant && !board.IsCapturedAt(newPos) && Math.Abs(oldPos.Column - newPos.Column) == 1)
+            else if (piece.Type == ChessPieceType.Peasant && !board.IsCapturedAt(newPos) 
+                && Math.Abs(oldPos.Column - newPos.Column) == 1)
             {
                 type = ChessDrawType.EnPassant;
             }

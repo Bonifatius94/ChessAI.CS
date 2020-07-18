@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Chess.Lib
@@ -16,6 +17,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The position of the chess piece</param>
         /// <param name="piece">The chess piece data</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPieceAtPos(ChessPosition position, ChessPiece piece)
         {
             _hashCode = (short)((position.GetHashCode() << 5) | piece.GetHashCode());
@@ -25,6 +27,7 @@ namespace Chess.Lib
         /// Create a new instance of hash code.
         /// </summary>
         /// <param name="hashCode">The hash code of the new instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPieceAtPos(int hashCode)
         {
             _hashCode = (short)hashCode;
@@ -43,12 +46,20 @@ namespace Chess.Lib
         /// <summary>
         /// The chess piece data.
         /// </summary>
-        public ChessPiece Piece { get { return new ChessPiece((byte)(_hashCode & 0b_11111)); } }
+        public ChessPiece Piece
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return new ChessPiece((byte)(_hashCode & 0b_11111)); }
+        }
 
         /// <summary>
         /// The chess position of the chess piece.
         /// </summary>
-        public ChessPosition Position { get { return new ChessPosition((byte)(_hashCode >> 5)); } }
+        public ChessPosition Position
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return new ChessPosition((byte)(_hashCode >> 5)); }
+        }
 
         #endregion Members
 
@@ -77,6 +88,7 @@ namespace Chess.Lib
         /// Retrieve a unique hash code representing a chess piece and its position.
         /// </summary>
         /// <returns>a unique hash code representing a chess piece and its position</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return _hashCode;
@@ -88,6 +100,7 @@ namespace Chess.Lib
         /// <param name="c1">The first chess piece to compare</param>
         /// <param name="c2">The second chess piece to compare</param>
         /// <returns>a boolean that indicates whether the chess pieces are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(ChessPieceAtPos c1, ChessPieceAtPos c2)
         {
             return c1.GetHashCode() == c2.GetHashCode();
@@ -99,6 +112,7 @@ namespace Chess.Lib
         /// <param name="c1">The first chess piece to compare</param>
         /// <param name="c2">The second chess piece to compare</param>
         /// <returns>a boolean that indicates whether the chess pieces are not equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(ChessPieceAtPos c1, ChessPieceAtPos c2)
         {
             return c1.GetHashCode() != c2.GetHashCode();
