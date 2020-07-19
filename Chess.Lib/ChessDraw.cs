@@ -274,7 +274,7 @@ namespace Chess.Lib
         /// <param name="board">the chess board where the draw should be applied to</param>
         /// <param name="predecedingEnemyDraw">The last draw that the oponent made</param>
         /// <returns>boolean whether the draw is valid</returns>
-        public bool IsValid(ChessBoard board, ChessDraw? predecedingEnemyDraw = null)
+        public bool IsValid(IChessBoard board, ChessDraw? predecedingEnemyDraw = null)
         {
             // TODO: refactor this function!!!
 

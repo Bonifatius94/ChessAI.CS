@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Chess.Lib
@@ -129,32 +130,56 @@ namespace Chess.Lib
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
         /// </summary>
-        public static ChessBoard StartFormation => new ChessBoard(START_FORMATION);
+        public static ChessBoard StartFormation
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new ChessBoard(START_FORMATION);
+        }
 
         /// <summary>
         /// A list of all chess pieces (and their position) that are currently on the chess board.
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> AllPieces => ((ChessPieceAtPos[])WhitePieces).ArrayConcat((ChessPieceAtPos[])BlackPieces);
+        public IEnumerable<ChessPieceAtPos> AllPieces
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ((ChessPieceAtPos[])WhitePieces).ArrayConcat((ChessPieceAtPos[])BlackPieces);
+        }
 
         /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> WhitePieces => GetPiecesOfColor(ChessColor.White);
+        public IEnumerable<ChessPieceAtPos> WhitePieces
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetPiecesOfColor(ChessColor.White);
+        }
 
         /// <summary>
         /// Selects all black chess pieces from the chess pieces list. (computed operation)
         /// </summary>
-        public IEnumerable<ChessPieceAtPos> BlackPieces => GetPiecesOfColor(ChessColor.Black);
+        public IEnumerable<ChessPieceAtPos> BlackPieces
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetPiecesOfColor(ChessColor.Black);
+        }
 
         /// <summary>
         /// Selects the white king from the chess pieces list (computed operation).
         /// </summary>
-        public readonly ChessPieceAtPos WhiteKing => WhitePieces.First(x => x.Piece.Type == ChessPieceType.King);
+        public readonly ChessPieceAtPos WhiteKing
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => WhitePieces.First(x => x.Piece.Type == ChessPieceType.King);
+        }
 
         /// <summary>
         /// Selects the black king from the chess pieces list (computed operation).
         /// </summary>
-        public readonly ChessPieceAtPos BlackKing => BlackPieces.First(x => x.Piece.Type == ChessPieceType.King);
+        public readonly ChessPieceAtPos BlackKing
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BlackPieces.First(x => x.Piece.Type == ChessPieceType.King);
+        }
 
         ///// <summary>
         ///// Selects the white king from the chess pieces list.
@@ -175,6 +200,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The chess field to check</param>
         /// <returns>A boolean that indicates whether the given chess field is captured</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsCapturedAt(ChessPosition position)
         {
             return _pieces[position.GetHashCode()].HasValue;
@@ -185,6 +211,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="positionHash">The chess field to check</param>
         /// <returns>A boolean that indicates whether the given chess field is captured</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsCapturedAt(byte positionHash)
         {
             return _pieces[positionHash].HasValue;
@@ -195,6 +222,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="positionHash">The chess field</param>
         /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPiece GetPieceAt(byte positionHash)
         {
             return _pieces[positionHash];
@@ -205,6 +233,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="position">The chess field</param>
         /// <returns>the chess piece at the given position or null (if the chess field is not captured)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessPiece GetPieceAt(ChessPosition position)
         {
             return _pieces[position.GetHashCode()];
@@ -215,6 +244,7 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="side">The player's side</param>
         /// <returns>a list of all chess pieces of the given player's side</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<ChessPieceAtPos> GetPiecesOfColor(ChessColor side)
         {
             // initialize the pieces array for worst-case

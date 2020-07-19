@@ -12,6 +12,11 @@ namespace Chess.Lib
         #region Members
 
         /// <summary>
+        /// A list of all chess pieces (and their position) that are currently on the chess board. (computed operation)
+        /// </summary>
+        IEnumerable<ChessPieceAtPos> AllPieces { get; }
+
+        /// <summary>
         /// Selects all white chess pieces from the chess pieces list. (computed operation)
         /// </summary>
         IEnumerable<ChessPieceAtPos> WhitePieces { get; }
@@ -81,8 +86,6 @@ namespace Chess.Lib
         /// </summary>
         /// <param name="draws">The chess draws to be executed</param>
         IChessBoard ApplyDraws(IList<ChessDraw> draws);
-
-        // TODO: figure out whether a revert draw function is possible and add it here in case
 
         #endregion Methods
     }

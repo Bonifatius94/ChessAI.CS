@@ -113,7 +113,7 @@ namespace Chess.UnitTest
                             if (isBlocked) { pieces.Add(new ChessPieceAtPos(blockPos, new ChessPiece(ChessPieceType.Knight, allyColor, false))); }
 
                             // init chess board and rochade draw
-                            var board = new ChessBoard(pieces);
+                            IChessBoard board = new ChessBoard(pieces);
                             var draw = new ChessDraw(board, pieces[0].Position, newKingPos);
 
                             // check whether the draw validation returns the expected value
@@ -168,7 +168,7 @@ namespace Chess.UnitTest
                     };
 
                     // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
-                    var board = new ChessBoard(pieces);
+                    IChessBoard board = new ChessBoard(pieces);
                     var draws = ChessDrawGenerator.Instance.GetDraws(board, pieces[0].Position, null, true);
                     Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
 
@@ -217,7 +217,7 @@ namespace Chess.UnitTest
                     };
 
                     // evaluate queen draws
-                    var board = new ChessBoard(pieces);
+                    IChessBoard board = new ChessBoard(pieces);
                     var draws = ChessDrawGenerator.Instance.GetDraws(board, pieces[0].Position, null, true);
                     Assert.True(draws.Count() == ((row + col == 7) ? 7 : 5));
 
@@ -258,7 +258,7 @@ namespace Chess.UnitTest
                     new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece(ChessPieceType.King,   enemyColor, true)),
                 };
 
-                var board = new ChessBoard(pieces);
+                IChessBoard board = new ChessBoard(pieces);
                 var draws = ChessDrawGenerator.Instance.GetDraws(board, bishopPos, null, true);
                 Assert.True(draws.Count() == 10);
 
@@ -308,7 +308,7 @@ namespace Chess.UnitTest
                         new ChessPieceAtPos(new ChessPosition(6, 5), new ChessPiece(ChessPieceType.King,    enemyColor, true)),
                     };
 
-                    var board = new ChessBoard(pieces);
+                    IChessBoard board = new ChessBoard(pieces);
                     var draws = ChessDrawGenerator.Instance.GetDraws(board, knightPos, null, true);
                     Assert.True(draws.Count() == 5);
 
@@ -386,7 +386,7 @@ namespace Chess.UnitTest
                                     new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece(ChessPieceType.King,    ChessColor.Black, false   )),
                                 };
 
-                                var board = new ChessBoard(pieces);
+                                IChessBoard board = new ChessBoard(pieces);
 
                                 var sfwDraw = new ChessDraw(board, oldPos, sfwNewPos);
                                 bool shouldSfwBeValid = (blockingPieceRowDiff > 1);
@@ -463,7 +463,7 @@ namespace Chess.UnitTest
 
                             //output.WriteLine($"current constellation: allyColor={allyColor}, targetColor={targetColor}, allyRow={allyRow}, allyCol={allyCol}, targetColMiddle={targetColMiddle}");
 
-                            var board = new ChessBoard(pieces);
+                            IChessBoard board = new ChessBoard(pieces);
                             var catchDraws = ChessDrawGenerator.Instance.GetDraws(board, oldPos, null, true).Where(x => x.OldPosition.Column != x.NewPosition.Column);
 
                             int expectedCatchDrawsCount = (targetColor == allyColor) ? 0 : (targetColMiddle == allyCol) ? 2 : ((Math.Abs(targetColMiddle - allyCol) == 2) ? 1 : 0);
@@ -518,7 +518,7 @@ namespace Chess.UnitTest
                             };
 
                             // apply the double foreward draw as preparation for the en-passant
-                            var board = new ChessBoard(pieces);
+                            IChessBoard board = new ChessBoard(pieces);
                             var drawDfw = new ChessDraw(board, dfwOldPos, dfwNewPos);
                             board = board.ApplyDraw(drawDfw);
 
@@ -581,7 +581,7 @@ namespace Chess.UnitTest
                         pieces.Add(new ChessPieceAtPos(posCatchRight, enemyPeasant));
                     }
 
-                    var board = new ChessBoard(pieces);
+                    IChessBoard board = new ChessBoard(pieces);
                     var draws = ChessDrawGenerator.Instance.GetDraws(board, fwPos, null, true);
                     Assert.True(draws.Count() ==  (4 * ((fwCol % 7 == 0) ? 2 : 3)));
                         
