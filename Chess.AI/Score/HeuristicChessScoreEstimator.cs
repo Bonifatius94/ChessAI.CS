@@ -71,7 +71,7 @@ namespace Chess.AI.Score
         /// <param name="board">The chess board to be evaluated</param>
         /// <param name="sideToDraw">The chess player to be evaluated</param>
         /// <returns>the score of the chess player's game situation</returns>
-        public double GetScore(ChessBoard board, ChessColor sideToDraw)
+        public double GetScore(IChessBoard board, ChessColor sideToDraw)
         {
             // get allied pieces and calculate the score
             double allyScore = board.GetPiecesOfColor(sideToDraw).Select(x => getPieceScore(board, x.Position)).Sum();
@@ -82,7 +82,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getPieceScore(ChessBoard board, ChessPosition position)
+        private double getPieceScore(IChessBoard board, ChessPosition position)
         {
             double score;
             var piece = board.GetPieceAt(position);
@@ -102,7 +102,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getKingScore(ChessBoard board, ChessPosition position)
+        private double getKingScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -116,7 +116,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getQueenScore(ChessBoard board, ChessPosition position)
+        private double getQueenScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -130,7 +130,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getRookScore(ChessBoard board, ChessPosition position)
+        private double getRookScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -144,7 +144,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getBishopScore(ChessBoard board, ChessPosition position)
+        private double getBishopScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -158,7 +158,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getKnightScore(ChessBoard board, ChessPosition position)
+        private double getKnightScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -172,7 +172,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getPeasantScore(ChessBoard board, ChessPosition position)
+        private double getPeasantScore(IChessBoard board, ChessPosition position)
         {
             // Shannon's chess piece evaluation
             // TODO: check this heuristic
@@ -210,7 +210,7 @@ namespace Chess.AI.Score
         #region Helpers
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getMovabilityBonus(ChessBoard board, ChessPosition position, double factor = 0.02)
+        private double getMovabilityBonus(IChessBoard board, ChessPosition position, double factor = 0.02)
         {
             int drawsCount = ChessDrawGenerator.Instance.GetDraws(board, position, null, false).Count();
             return factor * drawsCount;

@@ -16,7 +16,7 @@ namespace Chess.Lib.Extensions
         /// </summary>
         /// <param name="board">the chess board to be converted</param>
         /// <returns>a hash string containing the data from the chess board</returns>
-        public static string ToHash(this ChessBoard board)
+        public static string ToHash(this IChessBoard board)
         {
             // convert chess board into a hex stzing
             string hex = board.ToBitboard().BinaryData.BytesToHexString();
@@ -28,7 +28,7 @@ namespace Chess.Lib.Extensions
         /// </summary>
         /// <param name="hash">the hash string to be converted</param>
         /// <returns>a new chess board instance containing the data from the hash</returns>
-        public static ChessBoard HashToBoard(this string hash)
+        public static IChessBoard HashToBoard(this string hash)
         {
             // convert hash into a chess board
             var board = new Bitboard(hash.HexStringToBytes()).ToBoard();

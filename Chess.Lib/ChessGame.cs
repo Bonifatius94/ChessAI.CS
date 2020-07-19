@@ -29,7 +29,7 @@ namespace Chess.Lib
         /// <summary>
         /// The chess board with the current game situation.
         /// </summary>
-        public ChessBoard Board { get; set; }
+        public IChessBoard Board { get; set; }
 
         /// <summary>
         /// The time when the game was started. Time is measured for UTC time zone.

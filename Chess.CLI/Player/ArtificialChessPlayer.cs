@@ -42,7 +42,7 @@ namespace Chess.CLI.Player
         /// <param name="board">The chess board representing the current game situation.</param>
         /// <param name="previousDraw">The preceding draw made by the enemy.</param>
         /// <returns>the next chess draw</returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? previousDraw)
+        public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? previousDraw)
         {
             return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
         }

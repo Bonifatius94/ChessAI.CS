@@ -71,7 +71,7 @@ namespace Chess.AI.Score
         /// <param name="board">The chess board to be evaluated</param>
         /// <param name="sideToDraw">The chess player to be evaluated</param>
         /// <returns>the score of the chess player's game situation</returns>
-        public double GetScore(ChessBoard board, ChessColor sideToDraw)
+        public double GetScore(IChessBoard board, ChessColor sideToDraw)
         {
             // get allied pieces and calculate the score
             double allyScore = board.GetPiecesOfColor(sideToDraw).Select(x => getPieceScore(board, x.Position)).Sum();
@@ -82,7 +82,7 @@ namespace Chess.AI.Score
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double getPieceScore(ChessBoard board, ChessPosition position)
+        private double getPieceScore(IChessBoard board, ChessPosition position)
         {
             double score;
             var piece = board.GetPieceAt(position);

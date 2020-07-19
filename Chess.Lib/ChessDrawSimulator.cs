@@ -90,7 +90,7 @@ namespace Chess.Lib
         /// <param name="board">the chess board to be evaluated</param>
         /// <param name="precedingEnemyDraw">the preceding opponent chess draw</param>
         /// <returns>a check game status</returns>
-        public ChessGameStatus GetCheckGameStatus(ChessBoard board, ChessDraw precedingEnemyDraw)
+        public ChessGameStatus GetCheckGameStatus(IChessBoard board, ChessDraw precedingEnemyDraw)
         {
             var alliedSide = (precedingEnemyDraw.DrawingSide == ChessColor.White) ? ChessColor.Black : ChessColor.White;
             var enemySide = precedingEnemyDraw.DrawingSide;
@@ -125,7 +125,7 @@ namespace Chess.Lib
             return status;
         }
         
-        private bool canAchieveCheckmate(ChessBoard board, ChessColor side)
+        private bool canAchieveCheckmate(IChessBoard board, ChessColor side)
         {
             // minimal pieces required for checkmate: 
             // ======================================

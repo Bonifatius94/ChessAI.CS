@@ -18,7 +18,7 @@ namespace Chess.CLI.Player
         /// <param name="board">The chess board representing the current game situation.</param>
         /// <param name="previousDraw">The preceding draw made by the enemy.</param>
         /// <returns>the next chess draw</returns>
-        ChessDraw GetNextDraw(ChessBoard board, ChessDraw? previousDraw);
+        ChessDraw GetNextDraw(IChessBoard board, ChessDraw? previousDraw);
 
         #endregion Methods
     }

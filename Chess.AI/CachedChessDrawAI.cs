@@ -45,7 +45,7 @@ namespace Chess.AI
         /// <param name="precedingEnemyDraw"></param>
         /// <param name="searchDepth"></param>
         /// <returns></returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
+        public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
         {
             // always use the cache if possible, otherwise compute the best draw with minimax algorithm
             return _cache.GetBestDraw(board, precedingEnemyDraw) ?? MinimaxChessDrawAI.Instance.GetNextDraw(board, precedingEnemyDraw, searchDepth);
@@ -58,7 +58,7 @@ namespace Chess.AI
         /// <param name="draw"></param>
         /// <param name="searchDepth"></param>
         /// <returns></returns>
-        public double RateDraw(ChessBoard board, ChessDraw draw, int searchDepth)
+        public double RateDraw(IChessBoard board, ChessDraw draw, int searchDepth)
         {
             return MinimaxChessDrawAI.Instance.RateDraw(board, draw, searchDepth);
         }

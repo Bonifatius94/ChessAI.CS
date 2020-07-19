@@ -39,7 +39,7 @@ namespace Chess.AI
         /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
         /// <param name="searchDepth">The difficulty level</param>
         /// <returns>The 'best' possible chess draw</returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
+        public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
         {
             // TODO: check whether the optimal draw was already found (-> database query)
 
@@ -62,7 +62,7 @@ namespace Chess.AI
         /// <param name="draw">The chess draw to be evaluated</param>
         /// <param name="searchDepth">The minimax search depth (higher level = deeper search = better decisions)</param>
         /// <returns>a score that rates the quality of the given chess draw</returns>
-        public double RateDraw(ChessBoard board, ChessDraw draw, int searchDepth)
+        public double RateDraw(IChessBoard board, ChessDraw draw, int searchDepth)
         {
             // simulate the given draw
             var simulatedBoard = board.ApplyDraw(draw);
@@ -98,7 +98,7 @@ namespace Chess.AI
         /// <param name="precedingEnemyDraw">The previous chess draw made by the opponent</param>
         /// <param name="depth">The recursion depth for minimax algorithm</param>
         /// <returns>the 'best' chess draw</returns>
-        private ChessDraw iterativeDeepening(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth)
+        private ChessDraw iterativeDeepening(IChessBoard board, ChessDraw? precedingEnemyDraw, int depth)
         {
             // compute all possible draws
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
@@ -208,7 +208,7 @@ namespace Chess.AI
         /// <param name="drawScores">The chess draws to evaluate</param>
         /// <param name="depth">The depth of the minimax algorithm</param>
         /// <returns>a list of (chess draw, minimax score) tuples, ordered by the score (desc)</returns>
-        private IEnumerable<ChessDrawScore> getRatedDraws(ChessBoard board, IEnumerable<ChessDrawScore> drawScores, int depth)
+        private IEnumerable<ChessDrawScore> getRatedDraws(IChessBoard board, IEnumerable<ChessDrawScore> drawScores, int depth)
         {
             // make sure that the ally can draw
             if (drawScores?.Count() == 0) { throw new ArgumentException("draws list is empty"); }
@@ -254,7 +254,7 @@ namespace Chess.AI
         /// <param name="beta">The upper bound of the already computed game scores</param>
         /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
-        private double negamax(ChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
+        private double negamax(IChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
             var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
@@ -291,7 +291,7 @@ namespace Chess.AI
             return maxScore;
         }
 
-        private IEnumerable<ChessDraw> getPreorderedDrawsByPossibleGain(ChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
+        private IEnumerable<ChessDraw> getPreorderedDrawsByPossibleGain(IChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
         {
             // compute the score
             var drawsXScoreTuples = new List<ChessDrawScore>();

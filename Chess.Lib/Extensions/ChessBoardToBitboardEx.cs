@@ -16,7 +16,7 @@ namespace Chess.Lib.Extensions
         /// </summary>
         /// <param name="board">the chess board to be converted</param>
         /// <returns>a hash string containing the data from the chess board</returns>
-        public static Bitboard ToBitboard(this ChessBoard board)
+        public static Bitboard ToBitboard(this IChessBoard board)
         {
             // init a new bitboard with 40 byte
             var bitboard = new Bitboard(40 * 8);
@@ -59,7 +59,7 @@ namespace Chess.Lib.Extensions
         /// </summary>
         /// <param name="bytes">the binary data to be converted</param>
         /// <returns>a new chess board instance containing the data from the given bytes</returns>
-        public static ChessBoard ToBoard(this byte[] bytes)
+        public static IChessBoard ToBoard(this byte[] bytes)
         {
             var bitboard = new Bitboard(bytes);
             var pieces = new ChessPiece[64];

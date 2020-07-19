@@ -59,7 +59,7 @@ namespace Chess.DataTools
         public double WinRate { get; set; }
         public int AnalyzedGames { get; set; }
 
-        public ChessBoard Board
+        public IChessBoard Board
         {
             get { return BoardHash.HashToBoard(); }
             set { BoardHash = value.ToHash(); }
@@ -100,7 +100,7 @@ namespace Chess.DataTools
 
                 foreach (var draw in game.AllDraws)
                 {
-                    var board = (ChessBoard)tempGame.Board.Clone();
+                    var board = (IChessBoard)((ICloneable)tempGame.Board).Clone();
                     drawsXWinner.Add(new Tuple<Tuple<string, ChessDraw>, ChessColor>(new Tuple<string, ChessDraw>(board.ToHash(), draw), winningSide));
                     tempGame.ApplyDraw(draw);
                 }

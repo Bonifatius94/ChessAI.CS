@@ -79,7 +79,7 @@ namespace Chess.DataTools.SQLite
         /// <param name="board">The chess board representing the situation.</param>
         /// <param name="predecedingDraw">The previous draw made by the enemy.</param>
         /// <returns>The best chess draw (if there is one in the cache)</returns>
-        public ChessDraw? GetBestDraw(ChessBoard board, ChessDraw? predecedingDraw)
+        public ChessDraw? GetBestDraw(IChessBoard board, ChessDraw? predecedingDraw)
         {
             // get possible draws from database (with win rate)
             var drawingSide = predecedingDraw?.DrawingSide.Opponent() ?? ChessColor.White;

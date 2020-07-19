@@ -71,7 +71,7 @@ namespace Chess.UnitTest
         public void GetCheckGameStatusTest()
         {
             // test no check
-            var board = ChessBoard.StartFormation;
+            IChessBoard board = ChessBoard.StartFormation;
             var enemyDraw = new ChessDraw(board, new ChessPosition(0, 0), new ChessPosition(0, 0));
             board = board.ApplyDraw(enemyDraw);
             Assert.True(ChessDrawSimulator.Instance.GetCheckGameStatus(board, enemyDraw) == ChessGameStatus.None);

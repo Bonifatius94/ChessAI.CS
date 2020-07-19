@@ -19,7 +19,7 @@ namespace Chess.AI.Score
         /// <param name="board">The chess board representing the situation to be evaluated.</param>
         /// <param name="sideToDraw">The drawing side.</param>
         /// <returns>the estimated score of the given game situation</returns>
-        double GetScore(ChessBoard board, ChessColor sideToDraw);
+        double GetScore(IChessBoard board, ChessColor sideToDraw);
 
         #endregion Methods
     }

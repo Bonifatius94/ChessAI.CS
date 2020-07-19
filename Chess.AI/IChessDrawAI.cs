@@ -17,7 +17,7 @@ namespace Chess.AI
         /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
         /// <param name="searchDepth">The difficulty level</param>
         /// <returns>The 'best' possible chess draw</returns>
-        ChessDraw GetNextDraw(ChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth);
+        ChessDraw GetNextDraw(IChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth);
 
         /// <summary>
         /// Compute the score of the given draw using the rating technique of the chosen implementation.
@@ -26,7 +26,7 @@ namespace Chess.AI
         /// <param name="draw">The chess draw to be evaluated</param>
         /// <param name="searchDepth">The minimax search depth (higher level = deeper search = better decisions, but more computation time)</param>
         /// <returns>a score that rates the quality of the given chess draw</returns>
-        double RateDraw(ChessBoard board, ChessDraw draw, int searchDepth);
+        double RateDraw(IChessBoard board, ChessDraw draw, int searchDepth);
 
         // TODO: rework! why specifying difficulty here???
     }
