@@ -21,45 +21,51 @@ namespace Chess.UnitTest
         public void ConstructorAndGetterSetterTest()
         {
             // check if all possible chess draws can be created
-            for (int drawingSideValue = 0; drawingSideValue < 2; drawingSideValue++)
+            for (int firstMove = 0; firstMove < 2; firstMove++)
             {
-                var drawingSide = (ChessColor)drawingSideValue;
+                bool isFirstMove = firstMove == 1;
 
-                for (int drawTypeValue = 0; drawTypeValue < 4; drawTypeValue++)
+                for (int drawingSideValue = 0; drawingSideValue < 2; drawingSideValue++)
                 {
-                    var drawType = (ChessDrawType)drawTypeValue;
+                    var drawingSide = (ChessColor)drawingSideValue;
 
-                    for (int drawingPieceTypeValue = 1; drawingPieceTypeValue < 7; drawingPieceTypeValue++)
+                    for (int drawTypeValue = 0; drawTypeValue < 4; drawTypeValue++)
                     {
-                        var drawingPieceType = (ChessPieceType)drawingPieceTypeValue;
+                        var drawType = (ChessDrawType)drawTypeValue;
 
-                        for (int takenPieceTypeValue = 0; takenPieceTypeValue < 7; takenPieceTypeValue++)
+                        for (int drawingPieceTypeValue = 1; drawingPieceTypeValue < 7; drawingPieceTypeValue++)
                         {
-                            var takenPieceType = (takenPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)takenPieceTypeValue) : null;
+                            var drawingPieceType = (ChessPieceType)drawingPieceTypeValue;
 
-                            for (int promotionPieceTypeValue = 0; promotionPieceTypeValue < 7; promotionPieceTypeValue++)
+                            for (int takenPieceTypeValue = 0; takenPieceTypeValue < 7; takenPieceTypeValue++)
                             {
-                                var promotionPieceType = (promotionPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
+                                var takenPieceType = (takenPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)takenPieceTypeValue) : null;
 
-                                for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
+                                for (int promotionPieceTypeValue = 0; promotionPieceTypeValue < 7; promotionPieceTypeValue++)
                                 {
-                                    var oldPos = new ChessPosition((byte)oldPosHash);
+                                    var promotionPieceType = (promotionPieceTypeValue > 0) ? (ChessPieceType?)((ChessPieceType)promotionPieceTypeValue) : null;
 
-                                    for (int newPosHash = 0; newPosHash < 64; newPosHash++)
+                                    for (int oldPosHash = 0; oldPosHash < 64; oldPosHash++)
                                     {
-                                        var newPos = new ChessPosition((byte)newPosHash);
+                                        var oldPos = new ChessPosition((byte)oldPosHash);
 
-                                        // get expected hash code
-                                        int hashCode = ((drawingSideValue << 23) | (drawTypeValue << 21) | (drawingPieceTypeValue << 18) | (takenPieceTypeValue << 15) | (promotionPieceTypeValue << 12) | (oldPosHash << 6) | (newPosHash));
+                                        for (int newPosHash = 0; newPosHash < 64; newPosHash++)
+                                        {
+                                            var newPos = new ChessPosition((byte)newPosHash);
 
-                                        // create a new chess draw instance and check if the getters work correctly
-                                        var draw = new ChessDraw(hashCode);
+                                            // get expected hash code
+                                            int hashCode = ((firstMove << 24) | (drawingSideValue << 23) | (drawTypeValue << 21) | (drawingPieceTypeValue << 18) 
+                                                | (takenPieceTypeValue << 15) | (promotionPieceTypeValue << 12) | (oldPosHash << 6) | (newPosHash));
 
-                                        // check if the created chess draw has the correct features
-                                        Assert.True(
-                                            draw.DrawingSide == drawingSide && draw.Type == drawType && draw.DrawingPieceType == drawingPieceType && draw.TakenPieceType == takenPieceType
-                                            && draw.PeasantPromotionPieceType == promotionPieceType && draw.OldPosition == oldPos && draw.NewPosition == newPos && draw.GetHashCode() == hashCode
-                                        );
+                                            // create a new chess draw instance and check if the getters work correctly
+                                            var draw = new ChessDraw(hashCode);
+
+                                            // check if the created chess draw has the correct features
+                                            Assert.True(
+                                                draw.IsFirstMove == isFirstMove && draw.DrawingSide == drawingSide && draw.Type == drawType && draw.DrawingPieceType == drawingPieceType && draw.TakenPieceType == takenPieceType
+                                                && draw.PeasantPromotionPieceType == promotionPieceType && draw.OldPosition == oldPos && draw.NewPosition == newPos && draw.GetHashCode() == hashCode
+                                            );
+                                        }
                                     }
                                 }
                             }

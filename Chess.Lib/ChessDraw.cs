@@ -105,7 +105,7 @@ namespace Chess.Lib
         public ChessDraw(int hashCode)
         {
             // make sure the hash code is within value range
-            if (hashCode < 0 || hashCode >= 0b_1000000000000000000000000) { throw new ArgumentException("invalid hash code detected (expected value of set { 0, 1, ..., 2^24 - 1 })"); }
+            if (hashCode < 0 || hashCode >= 0b_10000000000000000000000000) { throw new ArgumentException("invalid hash code detected (expected value of set { 0, 1, ..., 2^24 - 1 })"); }
 
             _hashCode = hashCode;
         }
@@ -223,7 +223,7 @@ namespace Chess.Lib
             // TODO: try to remove if/else branchings to make this more efficient
 
             // shift the bits to the right position (preparation for bitwise OR)
-            int isFirstMoveBits = (isFirstMove ? 1 : 0) << DRAW_TYPE_TRAILING_BITS;
+            int isFirstMoveBits = (isFirstMove ? 1 : 0) << IS_FIRST_MOVE_TRAILING_BITS;
             int drawTypeBits = ((int)drawType) << DRAW_TYPE_TRAILING_BITS;
             int drawingSideBits = ((int)drawingSide) << DRAWING_SIDE_TRAILING_BITS;
             int drawingPieceTypeBits = ((int)drawingPieceType) << DRAWING_PIECE_TYPE_TRAILING_BITS;

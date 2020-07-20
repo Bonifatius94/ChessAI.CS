@@ -571,24 +571,12 @@ namespace Chess.Lib
                         if ((side == ChessColor.White && (drawBitboard & ROW_8) > 0) || (side == ChessColor.Black && (drawBitboard & ROW_1) > 0))
                         {
                             // add types that the piece can promote to (queen, rook, bishop, knight)
-                            for (byte pieceType = 2; pieceType < 6; pieceType++)
-                            {
-                                draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j], (ChessPieceType)pieceType);
-                            }
+                            for (byte pieceType = 2; pieceType < 6; pieceType++) { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j], (ChessPieceType)pieceType); }
                         }
-                        else
-                        {
-                            draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]);
-                        }
+                        else { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]); }
                     }
                 }
-                else
-                {
-                    for (byte j = 0; j < capturablePositions.Length; j++)
-                    {
-                        draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]);
-                    }
-                }
+                else { for (byte j = 0; j < capturablePositions.Length; j++) { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]); } }
             }
 
             return draws.SubArray(0, count);
@@ -887,7 +875,7 @@ namespace Chess.Lib
             // loop through all bits of the board
             for (byte pos = 0; pos < 64; pos++)
             {
-                bool isSet = (bitboard & 0x1uL) > 0;
+                bool isSet = (bitboard & 0x1uL << pos) > 0;
                 if (isSet) { posCache[count++] = new ChessPosition(pos); }
             }
 
