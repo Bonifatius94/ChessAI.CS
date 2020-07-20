@@ -91,19 +91,35 @@ namespace Chess.AI
         //    return _context.Draws.Where(x => x.GameSituationHash.Equals(gameSituationHash)).FirstOrDefault()?.OptimalDraw;
         //}
 
+        private ChessDraw[] generateDraws(IChessBoard board, ChessDraw? lastDraw = null)
+        {
+            ChessDraw[] draws = new ChessDraw[0];
+            var drawingSide = lastDraw?.DrawingSide.Opponent() ?? ChessColor.White;
+
+            if (board?.GetType() == typeof(ChessBoard))
+            {
+                var alliedPieces = board.GetPiecesOfColor(drawingSide);
+                draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, lastDraw, true)).ToArray();
+            }
+            else if (board?.GetType() == typeof(ChessBitboard))
+            {
+                draws = ((ChessBitboard)board).GetAllDraws(drawingSide, lastDraw, true);
+            }
+
+            return draws;
+        }
+
         /// <summary>
         /// Determine the 'best' chess draw by iterative deepening and aspiration window technique (based on minimax game tree algorithm).
         /// </summary>
         /// <param name="board">The chess board representing the game situation</param>
-        /// <param name="precedingEnemyDraw">The previous chess draw made by the opponent</param>
+        /// <param name="last">The previous chess draw made by the opponent</param>
         /// <param name="depth">The recursion depth for minimax algorithm</param>
         /// <returns>the 'best' chess draw</returns>
-        private ChessDraw iterativeDeepening(IChessBoard board, ChessDraw? precedingEnemyDraw, int depth)
+        private ChessDraw iterativeDeepening(IChessBoard board, ChessDraw? last, int depth)
         {
             // compute all possible draws
-            var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
-            var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true)).ToArray();
+            var draws = generateDraws(board, last);
 
             // make sure there are chess draws to evaluate
             if (draws?.Count() <= 0) { throw new ArgumentException("the given player cannot draw. game is already over."); }
@@ -248,15 +264,15 @@ namespace Chess.AI
         /// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.
         /// </summary>
         /// <param name="board">The chess board representing the game situation data</param>
-        /// <param name="precedingEnemyDraw">The last chess draw made by the opponent</param>
+        /// <param name="lastDraw">The last chess draw made by the opponent</param>
         /// <param name="depth">The recursion depth (is decremented step-by-step, so the recursion stops eventually when it has reached depth=0)</param>
         /// <param name="alpha">The lower bound of the already computed game scores</param>
         /// <param name="beta">The upper bound of the already computed game scores</param>
         /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
-        private double negamax(IChessBoard board, ChessDraw? precedingEnemyDraw, int depth, double alpha, double beta, bool isMaximizing = true)
+        private double negamax(IChessBoard board, ChessDraw? lastDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
-            var drawingSide = precedingEnemyDraw?.DrawingSide.Opponent() ?? ChessColor.White;
+            var drawingSide = lastDraw?.DrawingSide.Opponent() ?? ChessColor.White;
 
             // recursion anchor: depth <= 0
             if (depth <= 0) { return _estimator.GetScore(board, drawingSide); }
@@ -265,17 +281,17 @@ namespace Chess.AI
             double maxScore = alpha;
 
             // compute possible draws
-            var alliedPieces = board.GetPiecesOfColor(drawingSide);
-            var draws = alliedPieces.SelectMany(x => ChessDrawGenerator.Instance.GetDraws(board, x.Position, precedingEnemyDraw, true))./*Shuffle().*/ToArray();
-            // TODO: test if shuffle improves performance
+            var draws = generateDraws(board, lastDraw);
 
-            // order draws by possible gain, so alpha-beta prune can achieve more cut-offs
+            // order draws by possible gain, so the alpha-beta prune can achieve fast cut-offs 
+            // at high-level game tree nodes which ideally saves lots of computation effort
             var preorderedDraws = getPreorderedDrawsByPossibleGain(board, draws, drawingSide);
 
             // loop through all possible draws
-            foreach (var simDraw in preorderedDraws)
+            for (int i = 0; i < preorderedDraws.Length; i++)
             {
                 // simulate draw
+                var simDraw = preorderedDraws[i];
                 var simBoard = board.ApplyDraw(simDraw);
 
                 // start recursion
@@ -291,7 +307,7 @@ namespace Chess.AI
             return maxScore;
         }
 
-        private IEnumerable<ChessDraw> getPreorderedDrawsByPossibleGain(IChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
+        private ChessDraw[] getPreorderedDrawsByPossibleGain(IChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
         {
             // compute the score
             var drawsXScoreTuples = new List<ChessDrawScore>();

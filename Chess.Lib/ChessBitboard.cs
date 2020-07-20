@@ -198,10 +198,12 @@ namespace Chess.Lib
                     {
                         type = (ChessPieceType)((i % 6) + 1);
                         color = (ChessColor)(i / 6);
+                        break;
                     }
                 }
 
-                piece = new ChessPiece(type, color, isSetAt(_bitboards[12], position));
+                bool wasMoved = wasPieceMoved(position);
+                piece = new ChessPiece(type, color, wasMoved);
             }
 
             return piece;
@@ -397,7 +399,7 @@ namespace Chess.Lib
                 for (byte pos = 0; pos < 64; pos++)
                 {
                     // write piece to array if there is one
-                    if ((bitboard & 0x1) > 0) { pieces[pos] = new ChessPiece(pieceType, color, isSetAt(_bitboards[12], pos)); }
+                    if ((bitboard & 0x1) > 0) { pieces[pos] = new ChessPiece(pieceType, color, wasPieceMoved(pos)); }
 
                     // shift bitboard
                     bitboard >>= 1;
@@ -498,12 +500,12 @@ namespace Chess.Lib
 
                     // calculate enemy answer draws (only fields that could be captured as one bitboard)
                     ulong enemyCapturableFields =
-                          unionBitboards(getKingDrawBitboards(simBitboards, opponent, false))
-                        | unionBitboards(getQueenDrawBitboards(simBitboards, opponent))
-                        | unionBitboards(getRookDrawBitboards(simBitboards, opponent))
-                        | unionBitboards(getBishopDrawBitboards(simBitboards, opponent))
-                        | unionBitboards(getKnightDrawBitboards(simBitboards, opponent))
-                        | unionBitboards(getPeasantDrawBitboards(simBitboards, opponent));
+                          getKingDrawBitboards(simBitboards, opponent, false)
+                        | getQueenDrawBitboards(simBitboards, opponent)
+                        | getRookDrawBitboards(simBitboards, opponent)
+                        | getBishopDrawBitboards(simBitboards, opponent)
+                        | getKnightDrawBitboards(simBitboards, opponent)
+                        | getPeasantDrawBitboards(simBitboards, opponent);
 
                     // revert the simulated draw (flip the bits back, this actually works LOL!!!)
                     applyDraw(simBitboards, draws[i]);
@@ -524,6 +526,7 @@ namespace Chess.Lib
             return draws;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ChessDraw[] getDraws(ulong[] bitboards, ChessColor side, ChessPieceType type, ChessDraw? lastDraw)
         {
             // get drawinh pieces
@@ -541,22 +544,21 @@ namespace Chess.Lib
 
                 // only set the drawing piece to the bitboard, wipe all others
                 ulong filter = ~(0x1uL << pos);
-                ulong[] pieceDrawsBoards;
+                ulong drawBitboard;
 
                 // compute the chess piece's capturable positions as bitboard
                 switch (type)
                 {
-                    case ChessPieceType.King:    pieceDrawsBoards = getKingDrawBitboards(bitboards, side, true, filter);        break;
-                    case ChessPieceType.Queen:   pieceDrawsBoards = getQueenDrawBitboards(bitboards, side, filter);             break;
-                    case ChessPieceType.Rook:    pieceDrawsBoards = getRookDrawBitboards(bitboards, side, filter);              break;
-                    case ChessPieceType.Bishop:  pieceDrawsBoards = getBishopDrawBitboards(bitboards, side, filter);            break;
-                    case ChessPieceType.Knight:  pieceDrawsBoards = getKnightDrawBitboards(bitboards, side, filter);            break;
-                    case ChessPieceType.Peasant: pieceDrawsBoards = getPeasantDrawBitboards(bitboards, side, filter, lastDraw); break;
+                    case ChessPieceType.King:    drawBitboard = getKingDrawBitboards(bitboards, side, true, filter);        break;
+                    case ChessPieceType.Queen:   drawBitboard = getQueenDrawBitboards(bitboards, side, filter);             break;
+                    case ChessPieceType.Rook:    drawBitboard = getRookDrawBitboards(bitboards, side, filter);              break;
+                    case ChessPieceType.Bishop:  drawBitboard = getBishopDrawBitboards(bitboards, side, filter);            break;
+                    case ChessPieceType.Knight:  drawBitboard = getKnightDrawBitboards(bitboards, side, filter);            break;
+                    case ChessPieceType.Peasant: drawBitboard = getPeasantDrawBitboards(bitboards, side, filter, lastDraw); break;
                     default: throw new ArgumentException("Invalid chess piece type detected!");
                 }
 
-                // extract the capturable positions from bitboard
-                ulong drawBitboard = unionBitboards(pieceDrawsBoards);
+                // extract all capturable positions from the draws bitboard
                 var capturablePositions = getPositions(drawBitboard);
 
                 // check for peasant promotion
@@ -584,15 +586,17 @@ namespace Chess.Lib
 
         #region King
 
-        private ulong[] getKingDrawBitboards(ulong[] bitboards, ChessColor side, bool rochade, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getKingDrawBitboards(ulong[] bitboards, ChessColor side, bool rochade, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
             // determine standard and rochade draws
             ulong standardDraws = getStandardKingDrawBitboard(bitboards, side, drawingPiecesFilter);
             ulong rochadeDraws = rochade ? getRochadeKingDrawBitboard(bitboards, side, drawingPiecesFilter) : 0x0uL;
 
-            return new ulong[] { standardDraws, rochadeDraws };
+            return standardDraws | rochadeDraws;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getStandardKingDrawBitboard(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
             // get the king bitboard
@@ -641,20 +645,22 @@ namespace Chess.Lib
 
         #region Queen
 
-        private ulong[] getQueenDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getQueenDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
-            return getRookDrawBitboards(bitboards, side, drawingPiecesFilter, 1).ArrayConcat(getBishopDrawBitboards(bitboards, side, drawingPiecesFilter, 1));
+            return getRookDrawBitboards(bitboards, side, drawingPiecesFilter, 1) | getBishopDrawBitboards(bitboards, side, drawingPiecesFilter, 1);
         }
 
         #endregion Queen
 
         #region Rook
 
-        private ulong[] getRookDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 2)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getRookDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 2)
         {
             // TODO: test this logic!!!
 
-            var draws = new ulong[4];
+            ulong draws = 0uL;
 
             // get the bitboard
             ulong bitboard = bitboards[bitboardIndex + side.SideOffset()];
@@ -681,10 +687,7 @@ namespace Chess.Lib
                 tRooks ^= ((tRooks << (i * 8)) & (ROW_1 | alliedPieces)) >> (i * 8); // top
 
                 // compute all legal draws and apply them to the result bitboard
-                draws[0] |= bRooks >> (i * 8);
-                draws[1] |= lRooks >> (i * 1);
-                draws[2] |= rRooks << (i * 1);
-                draws[3] |= tRooks << (i * 8);
+                draws |= bRooks >> (i * 8) | lRooks >> (i * 1) | rRooks << (i * 1) | tRooks << (i * 8);
 
                 // handle catches the same way as overflow / collision detection (this has to be done afterwards 
                 // as the catches are legal draws that need to occur onto the result bitboard)
@@ -701,11 +704,12 @@ namespace Chess.Lib
 
         #region Bishop
 
-        private ulong[] getBishopDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getBishopDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 3)
         {
             // TODO: test this logic!!!
 
-            var draws = new ulong[4];
+            ulong draws = 0uL;
 
             // get the bitboard
             ulong bitboard = bitboards[bitboardIndex + side.SideOffset()];
@@ -732,10 +736,7 @@ namespace Chess.Lib
                 tlBishops ^= ((tlBishops << (i * 7)) & (ROW_1 | COL_H | alliedPieces)) >> (i * 7); // top left
 
                 // compute all legal draws and apply them to the result bitboard
-                draws[0] |= brBishops >> (i * 7);
-                draws[1] |= blBishops >> (i * 9);
-                draws[2] |= trBishops << (i * 9);
-                draws[3] |= tlBishops << (i * 7);
+                draws |= brBishops >> (i * 7) | blBishops >> (i * 9) | trBishops << (i * 9) | tlBishops << (i * 7);
 
                 // handle catches the same way as overflow / collision detection (this has to be done afterwards 
                 // as the catches are legal draws that need to occur onto the result bitboard)
@@ -752,7 +753,8 @@ namespace Chess.Lib
 
         #region Knight
 
-        private ulong[] getKnightDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getKnightDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
             // TODO: test this logic!!!
 
@@ -773,18 +775,19 @@ namespace Chess.Lib
                 | ((bitboard >> 17) & ~(ROW_8 | COL_H | ROW_7 | alliedPieces))  // bottom left  (2-1)
                 | ((bitboard >> 15) & ~(ROW_8 | COL_A | ROW_7 | alliedPieces)); // bottom right (2-1)
 
-            return new ulong[] { draws };
+            return draws;
         }
 
         #endregion Knight
 
         #region Peasant
 
-        private ulong[] getPeasantDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, ChessDraw? lastDraw = null)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong getPeasantDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, ChessDraw? lastDraw = null)
         {
             // TODO: test this logic!!!
 
-            var draws = new ulong[4];
+            ulong draws = 0x0uL;
 
             // get peasants bitboard
             ulong bitboard = bitboards[side.SideOffset() + 5];
@@ -812,12 +815,12 @@ namespace Chess.Lib
                 enemyPieces |= additionalPeasantMask;
 
                 // get one-foreward / two-foreward draws
-                draws[0] = (bitboard << 8) & ~blockingPieces;
-                draws[1] = ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
+                draws |= (bitboard << 8) & ~blockingPieces;
+                draws |= ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
 
                 // get right / left catch draws (including en-passant)
-                draws[2] = ((bitboard & ~COL_H) << 9) & enemyPieces;
-                draws[3] = ((bitboard & ~COL_A) << 7) & enemyPieces;
+                draws |= ((bitboard & ~COL_H) << 9) & enemyPieces;
+                draws |= ((bitboard & ~COL_A) << 7) & enemyPieces;
             }
             else
             {
@@ -829,12 +832,12 @@ namespace Chess.Lib
                 enemyPieces |= additionalPeasantMask;
 
                 // get one-foreward / two-foreward draws
-                draws[0] = (bitboard >> 8) & ~blockingPieces;
-                draws[1] = ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
+                draws |= (bitboard >> 8) & ~blockingPieces;
+                draws |= ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
 
                 // get right / left catch draws (including en-passant)
-                draws[2] = ((bitboard & ~COL_A) << 7) & enemyPieces;
-                draws[3] = ((bitboard & ~COL_H) << 9) & enemyPieces;
+                draws |= ((bitboard & ~COL_A) << 7) & enemyPieces;
+                draws |= ((bitboard & ~COL_H) << 9) & enemyPieces;
             }
 
             return draws;
@@ -846,6 +849,7 @@ namespace Chess.Lib
 
         #region Helpers
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong unionBitboards(ulong[] bitboards)
         {
             ulong result = 0x0uL;
@@ -956,11 +960,18 @@ namespace Chess.Lib
             for (byte i = 0; i < positions.Length; i++)
             {
                 var pos = positions[i];
-                var piece = new ChessPiece(type, color, isSetAt(_bitboards[12], (byte)pos.GetHashCode()));
+                bool wasMoved = wasPieceMoved((byte)pos.GetHashCode());
+                var piece = new ChessPiece(type, color, wasMoved);
                 piecesAtPos[i] = new ChessPieceAtPos(pos, piece);
             }
 
             return piecesAtPos.SubArray(0, positions.Length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool wasPieceMoved(byte position)
+        {
+            return ((~START_POSITIONS | _bitboards[12]) & (0x1uL << position)) > 0;
         }
 
         #endregion Helpers

@@ -84,6 +84,7 @@ namespace Chess.Lib
                 // update positions result
                 positions |= (ulong)pos << offset;
                 positions++;
+                offset += 6;
 
                 // clear the identified piece on bitboard (this ensures termination)
                 bitboard ^= 0x1uL << pos;

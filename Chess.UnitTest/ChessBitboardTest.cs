@@ -18,6 +18,8 @@ namespace Chess.UnitTest
 
         #region Tests
 
+        #region Creation
+
         [Fact]
         public void ConstructorTest()
         {
@@ -62,6 +64,36 @@ namespace Chess.UnitTest
             }
         }
 
+        #endregion Creation
+
+        #region CommonDraws
+
+        [Fact]
+        public void EdgeDrawsTest()
+        {
+            // create board in start formation
+            IChessBoard board = ChessBitboard.StartFormation;
+
+            // draw white peasant E2-E4
+            var posE2 = new ChessPosition("E2");
+            var posE4 = new ChessPosition("E4");
+            Assert.True(board.IsCapturedAt(posE2) && board.GetPieceAt(posE2) == new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false));
+            var draw = new ChessDraw(board, posE2, posE4);
+            Assert.True(draw.IsFirstMove);
+            board =  board.ApplyDraw(draw);
+            Assert.True(!board.IsCapturedAt(posE2) && board.IsCapturedAt(posE4) && board.GetPieceAt(posE4) == new ChessPiece(ChessPieceType.Peasant, ChessColor.White, true));
+
+            // draw black peasant H7-H5
+            var posH7 = new ChessPosition("H7");
+            var posH5 = new ChessPosition("H5");
+            board = board.ApplyDraw(new ChessDraw(board, posH7, posH5));
+            Assert.True(!board.IsCapturedAt(posH7) && board.IsCapturedAt(posH5) && board.GetPieceAt(posH5) == new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, true));
+
+
+        }
+
+        #endregion CommonDraws
+
         #region KingDraws
 
         [Fact]
@@ -81,6 +113,8 @@ namespace Chess.UnitTest
 
         private void testStandardKingDraws()
         {
+            // TODO: investigate why draw-into-check by the white king is not detected!
+
             // check if only draws are computed where the destination is actually on the chess board
             // and also make sure that only enemy pieces are taken (blocking allied pieces not)
             for (int run = 0; run < 4; run++)

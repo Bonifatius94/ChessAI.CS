@@ -17,7 +17,7 @@ namespace Chess.Lib
         /// </summary>
         public ChessGame()
         {
-            Board = ChessBoard.StartFormation;
+            Board = ChessBitboard.StartFormation;
             StartOfGame = DateTime.UtcNow;
             SideToDraw = ChessColor.White;
         }
