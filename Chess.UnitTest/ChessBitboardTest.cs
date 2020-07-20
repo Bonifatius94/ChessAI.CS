@@ -139,6 +139,7 @@ namespace Chess.UnitTest
                 board = new ChessBitboard(new ChessBoard(pieces));
                 draws = ((ChessBitboard)board).GetAllDraws(ChessColor.Black, null, true).Where(x => x.OldPosition == board.BlackKing.Position);
                 Assert.True(draws.Count() == ((row == 7 && col == 0) ? 7 : 8));
+                // TODO: fix the issue making this constraint fail (on 3rd loop)
             }
         }
 

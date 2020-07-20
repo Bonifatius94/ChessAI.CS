@@ -497,6 +497,7 @@ namespace Chess.Lib
                 {
                     // simulate the draw
                     applyDraw(simBitboards, draws[i]);
+                    ulong kingMask = simBitboards[sideOffset];
 
                     // calculate enemy answer draws (only fields that could be captured as one bitboard)
                     ulong enemyCapturableFields =
@@ -512,7 +513,7 @@ namespace Chess.Lib
                     // TODO: test if cloning the board is actually faster than reverting the draw (use the better option)
 
                     // check if one of those draws would catch the allied king (bitwise AND) -> draw-into-check
-                    if ((simBitboards[sideOffset] & enemyCapturableFields) > 0)
+                    if ((kingMask & enemyCapturableFields) > 0)
                     {
                         // overwrite the illegal draw with the last unevaluated draw in the array
                         draws[i--] = draws[--legalDrawsCount];
