@@ -39,7 +39,7 @@ namespace Chess.UnitTest
                 new ChessPieceAtPos(new ChessPosition("D7"), new ChessPiece(ChessPieceType.Rook,    ChessColor.White, true )),
 
                 new ChessPieceAtPos(new ChessPosition("C6"), new ChessPiece(ChessPieceType.King,    ChessColor.Black, true )),
-                new ChessPieceAtPos(new ChessPosition("E6"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
+                new ChessPieceAtPos(new ChessPosition("E7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
                 new ChessPieceAtPos(new ChessPosition("A7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, true )),
                 new ChessPieceAtPos(new ChessPosition("F7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
                 new ChessPieceAtPos(new ChessPosition("G7"), new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, false)),
@@ -57,9 +57,10 @@ namespace Chess.UnitTest
             {
                 for (int column = 0; column < 8; column++)
                 {
+                    // test GetPieceAt, IsCapturedAt
                     var pos = new ChessPosition(row, column);
                     var pieceAtPos = board.GetPieceAt(pos);
-                    Assert.True((board.IsCapturedAt(pos) && pieces.Any(x => x.Piece == pieceAtPos)) || (!board.IsCapturedAt(pos) && !pieces.Any(x => x.Position == pos)));
+                    Assert.True((board.IsCapturedAt(pos) && pieces.Any(x => x.Position == pos && x.Piece == pieceAtPos)) || (!board.IsCapturedAt(pos) && !pieces.Any(x => x.Position == pos)));
                 }
             }
         }
@@ -69,7 +70,7 @@ namespace Chess.UnitTest
         #region CommonDraws
 
         [Fact]
-        public void EdgeDrawsTest()
+        public void CommonDrawsTest()
         {
             // create board in start formation
             IChessBoard board = ChessBitboard.StartFormation;
@@ -88,8 +89,6 @@ namespace Chess.UnitTest
             var posH5 = new ChessPosition("H5");
             board = board.ApplyDraw(new ChessDraw(board, posH7, posH5));
             Assert.True(!board.IsCapturedAt(posH7) && board.IsCapturedAt(posH5) && board.GetPieceAt(posH5) == new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, true));
-
-
         }
 
         #endregion CommonDraws
