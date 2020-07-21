@@ -9,7 +9,8 @@ using System.Text;
 namespace Chess.Lib
 {
     /// <summary>
-    /// This struct represents a chess board and all fields / pieces on it. It is designed for high performance draw computations which may be non-intuitive but efficient.
+    /// This struct represents a chess board and all fields / pieces on it. It is designed for 
+    /// high performance draw computations which may be non-intuitive but efficient.
     /// </summary>
     public struct ChessBitboard : IChessBoard, ICloneable
     {
@@ -316,12 +317,14 @@ namespace Chess.Lib
             ulong oldPos = 0x1uL << draw.OldPosition.GetHashCode();
             ulong newPos = 0x1uL << draw.NewPosition.GetHashCode();
 
-            // set was moved
-            if (draw.IsFirstMove) { bitboards[12] ^= oldPos; }
-
             // determine the bitboard index of the drawing piece
             byte sideOffset = draw.DrawingSide.SideOffset();
             byte drawingBoardIndex = (byte)((byte)draw.DrawingPieceType - 1 + sideOffset);
+
+            // set was moved
+            if (draw.IsFirstMove && (bitboards[drawingBoardIndex] & oldPos) > 0) { bitboards[12] |= (oldPos | newPos); }
+            else if (draw.IsFirstMove) { bitboards[12] &= ~(oldPos | newPos); }
+            // TODO: fix issue here ... moving a piece inside the start formation does not work (e.g. apply filters per piece type)
 
             // move the drawing piece by flipping its' bits at the old and new position on the bitboard
             bitboards[drawingBoardIndex] ^= oldPos | newPos;
@@ -544,13 +547,13 @@ namespace Chess.Lib
                 var pos = (byte)drawingPieces[i].GetHashCode();
 
                 // only set the drawing piece to the bitboard, wipe all others
-                ulong filter = ~(0x1uL << pos);
+                ulong filter = 0x1uL << pos;
                 ulong drawBitboard;
 
                 // compute the chess piece's capturable positions as bitboard
                 switch (type)
                 {
-                    case ChessPieceType.King:    drawBitboard = getKingDrawBitboards(bitboards, side, true, filter);        break;
+                    case ChessPieceType.King:    drawBitboard = getKingDrawBitboards(bitboards, side, true);                break;
                     case ChessPieceType.Queen:   drawBitboard = getQueenDrawBitboards(bitboards, side, filter);             break;
                     case ChessPieceType.Rook:    drawBitboard = getRookDrawBitboards(bitboards, side, filter);              break;
                     case ChessPieceType.Bishop:  drawBitboard = getBishopDrawBitboards(bitboards, side, filter);            break;
@@ -588,23 +591,23 @@ namespace Chess.Lib
         #region King
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getKingDrawBitboards(ulong[] bitboards, ChessColor side, bool rochade, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        private ulong getKingDrawBitboards(ulong[] bitboards, ChessColor side, bool rochade)
         {
             // determine standard and rochade draws
-            ulong standardDraws = getStandardKingDrawBitboard(bitboards, side, drawingPiecesFilter);
-            ulong rochadeDraws = rochade ? getRochadeKingDrawBitboard(bitboards, side, drawingPiecesFilter) : 0x0uL;
+            ulong standardDraws = getStandardKingDrawBitboard(bitboards, side);
+            ulong rochadeDraws = rochade ? getRochadeKingDrawBitboard(bitboards, side) : 0x0uL;
 
             return standardDraws | rochadeDraws;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getStandardKingDrawBitboard(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        private ulong getStandardKingDrawBitboard(ulong[] bitboards, ChessColor side)
         {
             // get the king bitboard
             ulong bitboard = bitboards[side.SideOffset()];
 
             // determine allied pieces to eliminate blocked draws
-            ulong alliedPieces = getCapturedFields(side);
+            ulong alliedPieces = getCapturedFields(bitboards, side);
 
             // compute all possible draws using bit-shift, moreover eliminate illegal overflow draws
             // info: the top/bottom comments are related to white-side perspective
@@ -621,7 +624,7 @@ namespace Chess.Lib
             return standardDraws;
         }
 
-        private ulong getRochadeKingDrawBitboard(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
+        private ulong getRochadeKingDrawBitboard(ulong[] bitboards, ChessColor side)
         {
             // get the king and rook bitboard
             byte offset = side.SideOffset();
@@ -662,13 +665,13 @@ namespace Chess.Lib
             // TODO: test this logic!!!
 
             ulong draws = 0uL;
-
+            
             // get the bitboard
-            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()];
+            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()] & drawingPiecesFilter;
 
             // determine allied and enemy pieces (for collision / catch handling)
-            ulong enemyPieces = getCapturedFields(side.Opponent());
-            ulong alliedPieces = getCapturedFields(side);
+            ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
+            ulong alliedPieces = getCapturedFields(bitboards, side);
 
             // init empty draws bitboards, separated by field color
             ulong bRooks = bitboard;
@@ -713,11 +716,11 @@ namespace Chess.Lib
             ulong draws = 0uL;
 
             // get the bitboard
-            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()];
+            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()] & drawingPiecesFilter;
 
             // determine allied and enemy pieces (for collision / catch handling)
-            ulong enemyPieces = getCapturedFields(side.Opponent());
-            ulong alliedPieces = getCapturedFields(side);
+            ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
+            ulong alliedPieces = getCapturedFields(bitboards, side);
 
             // init empty draws bitboards, separated by field color
             ulong brBishops = bitboard;
@@ -760,10 +763,10 @@ namespace Chess.Lib
             // TODO: test this logic!!!
 
             // get bishops bitboard
-            ulong bitboard = bitboards[4 + side.SideOffset()];
+            ulong bitboard = bitboards[4 + side.SideOffset()] & drawingPiecesFilter;
 
             // determine allied pieces to eliminate blocked draws
-            ulong alliedPieces = getCapturedFields(side);
+            ulong alliedPieces = getCapturedFields(bitboards, side);
 
             // compute all possible draws using bit-shift, moreover eliminate illegal overflow draws
             ulong draws =
@@ -791,11 +794,11 @@ namespace Chess.Lib
             ulong draws = 0x0uL;
 
             // get peasants bitboard
-            ulong bitboard = bitboards[side.SideOffset() + 5];
+            ulong bitboard = bitboards[side.SideOffset() + 5] & drawingPiecesFilter;
 
             // get all fields captured by enemy pieces as bitboard
-            ulong alliedPieces = getCapturedFields(side);
-            ulong enemyPieces = getCapturedFields(side.Opponent());
+            ulong alliedPieces = getCapturedFields(bitboards, side);
+            ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
             ulong blockingPieces = alliedPieces | enemyPieces;
             ulong enemyPeasants = bitboards[side.Opponent().SideOffset() + 5];
 
@@ -864,10 +867,12 @@ namespace Chess.Lib
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getCapturedFields(ChessColor side)
+        private ulong getCapturedFields(ulong[] bitboards, ChessColor side)
         {
-            byte offset = (byte)((byte)side * 6);
-            return _bitboards[offset] | _bitboards[offset + 1] | _bitboards[offset + 2] | _bitboards[offset + 3] | _bitboards[offset + 4] | _bitboards[offset + 5];
+            byte offset = side.SideOffset();
+
+            return bitboards[offset] | bitboards[offset + 1] | bitboards[offset + 2] 
+                | bitboards[offset + 3] | bitboards[offset + 4] | bitboards[offset + 5];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
