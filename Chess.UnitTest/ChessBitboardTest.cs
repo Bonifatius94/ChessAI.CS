@@ -73,7 +73,7 @@ namespace Chess.UnitTest
         public void CommonDrawsTest()
         {
             // create board in start formation
-            IChessBoard board = ChessBitboard.StartFormation;
+            var board = ChessBitboard.StartFormation;
 
             // draw white peasant E2-E4
             var posE2 = new ChessPosition("E2");
@@ -81,13 +81,13 @@ namespace Chess.UnitTest
             Assert.True(board.IsCapturedAt(posE2) && board.GetPieceAt(posE2) == new ChessPiece(ChessPieceType.Peasant, ChessColor.White, false));
             var draw = new ChessDraw(board, posE2, posE4);
             Assert.True(draw.IsFirstMove);
-            board =  board.ApplyDraw(draw);
+            board =  (ChessBitboard)board.ApplyDraw(draw);
             Assert.True(!board.IsCapturedAt(posE2) && board.IsCapturedAt(posE4) && board.GetPieceAt(posE4) == new ChessPiece(ChessPieceType.Peasant, ChessColor.White, true));
 
             // draw black peasant H7-H5
             var posH7 = new ChessPosition("H7");
             var posH5 = new ChessPosition("H5");
-            board = board.ApplyDraw(new ChessDraw(board, posH7, posH5));
+            board = (ChessBitboard)board.ApplyDraw(new ChessDraw(board, posH7, posH5));
             Assert.True(!board.IsCapturedAt(posH7) && board.IsCapturedAt(posH5) && board.GetPieceAt(posH5) == new ChessPiece(ChessPieceType.Peasant, ChessColor.Black, true));
         }
 
@@ -464,33 +464,42 @@ namespace Chess.UnitTest
                                     new ChessPieceAtPos(new ChessPosition(7, 4), new ChessPiece(ChessPieceType.King,    ChessColor.Black, false   )),
                                 };
 
-                                IChessBoard board = new ChessBitboard(new ChessBoard(pieces));
-
-                                var sfwDraw = new ChessDraw(board, oldPos, sfwNewPos);
                                 bool shouldSfwBeValid = (blockingPieceRowDiff > 1);
+                                bool shouldDfwBeValid = (wasMoved == false) && (blockingPieceRowDiff > 2);
+
+                                // test draw-gen
+                                var board = new ChessBitboard(new ChessBoard(pieces));
+                                var draws = board.GetAllDraws(allyColor, null, true);
+
+                                // validate draws
+                                var sfwDraw = new ChessDraw(board, oldPos, sfwNewPos);
                                 bool isSfwValid = sfwDraw.IsValid(board);
                                 Assert.True(shouldSfwBeValid == isSfwValid);
-
                                 var dfwDraw = new ChessDraw(board, oldPos, dfwNewPos);
-                                bool shouldDfwBeValid = (wasMoved == false) && (blockingPieceRowDiff > 2);
                                 bool isDfwValid = dfwDraw.IsValid(board);
                                 Assert.True(shouldDfwBeValid == isDfwValid);
 
                                 if (isSfwValid)
                                 {
+                                    Assert.Contains(sfwDraw, draws);
+
                                     // check if the chess piece is moved correctly
                                     var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, true);
                                     var simBoard = board.ApplyDraw(sfwDraw);
                                     Assert.True(!simBoard.IsCapturedAt(oldPos) && simBoard.GetPieceAt(sfwNewPos) == pieceCmp);
                                 }
+                                else { Assert.DoesNotContain(sfwDraw, draws); }
 
                                 if (isDfwValid)
                                 {
+                                    Assert.Contains(dfwDraw, draws);
+
                                     // check if the chess piece is moved correctly
                                     var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, !wasMoved);
                                     var simBoard = board.ApplyDraw(dfwDraw);
                                     Assert.True(!simBoard.IsCapturedAt(oldPos) && simBoard.GetPieceAt(dfwNewPos) == pieceCmp);
                                 }
+                                else { Assert.DoesNotContain(dfwDraw, draws); }
                             }
                         }
                     }
@@ -657,15 +666,14 @@ namespace Chess.UnitTest
                         pieces.Add(new ChessPieceAtPos(posCatchRight, enemyPeasant));
                     }
 
-                    IChessBoard board = new ChessBitboard(new ChessBoard(pieces));
-                    var draws = ((ChessBitboard)board).GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == fwPos);
+                    var board = new ChessBitboard(new ChessBoard(pieces));
+                    var draws = board.GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == fwPos).ToArray();
                     Assert.True(draws.Count() == (4 * ((fwCol % 7 == 0) ? 2 : 3)));
 
                     foreach (var draw in draws)
                     {
-                        board = new ChessBitboard(new ChessBoard(pieces));
-                        board = board.ApplyDraw(draw);
-                        Assert.True(board.AllPieces.All(x => x.Piece.Color == enemyColor || x.Piece.Type != ChessPieceType.Peasant));
+                        var simBoard = board.ApplyDraw(draw);
+                        Assert.True(simBoard.AllPieces.All(x => x.Piece.Color == enemyColor || x.Piece.Type != ChessPieceType.Peasant));
                     }
                 }
             }

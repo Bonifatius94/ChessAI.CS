@@ -71,6 +71,7 @@ namespace Chess.AI.Score
         /// <param name="board">The chess board to be evaluated</param>
         /// <param name="sideToDraw">The chess player to be evaluated</param>
         /// <returns>the score of the chess player's game situation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetScore(IChessBoard board, ChessColor sideToDraw)
         {
             // get allied pieces and calculate the score

@@ -18,15 +18,21 @@ dotnet package
 
 # Roadmap
 
+## Chess Lib
+
+- make the draw computation a lot faster by adding a (64-bit) bitboard implementation. This is supposed to increase minimax search depth to about 10 steps, instead of just 5
+- remove slow Linq statements and replace them with optimized loops, cached arrays, array concat, sub-array, etc.
+- also add tests for measuring the performance
+
+## AI Stuff:
+
+- further improve the minimax implementation
+- add a deep learning approach using the PGN data already used for the "good draws" cache database
+
 ## Game Server:
 
 - make chess game server work
 - add website
-
-## AI Stuff:
-
-- train a neuronal network by applying deep learing to some extracted pgn data from pro chess games (-> this may fix the performance issues of minimax algorithm)
-- improve AI performance -> increase search depth of minimax algorithm (e.g. by using a little chess draw database of common draws / positions)
 
 ## Other:
 - add server-side build automation using a CI pipeline

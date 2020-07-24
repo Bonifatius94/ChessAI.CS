@@ -12,7 +12,7 @@ namespace Chess.Lib
     /// This struct represents a chess board and all fields / pieces on it. It is designed for 
     /// high performance draw computations which may be non-intuitive but efficient.
     /// </summary>
-    public struct ChessBitboard : IChessBoard, ICloneable
+    public readonly struct ChessBitboard : IChessBoard, ICloneable
     {
         #region Constants
 
@@ -111,7 +111,7 @@ namespace Chess.Lib
         /// </para>
         /// <para>Was Moved: index 12, one bit of each chess piece at the position of the start formation whether the piece was moved. Addressing uses normalized ChessPosition hashes as well.</para>
         /// </summary>
-        private ulong[] _bitboards;
+        private readonly ulong[] _bitboards;
         // TODO: think about adding another 2 entries for a cached summary of all white and all black pieces (this saves 6 bitwise OR operations)
 
         /// <summary>
@@ -266,6 +266,8 @@ namespace Chess.Lib
                 // get pieces by board index and append them to the result
                 var pieces = getPieces(boardIndex);
                 pieces.CopyTo(piecesAtPos, count);
+
+                // TODO: check out why array copy encounters out-of-bounds error
 
                 // update the content count
                 count += (byte)pieces.Length;

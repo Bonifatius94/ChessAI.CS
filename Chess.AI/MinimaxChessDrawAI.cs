@@ -4,6 +4,7 @@ using Chess.Lib.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Chess.AI
@@ -39,6 +40,7 @@ namespace Chess.AI
         /// <param name="precedingEnemyDraw">The opponent's last draw (null on white-side's first draw)</param>
         /// <param name="searchDepth">The difficulty level</param>
         /// <returns>The 'best' possible chess draw</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? precedingEnemyDraw, int searchDepth)
         {
             // TODO: check whether the optimal draw was already found (-> database query)
@@ -62,6 +64,7 @@ namespace Chess.AI
         /// <param name="draw">The chess draw to be evaluated</param>
         /// <param name="searchDepth">The minimax search depth (higher level = deeper search = better decisions)</param>
         /// <returns>a score that rates the quality of the given chess draw</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double RateDraw(IChessBoard board, ChessDraw draw, int searchDepth)
         {
             // simulate the given draw
@@ -91,6 +94,7 @@ namespace Chess.AI
         //    return _context.Draws.Where(x => x.GameSituationHash.Equals(gameSituationHash)).FirstOrDefault()?.OptimalDraw;
         //}
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ChessDraw[] generateDraws(IChessBoard board, ChessDraw? lastDraw = null)
         {
             ChessDraw[] draws = new ChessDraw[0];
@@ -116,6 +120,7 @@ namespace Chess.AI
         /// <param name="last">The previous chess draw made by the opponent</param>
         /// <param name="depth">The recursion depth for minimax algorithm</param>
         /// <returns>the 'best' chess draw</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ChessDraw iterativeDeepening(IChessBoard board, ChessDraw? last, int depth)
         {
             // compute all possible draws
@@ -166,6 +171,7 @@ namespace Chess.AI
         /// </summary>
         /// <param name="drawsScores">The chess draws and their previous scores.</param>
         /// <returns>a list of chess draws</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private IEnumerable<ChessDrawScore> selectAspirationWindow(IEnumerable<ChessDrawScore> drawsScores)
         {
             // TODO: replace this by a real logging tool that uses different run configs for Debug/Release mode
@@ -224,6 +230,7 @@ namespace Chess.AI
         /// <param name="drawScores">The chess draws to evaluate</param>
         /// <param name="depth">The depth of the minimax algorithm</param>
         /// <returns>a list of (chess draw, minimax score) tuples, ordered by the score (desc)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private IEnumerable<ChessDrawScore> getRatedDraws(IChessBoard board, IEnumerable<ChessDrawScore> drawScores, int depth)
         {
             // make sure that the ally can draw
@@ -270,6 +277,7 @@ namespace Chess.AI
         /// <param name="beta">The upper bound of the already computed game scores</param>
         /// <param name="isMaximizing">Indicates whether the side to draw is maximizing or minimizing</param>
         /// <returns>The best score to be expected for the maximizing player</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double negamax(IChessBoard board, ChessDraw? lastDraw, int depth, double alpha, double beta, bool isMaximizing = true)
         {
             var drawingSide = lastDraw?.DrawingSide.Opponent() ?? ChessColor.White;
@@ -307,23 +315,26 @@ namespace Chess.AI
             return maxScore;
         }
 
-        private ChessDraw[] getPreorderedDrawsByPossibleGain(IChessBoard board, IEnumerable<ChessDraw> draws, ChessColor drawingSide)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ChessDraw[] getPreorderedDrawsByPossibleGain(IChessBoard board, IList<ChessDraw> draws, ChessColor drawingSide)
         {
             // compute the score
-            var drawsXScoreTuples = new List<ChessDrawScore>();
+            var drawsXScoreTuples = new ChessDrawScore[draws.Count()];
 
-            foreach (var simDraw in draws)
+            for (int i = 0; i < draws.Count(); i++)
             {
                 // simulate draw
+                var simDraw = draws[i];
                 var simBoard = board.ApplyDraw(simDraw);
 
                 // compute the new score of the resulting position
                 double score = _estimator.GetScore(simBoard, drawingSide);
 
                 // add the (draw, score) tuple to the list
-                drawsXScoreTuples.Add(new ChessDrawScore() { Draw = simDraw, Score = score });
+                drawsXScoreTuples[i] = new ChessDrawScore() { Draw = simDraw, Score = score };
             }
 
+            // TODO: check if this can be implemented more efficiently, e.g. with radix-sort
             return drawsXScoreTuples.OrderByDescending(x => x.Score).Select(x => x.Draw).ToArray();
         }
 
