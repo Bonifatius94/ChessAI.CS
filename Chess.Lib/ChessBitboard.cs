@@ -324,7 +324,6 @@ namespace Chess.Lib
             // set was moved
             if (draw.IsFirstMove && (bitboards[drawingBoardIndex] & oldPos) > 0) { bitboards[12] |= (oldPos | newPos); }
             else if (draw.IsFirstMove) { bitboards[12] &= ~(oldPos | newPos); }
-            // TODO: fix issue here ... moving a piece inside the start formation does not work (e.g. apply filters per piece type)
 
             // move the drawing piece by flipping its' bits at the old and new position on the bitboard
             bitboards[drawingBoardIndex] ^= oldPos | newPos;
@@ -438,7 +437,8 @@ namespace Chess.Lib
                 _bitboards[i] = bitboard;
             }
 
-            ulong wasMoved = 0uL;
+            // assume pieces as already moved
+            ulong wasMoved = 0xFFFFFFFFFFFFFFFFuL;
 
             // init was moved bitboard
             for (byte i = 0; i < 16; i++)
@@ -446,8 +446,9 @@ namespace Chess.Lib
                 byte whitePos = i;
                 byte blackPos = (byte)(i + 48);
 
-                wasMoved |= board.IsCapturedAt(whitePos) && board.GetPieceAt(whitePos).WasMoved ? 0x1uL << whitePos : 0x0uL;
-                wasMoved |= board.IsCapturedAt(blackPos) && board.GetPieceAt(blackPos).WasMoved ? 0x1uL << blackPos : 0x0uL;
+                // explicitly set was moved to 0 only for unmoved pieces
+                wasMoved ^= board.IsCapturedAt(whitePos) && !board.GetPieceAt(whitePos).WasMoved ? 0x1uL << whitePos : 0x0uL;
+                wasMoved ^= board.IsCapturedAt(blackPos) && !board.GetPieceAt(blackPos).WasMoved ? 0x1uL << blackPos : 0x0uL;
             }
 
             // apply converted bitboard
@@ -734,8 +735,8 @@ namespace Chess.Lib
                 // simulate the computing of all draws:
                 // if there would be one or more overflows / collisions with allied pieces, remove certain bishops 
                 // from the bishops bitboard, so the overflow won't occur on the real draw computation afterwards
-                brBishops ^= ((brBishops >> (i * 7)) & (ROW_8 | COL_H | alliedPieces)) << (i * 7); // bottom right
-                blBishops ^= ((blBishops >> (i * 9)) & (ROW_8 | COL_A | alliedPieces)) << (i * 9); // bottom left
+                brBishops ^= ((brBishops >> (i * 7)) & (ROW_8 | COL_A | alliedPieces)) << (i * 7); // bottom right
+                blBishops ^= ((blBishops >> (i * 9)) & (ROW_8 | COL_H | alliedPieces)) << (i * 9); // bottom left
                 trBishops ^= ((trBishops << (i * 9)) & (ROW_1 | COL_A | alliedPieces)) >> (i * 9); // top right
                 tlBishops ^= ((tlBishops << (i * 7)) & (ROW_1 | COL_H | alliedPieces)) >> (i * 7); // top left
 
@@ -760,8 +761,6 @@ namespace Chess.Lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getKnightDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
-            // TODO: test this logic!!!
-
             // get bishops bitboard
             ulong bitboard = bitboards[4 + side.SideOffset()] & drawingPiecesFilter;
 

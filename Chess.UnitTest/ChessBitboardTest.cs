@@ -302,10 +302,9 @@ namespace Chess.UnitTest
                     // check if the draws are correctly applied to the chess board
                     foreach (var draw in draws)
                     {
-                        board = new ChessBitboard(new ChessBoard(pieces));
-                        board = board.ApplyDraw(draw);
+                        var simBoard = board.ApplyDraw(draw);
                         var pieceCmp = new ChessPiece(ChessPieceType.Rook, allyColor, true);
-                        Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
+                        Assert.True(!simBoard.IsCapturedAt(draw.OldPosition) && simBoard.GetPieceAt(draw.NewPosition) == pieceCmp);
                     }
                 }
             }
@@ -337,17 +336,16 @@ namespace Chess.UnitTest
                 };
 
                 IChessBoard board = new ChessBitboard(new ChessBoard(pieces));
-                var draws = ((ChessBitboard)board).GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == bishopPos);
+                var draws = ((ChessBitboard)board).GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == bishopPos).ToArray();
 
                 Assert.True(draws.Count() == 10);
 
                 // check if the draws are correctly applied to the chess board
                 foreach (var draw in draws)
                 {
-                    board = new ChessBitboard(new ChessBoard(pieces));
-                    board = board.ApplyDraw(draw);
+                    var simBoard = board.ApplyDraw(draw);
                     var pieceCmp = new ChessPiece(ChessPieceType.Bishop, allyColor, true);
-                    Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
+                    Assert.True(!simBoard.IsCapturedAt(draw.OldPosition) && simBoard.GetPieceAt(draw.NewPosition) == pieceCmp);
                 }
             }
         }
