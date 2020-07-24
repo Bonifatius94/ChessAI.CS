@@ -145,6 +145,8 @@ namespace Chess.UnitTest
 
         private void testRochadeKingDraws()
         {
+            // TODO: check if rochade attacks really work, seems not to be the case though because logic without attack validation passes the test
+
             // go through each king x rook combo
             for (int run = 0; run < 4; run++)
             {
@@ -246,17 +248,16 @@ namespace Chess.UnitTest
                     };
 
                     // evaluate white king draws (when white king is onto A8, then the white peasant is blocking)
-                    IChessBoard board = new ChessBoard(pieces);
+                    var board = new ChessBitboard(new ChessBoard(pieces));
                     var draws = ((ChessBitboard)board).GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == pieces[0].Position);
                     Assert.True(draws.Count() == ((row + col == 7) ? 12 : 16));
 
                     // check if the draws are correctly applied to the chess board
                     foreach (var draw in draws)
                     {
-                        board = new ChessBitboard(new ChessBoard(pieces));
-                        board = board.ApplyDraw(draw);
+                        var simBoard = board.ApplyDraw(draw);
                         var pieceCmp = new ChessPiece(ChessPieceType.Queen, allyColor, true);
-                        Assert.True(!board.IsCapturedAt(draw.OldPosition) && board.GetPieceAt(draw.NewPosition) == pieceCmp);
+                        Assert.True(!simBoard.IsCapturedAt(draw.OldPosition) && simBoard.GetPieceAt(draw.NewPosition) == pieceCmp);
                     }
                 }
             }
@@ -477,22 +478,18 @@ namespace Chess.UnitTest
 
                                 if (isSfwValid)
                                 {
-                                    var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, true);
-
                                     // check if the chess piece is moved correctly
-                                    board = new ChessBitboard(new ChessBoard(pieces));
-                                    board = board.ApplyDraw(dfwDraw);
-                                    Assert.True(!board.IsCapturedAt(oldPos) && board.GetPieceAt(dfwNewPos) == pieceCmp);
+                                    var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, true);
+                                    var simBoard = board.ApplyDraw(sfwDraw);
+                                    Assert.True(!simBoard.IsCapturedAt(oldPos) && simBoard.GetPieceAt(sfwNewPos) == pieceCmp);
                                 }
 
                                 if (isDfwValid)
                                 {
-                                    var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, !wasMoved);
-
                                     // check if the chess piece is moved correctly
-                                    board = new ChessBitboard(new ChessBoard(pieces));
-                                    board = board.ApplyDraw(dfwDraw);
-                                    Assert.True(!board.IsCapturedAt(oldPos) && board.GetPieceAt(dfwNewPos) == pieceCmp);
+                                    var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, !wasMoved);
+                                    var simBoard = board.ApplyDraw(dfwDraw);
+                                    Assert.True(!simBoard.IsCapturedAt(oldPos) && simBoard.GetPieceAt(dfwNewPos) == pieceCmp);
                                 }
                             }
                         }
@@ -506,6 +503,8 @@ namespace Chess.UnitTest
             // simulate for white and black side for each ally and target chess pieces 
             for (int colorValues = 0; colorValues < 4; colorValues++)
             {
+                // TODO: try to figure out why the code crashes in third loop (ally=black, target=white)
+
                 var allyColor = (ChessColor)(colorValues / 2);
                 var targetColor = (ChessColor)(colorValues % 2);
 
@@ -540,9 +539,10 @@ namespace Chess.UnitTest
 
                             //output.WriteLine($"current constellation: allyColor={allyColor}, targetColor={targetColor}, allyRow={allyRow}, allyCol={allyCol}, targetColMiddle={targetColMiddle}");
 
-                            IChessBoard board = new ChessBitboard(new ChessBoard(pieces));
-                            var catchDraws = ((ChessBitboard)board).GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == oldPos && x.OldPosition.Column != x.NewPosition.Column);
+                            var board = new ChessBitboard(new ChessBoard(pieces));
+                            var catchDraws = board.GetAllDraws(allyColor, null, true).Where(x => x.OldPosition == oldPos && x.OldPosition.Column != x.NewPosition.Column);
 
+                            // get the expected draws count (for catch draw onto level 8, there are 4 draws instead of just 1 due to the peasant promotion)
                             int expectedCatchDrawsCount = (targetColor == allyColor) ? 0 : (targetColMiddle == allyCol) ? 2 : ((Math.Abs(targetColMiddle - allyCol) == 2) ? 1 : 0);
                             expectedCatchDrawsCount = ((rowDiff == 5) ? 4 : 1) * expectedCatchDrawsCount;
 
@@ -551,10 +551,9 @@ namespace Chess.UnitTest
                             // check if the draws are correctly applied to the chess board
                             foreach (var draw in catchDraws)
                             {
-                                board = new ChessBitboard(new ChessBoard(pieces));
-                                board = board.ApplyDraw(draw);
+                                var simBoard = board.ApplyDraw(draw);
                                 var pieceCmp = new ChessPiece(ChessPieceType.Peasant, allyColor, true);
-                                Assert.True(!board.IsCapturedAt(draw.OldPosition) && (board.GetPieceAt(draw.NewPosition) == pieceCmp || (rowDiff == 5)));
+                                Assert.True(!simBoard.IsCapturedAt(draw.OldPosition) && (simBoard.GetPieceAt(draw.NewPosition) == pieceCmp || (rowDiff == 5)));
                             }
                         }
                     }

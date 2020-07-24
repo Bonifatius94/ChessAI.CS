@@ -45,10 +45,18 @@ namespace Chess.Lib
 
         // position masks for kings and rooks on the start formation
         private const ulong FIELD_A1 = 0x0000000000000001uL;
+        private const ulong FIELD_C1 = FIELD_A1 << 2;
+        private const ulong FIELD_D1 = FIELD_A1 << 3;
         private const ulong FIELD_E1 = FIELD_A1 << 4;
+        private const ulong FIELD_F1 = FIELD_A1 << 5;
+        private const ulong FIELD_G1 = FIELD_A1 << 6;
         private const ulong FIELD_H1 = FIELD_A1 << 7;
         private const ulong FIELD_A8 = FIELD_A1 << 56;
+        private const ulong FIELD_C8 = FIELD_A1 << 58;
+        private const ulong FIELD_D8 = FIELD_A1 << 59;
         private const ulong FIELD_E8 = FIELD_A1 << 60;
+        private const ulong FIELD_F8 = FIELD_A1 << 61;
+        private const ulong FIELD_G8 = FIELD_A1 << 62;
         private const ulong FIELD_H8 = FIELD_A1 << 63;
 
         #endregion Constants
@@ -559,7 +567,7 @@ namespace Chess.Lib
                     case ChessPieceType.Rook:    drawBitboard = getRookDrawBitboards(bitboards, side, filter);              break;
                     case ChessPieceType.Bishop:  drawBitboard = getBishopDrawBitboards(bitboards, side, filter);            break;
                     case ChessPieceType.Knight:  drawBitboard = getKnightDrawBitboards(bitboards, side, filter);            break;
-                    case ChessPieceType.Peasant: drawBitboard = getPeasantDrawBitboards(bitboards, side, filter, lastDraw); break;
+                    case ChessPieceType.Peasant: drawBitboard = getPeasantDrawBitboards(bitboards, side, lastDraw, filter); break;
                     default: throw new ArgumentException("Invalid chess piece type detected!");
                 }
 
@@ -587,6 +595,19 @@ namespace Chess.Lib
             }
 
             return draws.SubArray(0, count);
+        }
+
+        private ulong getCapturableFields(ulong[] bitboards, ChessColor side, ChessDraw? lastDraw = null)
+        {
+            ulong capturableFields =
+                  getKingDrawBitboards(bitboards, side, false)
+                | getQueenDrawBitboards(bitboards, side)
+                | getRookDrawBitboards(bitboards, side)
+                | getBishopDrawBitboards(bitboards, side)
+                | getKnightDrawBitboards(bitboards, side)
+                | getPeasantDrawBitboards(bitboards, side, lastDraw);
+
+            return capturableFields;
         }
 
         #region King
@@ -633,15 +654,20 @@ namespace Chess.Lib
             ulong rooks = bitboards[offset + 2];
             ulong wasMoved = bitboards[12];
 
-            // filter by side
-            ulong whiteMask = (ulong)((byte)side - 1);
-            ulong blackMask = ~whiteMask;
+            // enemy capturable positions (for validation)
+            ulong enemyCapturableFields = getCapturableFields(bitboards, side.Opponent());
+            ulong freeKingPassage = 
+                  ~((FIELD_C1 & enemyCapturableFields) & ((FIELD_D1 & enemyCapturableFields) >> 1) & ((FIELD_E1 & enemyCapturableFields) >> 2))  // white big rochade
+                | ~((FIELD_G1 & enemyCapturableFields) & ((FIELD_F1 & enemyCapturableFields) << 1) & ((FIELD_E1 & enemyCapturableFields) << 2))  // white small rochade
+                | ~((FIELD_C8 & enemyCapturableFields) & ((FIELD_D8 & enemyCapturableFields) >> 1) & ((FIELD_E8 & enemyCapturableFields) >> 2))  // black big rochade
+                | ~((FIELD_G8 & enemyCapturableFields) & ((FIELD_F8 & enemyCapturableFields) << 1) & ((FIELD_E8 & enemyCapturableFields) << 2)); // black small rochade
 
+            // get rochade draws (king and rook not moved, king passage free)
             ulong draws =
-                  (((king & FIELD_E1 & ~wasMoved) >> 2) & ((rooks & FIELD_A1 & ~wasMoved) << 3) & whiteMask)  // white big rochade
-                | (((king & FIELD_E1 & ~wasMoved) << 2) & ((rooks & FIELD_H1 & ~wasMoved) >> 2) & whiteMask)  // white small rochade
-                | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_A8 & ~wasMoved) << 3) & blackMask)  // black big rochade
-                | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_H8 & ~wasMoved) >> 2) & blackMask); // black small rochade
+                  (((king & FIELD_E1 & ~wasMoved) >> 2) & ((rooks & FIELD_A1 & ~wasMoved) << 3) & freeKingPassage)  // white big rochade
+                | (((king & FIELD_E1 & ~wasMoved) << 2) & ((rooks & FIELD_H1 & ~wasMoved) >> 2) & freeKingPassage)  // white small rochade
+                | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_A8 & ~wasMoved) << 3) & freeKingPassage)  // black big rochade
+                | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_H8 & ~wasMoved) >> 2) & freeKingPassage); // black small rochade
 
             return draws;
         }
@@ -786,7 +812,7 @@ namespace Chess.Lib
         #region Peasant
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getPeasantDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, ChessDraw? lastDraw = null)
+        private ulong getPeasantDrawBitboards(ulong[] bitboards, ChessColor side, ChessDraw? lastDraw = null, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
             // TODO: test this logic!!!
 
