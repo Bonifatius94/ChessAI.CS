@@ -322,6 +322,7 @@ namespace Chess.Lib
         private void applyDraw(ulong[] bitboards, ChessDraw draw)
         {
             // TODO: check if this works
+            // TODO: try to make this even faster by removing the if/else-branching
 
             // determine bitboard masks of the drawing piece's old and new position
             ulong oldPos = 0x1uL << draw.OldPosition.GetHashCode();
@@ -342,7 +343,7 @@ namespace Chess.Lib
             if (draw.Type == ChessDrawType.Rochade)
             {
                 // determine the rooks bitboard
-                byte rooksBoardIndex = (byte)(2 + sideOffset);
+                byte rooksBoardIndex = (byte)(sideOffset + ChessPieceType.Rook.PieceTypeOffset());
 
                 // move the casteling rook by filpping bits at its' old and new position on the bitboard
                 bitboards[rooksBoardIndex] ^= 
@@ -484,7 +485,7 @@ namespace Chess.Lib
             byte sideOffset = drawingSide.SideOffset();
             var opponent = drawingSide.Opponent();
 
-            // compute the draws for the pieces of each type
+            // compute the draws for the pieces of each type (for non-king pieces, check first if the bitboard actually contains pieces)
             var kingDraws    = getDraws(_bitboards, drawingSide, ChessPieceType.King, lastDraw);
             var queenDraws   = (_bitboards[sideOffset + 1] != 0x0uL) ? getDraws(_bitboards, drawingSide, ChessPieceType.Queen, lastDraw)   : new ChessDraw[0];
             var rookDraws    = (_bitboards[sideOffset + 2] != 0x0uL) ? getDraws(_bitboards, drawingSide, ChessPieceType.Rook, lastDraw)    : new ChessDraw[0];
@@ -583,14 +584,11 @@ namespace Chess.Lib
                 // convert the positions into chess draws
                 if (containsPeasantPromotion)
                 {
+                    // peasant will advance to level 8, all draws need to be peasant promotions
                     for (byte j = 0; j < capturablePositions.Length; j++)
                     {
-                        if ((side == ChessColor.White && (drawBitboard & ROW_8) > 0) || (side == ChessColor.Black && (drawBitboard & ROW_1) > 0))
-                        {
-                            // add types that the piece can promote to (queen, rook, bishop, knight)
-                            for (byte pieceType = 2; pieceType < 6; pieceType++) { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j], (ChessPieceType)pieceType); }
-                        }
-                        else { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]); }
+                        // add types that the piece can promote to (queen, rook, bishop, knight)
+                        for (byte pieceType = 2; pieceType < 6; pieceType++) { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j], (ChessPieceType)pieceType); }
                     }
                 }
                 else { for (byte j = 0; j < capturablePositions.Length; j++) { draws[count++] = new ChessDraw(this, drawingPieces[i], capturablePositions[j]); } }
@@ -653,7 +651,7 @@ namespace Chess.Lib
             // get the king and rook bitboard
             byte offset = side.SideOffset();
             ulong king = bitboards[offset];
-            ulong rooks = bitboards[offset + 2];
+            ulong rooks = bitboards[offset + ChessPieceType.Rook.PieceTypeOffset()];
             ulong wasMoved = bitboards[12];
 
             // enemy capturable positions (for validation)
@@ -689,14 +687,14 @@ namespace Chess.Lib
         #region Rook
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getRookDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 2)
+        private ulong getRookDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte pieceOffset = 2)
         {
             // TODO: test this logic!!!
 
             ulong draws = 0uL;
             
             // get the bitboard
-            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()] & drawingPiecesFilter;
+            ulong bitboard = bitboards[side.SideOffset() + pieceOffset] & drawingPiecesFilter;
 
             // determine allied and enemy pieces (for collision / catch handling)
             ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
@@ -738,14 +736,14 @@ namespace Chess.Lib
         #region Bishop
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong getBishopDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte bitboardIndex = 3)
+        private ulong getBishopDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte pieceOffset = 3)
         {
             // TODO: test this logic!!!
 
             ulong draws = 0uL;
 
             // get the bitboard
-            ulong bitboard = bitboards[bitboardIndex + side.SideOffset()] & drawingPiecesFilter;
+            ulong bitboard = bitboards[side.SideOffset()+ pieceOffset] & drawingPiecesFilter;
 
             // determine allied and enemy pieces (for collision / catch handling)
             ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
@@ -790,7 +788,7 @@ namespace Chess.Lib
         private ulong getKnightDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
             // get bishops bitboard
-            ulong bitboard = bitboards[4 + side.SideOffset()] & drawingPiecesFilter;
+            ulong bitboard = bitboards[side.SideOffset() + ChessPieceType.Knight.PieceTypeOffset()] & drawingPiecesFilter;
 
             // determine allied pieces to eliminate blocked draws
             ulong alliedPieces = getCapturedFields(bitboards, side);
@@ -821,55 +819,37 @@ namespace Chess.Lib
             ulong draws = 0x0uL;
 
             // get peasants bitboard
-            ulong bitboard = bitboards[side.SideOffset() + 5] & drawingPiecesFilter;
+            ulong bitboard = bitboards[side.SideOffset() + ChessPieceType.Peasant.PieceTypeOffset()] & drawingPiecesFilter;
 
             // get all fields captured by enemy pieces as bitboard
             ulong alliedPieces = getCapturedFields(bitboards, side);
             ulong enemyPieces = getCapturedFields(bitboards, side.Opponent());
             ulong blockingPieces = alliedPieces | enemyPieces;
-            ulong enemyPeasants = bitboards[side.Opponent().SideOffset() + 5];
+            ulong enemyPeasants = bitboards[side.Opponent().SideOffset() + ChessPieceType.Peasant.PieceTypeOffset()];
+            ulong wasMovedMask = bitboards[12];
 
-            // TODO: express this using bitwise operations, e.g. shifting COL_A to the column of the column of the last drawing peasant that is standing onto level 4 and drew 2 levels
-            bool checkForEnPassant = (lastDraw != null && lastDraw.Value.DrawingPieceType == ChessPieceType.Peasant 
-                && Math.Abs(lastDraw.Value.OldPosition.Row - lastDraw.Value.NewPosition.Row) == 2);
+            // initialize white and black masks (-> calculate draws for both sides, but nullify draws of the wrong side using the mask)
+            ulong whiteMask = side.WhiteMask();
+            ulong blackMask = ~whiteMask;
 
-            // TODO: eliminate the if/else for side-dependent logic: use side mask, shift bits depending on side value (0 / 1), ...
-            // TODO: implement en-passant with only bitwise commands, no if/else branching
+            // get one-foreward draws
+            draws |= (whiteMask & (bitboard << 8) & ~blockingPieces)
+                | (blackMask & (bitboard >> 8) & ~blockingPieces);
 
-            if (side == ChessColor.White)
-            {
-                // 1) get en-passant mask (mask has bits set at level=5, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
-                // 2) add an additional enemy peasant one field backwards, so the en-passant gets handled by the standard catch logic
-                ulong enPassantMask = checkForEnPassant ? ((ROW_5 & (COL_A & COL_C)) << (lastDraw.Value.NewPosition.Column - 1)) & ROW_5 : 0uL;
-                bool isEnPassant = (bitboard & enPassantMask) > 0;
-                ulong additionalPeasantMask = isEnPassant ? (enemyPeasants >> 8) & (COL_A << lastDraw.Value.NewPosition.Column) & ROW_3 : 0L;
-                enemyPieces |= additionalPeasantMask;
+            // get two-foreward draws
+            draws |= (whiteMask & ((((bitboard & ROW_2 & ~wasMovedMask) << 8) & ~blockingPieces) << 8) & ~blockingPieces)
+                | (blackMask & ((((bitboard & ROW_7 & ~wasMovedMask) >> 8) & ~blockingPieces) >> 8) & ~blockingPieces);
 
-                // get one-foreward / two-foreward draws
-                draws |= (bitboard << 8) & ~blockingPieces;
-                draws |= ((bitboard & ROW_2) << 16) & (~blockingPieces | (~blockingPieces << 8));
+            // handle en-passant (in case of en-passant, put an extra peasant that gets caught by the standard catch logic)
+            ulong lastDrawNewPos = 0x1uL << (lastDraw?.NewPosition.GetHashCode() ?? -1);
+            ulong lastDrawOldPos = 0x1uL << (lastDraw?.OldPosition.GetHashCode() ?? -1);
+            bitboard |= 
+                  (whiteMask & ((lastDrawNewPos & enemyPeasants) >> 8) & ((ROW_2 & lastDrawOldPos) << 8))
+                | (blackMask & ((lastDrawNewPos & enemyPeasants) << 8) & ((ROW_2 & lastDrawOldPos) >> 8));
 
-                // get right / left catch draws (including en-passant)
-                draws |= ((bitboard & ~COL_H) << 9) & enemyPieces;
-                draws |= ((bitboard & ~COL_A) << 7) & enemyPieces;
-            }
-            else
-            {
-                // 1) get en-passant mask (mask has bits set at level=5, only if last draw is a two-foreward peasant draw, otherwise mask is zero)
-                // 2) add an additional enemy peasant one field backwards, so the en-passant gets handled by the standard catch logic
-                ulong enPassantMask = checkForEnPassant ? ((ROW_4 & (COL_A & COL_C)) << (lastDraw.Value.NewPosition.Column - 1)) & ROW_4 : 0uL;
-                bool isEnPassant = (bitboard & enPassantMask) > 0;
-                ulong additionalPeasantMask = isEnPassant ? (enemyPeasants << 8) & (COL_A << lastDraw.Value.NewPosition.Column) & ROW_6 : 0L;
-                enemyPieces |= additionalPeasantMask;
-
-                // get one-foreward / two-foreward draws
-                draws |= (bitboard >> 8) & ~blockingPieces;
-                draws |= ((bitboard & ROW_7) >> 16) & (~blockingPieces | (~blockingPieces >> 8));
-
-                // get right / left catch draws (including en-passant)
-                draws |= ((bitboard & ~COL_A) << 7) & enemyPieces;
-                draws |= ((bitboard & ~COL_H) << 9) & enemyPieces;
-            }
+            // get right / left catch draws
+            draws |= (whiteMask & ((((bitboard & ~COL_H) << 9) & enemyPieces) | (((bitboard & ~COL_A) << 7) & enemyPieces)))
+                | (blackMask & ((((bitboard & ~COL_A) >> 9) & enemyPieces) | (((bitboard & ~COL_H) >> 7) & enemyPieces)));
 
             return draws;
         }
@@ -880,18 +860,18 @@ namespace Chess.Lib
 
         #region Helpers
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ulong unionBitboards(ulong[] bitboards)
-        {
-            ulong result = 0x0uL;
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private ulong unionBitboards(ulong[] bitboards)
+        //{
+        //    ulong result = 0x0uL;
 
-            for (byte i = 0; i < bitboards.Length; i++)
-            {
-                result |= bitboards[i];
-            }
+        //    for (byte i = 0; i < bitboards.Length; i++)
+        //    {
+        //        result |= bitboards[i];
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getCapturedFields(ulong[] bitboards, ChessColor side)
@@ -932,7 +912,7 @@ namespace Chess.Lib
         private ChessPieceAtPos getKing(ChessColor side)
         {
             // get the position of the king and whether he was already moved
-            byte pos = getPosition(_bitboards[(byte)side * 6]);
+            byte pos = getPosition(_bitboards[side.SideOffset()]);
             bool wasMoved = isSetAt(_bitboards[12], pos);
 
             // put everything together (this already uses bitwise operations, so no further optimizations required)

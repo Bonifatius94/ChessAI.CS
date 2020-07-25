@@ -454,7 +454,7 @@ namespace Chess.UnitTest
                             for (int bpColorValue = 0; bpColorValue < 2; bpColorValue++)
                             {
                                 var bpColor = (ChessColor)bpColorValue;
-                                //output.WriteLine($"testing constellation: allyColor={ allyColor.ToString() }, sfwNewPos={ sfwNewPos }, dfwNewPos={ dfwNewPos }, blockPos={ blockPos }, wasMoved={ wasMoved }");
+                                output.WriteLine($"testing constellation: allyColor={ allyColor }, sfwNewPos={ sfwNewPos }, dfwNewPos={ dfwNewPos }, blockPos={ blockPos }, wasMoved={ wasMoved }");
 
                                 var pieces = new List<ChessPieceAtPos>()
                                 {
