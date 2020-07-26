@@ -9,56 +9,36 @@ using System.Xml;
 
 namespace Chess.DataTools
 {
-    //public readonly struct DrawSituation
-    //{
-    //    #region Constructor
-
-    //    public DrawSituation(ChessBoard board, ChessDraw draw)
-    //    {
-    //        Board = board;
-    //        Draw = draw;
-    //    }
-
-    //    #endregion Constructor
-
-    //    #region Members
-
-    //    public readonly ChessBoard Board;
-    //    public readonly ChessDraw Draw;
-
-    //    #endregion Members
-
-    //    #region Methods
-
-    //    public override bool Equals(object obj)
-    //    {
-    //        return 
-    //            obj.GetType() == typeof(DrawSituation) 
-    //            && ((DrawSituation)obj).Draw.Equals(Draw)
-    //            && ((DrawSituation)obj).Board.Equals(Board);
-    //    }
-
-    //    public override int GetHashCode()
-    //    {
-    //        return Draw.GetHashCode() + Board.GetHashCode();
-    //    }
-
-    //    #endregion Methods
-    //}
-
     /// <summary>
-    /// 
+    /// A data object class providing the win rate of a given (board, draw) tuple including the total amount of games measured.
     /// </summary>
     public class WinRateInfo
     {
         #region Members
 
-        //public Tuple<ChessBoard, ChessDraw> Situation { get; set; }
+        /// <summary>
+        /// The compact representation of a chess board as hex-string. (it's not really a hash, as no information is lost by 'hashing')
+        /// </summary>
         public string BoardHash { get; set; }
+
+        /// <summary>
+        /// The chess draw to be applied to the given board.
+        /// </summary>
         public ChessDraw Draw { get; set; }
+
+        /// <summary>
+        /// The win rate of the (board, draw) tuple as percentage.
+        /// </summary>
         public double WinRate { get; set; }
+
+        /// <summary>
+        /// The total count of games, containing the (board, draw) tuple. Can be used to measure how significant the win rate is.
+        /// </summary>
         public int AnalyzedGames { get; set; }
 
+        /// <summary>
+        /// A chess board property for converting between hex-string and the ChessBoard format (computed operation, data is stored as hex-string).
+        /// </summary>
         public IChessBoard Board
         {
             get { return BoardHash.HashToBoard(); }
@@ -69,30 +49,24 @@ namespace Chess.DataTools
     }
 
     /// <summary>
-    /// 
+    /// A helper class providing functionality for computing win rates related to (board, draw) tuples using a set of chess games.
     /// </summary>
     public class WinRateInfoHelper
     {
-        //#region Constants
-
-        //private const string NODE_WIN_RATES = "rates";
-        //private const string NODE_WIN_RATE = "winRate";
-
-        //private const string ATTRIBUTE_WIN_RATE_BOARD = "board";
-        //private const string ATTRIBUTE_WIN_RATE_DRAW = "draw";
-        //private const string ATTRIBUTE_WIN_RATE_PERCENTAGE = "percentage";
-        //private const string ATTRIBUTE_WIN_RATE_TOTAL_GAMES = "totalGames";
-
-        //private static readonly CultureInfo US_FORMAT = CultureInfo.CreateSpecificCulture("en-US");
-
-        //#endregion Constants
-
         #region Methods
 
+        /// <summary>
+        /// <para>Compute the win rate of each (board, draw) tuple onto the given chess games by grouping those tuples for multiple games.</para>
+        /// WARNING: This function might use lots of RAM to speed up the computation!!! (about 11 GB for evaluating 360000 games)
+        /// </summary>
+        /// <param name="games">The chess games to be evaluated.</param>
+        /// <returns>a list of win rates for each (board, draw) tuple onto the given chess games</returns>
         public IEnumerable<WinRateInfo> GamesToWinRates(IEnumerable<ChessGame> games)
         {
-            var drawsCache = games.Where(game => game.Winner != null).AsParallel().SelectMany(game => {
+            // TODO: use Trill API here ... instead of Linq ...
 
+            var drawsCache = games.Where(game => game.Winner != null).AsParallel().SelectMany(game => {
+                
                 var drawsXWinner = new List<Tuple<Tuple<string, ChessDraw>, ChessColor>>();
 
                 var winningSide = game.Winner.Value;
@@ -120,74 +94,6 @@ namespace Chess.DataTools
 
             return winRates;
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="filePath"></param>
-        ///// <param name="games"></param>
-        //public void Serialize(string filePath, IEnumerable<ChessGame> games)
-        //{
-        //    // calculate the win rate of each draw
-        //    var winRateInfos = GamesToWinRates(games);
-
-        //    // write win percentages to XML data file
-        //    using (var writer = XmlWriter.Create(filePath))
-        //    {
-        //        // TODO: add formatting
-
-        //        writer.WriteStartDocument();
-        //        writer.WriteStartElement(NODE_WIN_RATES);
-        //        //writer.WriteAttributeString("whiteOffset", offsetWhiteWinRate.ToString(usFormat));
-
-        //        foreach (var winRateInfo in winRateInfos)
-        //        {
-        //            writer.WriteStartElement(NODE_WIN_RATE);
-        //            writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_BOARD, winRateInfo.BoardHash);
-        //            writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_DRAW, winRateInfo.Draw.GetHashCode().ToString());
-        //            writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_PERCENTAGE, winRateInfo.WinRate.ToString(US_FORMAT));
-        //            writer.WriteAttributeString(ATTRIBUTE_WIN_RATE_TOTAL_GAMES, winRateInfo.AnalyzedGames.ToString());
-        //            writer.WriteEndElement();
-        //        }
-
-        //        writer.WriteEndElement();
-        //        writer.WriteEndDocument();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="filePath"></param>
-        ///// <returns></returns>
-        //public IEnumerable<WinRateInfo> Deserialize(string filePath)
-        //{
-        //    var winRateInfos = new List<WinRateInfo>();
-
-        //    using (var reader = XmlReader.Create(filePath))
-        //    {
-        //        while (reader.Read())
-        //        {
-        //            // init new win rate info
-        //            if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals(NODE_WIN_RATE))
-        //            {
-        //                var boardHash = reader.GetAttribute(ATTRIBUTE_WIN_RATE_BOARD);
-        //                var draw = new ChessDraw(int.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_DRAW)));
-        //                double winRate = double.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_PERCENTAGE), US_FORMAT);
-        //                int analyzedGames = int.Parse(reader.GetAttribute(ATTRIBUTE_WIN_RATE_TOTAL_GAMES));
-
-        //                winRateInfos.Add(new WinRateInfo() {
-        //                    Draw = draw,
-        //                    BoardHash = boardHash,
-        //                    WinRate = winRate,
-        //                    AnalyzedGames = analyzedGames
-        //                });
-        //            }
-        //        }
-        //    }
-
-        //    return winRateInfos;
-        //}
 
         #endregion Methods
     }

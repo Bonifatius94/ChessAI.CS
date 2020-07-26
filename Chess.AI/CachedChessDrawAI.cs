@@ -11,7 +11,8 @@ using System.Text;
 namespace Chess.AI
 {
     /// <summary>
-    /// 
+    /// An implementation providing the optimal chess draw using the minimax algorithm with alpha / beta prune, 
+    /// which is supported by pre-calculated draws from a cache database.
     /// </summary>
     public class CachedChessDrawAI : IChessDrawAI
     {

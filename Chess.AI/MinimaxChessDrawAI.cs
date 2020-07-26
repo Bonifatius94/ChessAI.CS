@@ -3,6 +3,7 @@ using Chess.Lib;
 using Chess.Lib.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -253,7 +254,6 @@ namespace Chess.AI
 
             public ChessDraw Draw { get; set; }
             public double Score { get; set; }
-            //public ChessDraw?[] Cache { get; set; }
 
             #endregion Members
 

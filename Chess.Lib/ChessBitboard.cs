@@ -643,6 +643,8 @@ namespace Chess.Lib
                 | ((bitboard >> 8) & ~(ROW_8         | alliedPieces))  // bottom mid
                 | ((bitboard >> 7) & ~(ROW_8 | COL_A | alliedPieces)); // bottom right
 
+            // TODO: cache draws to save computation
+
             return standardDraws;
         }
 
@@ -669,6 +671,8 @@ namespace Chess.Lib
                 | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_A8 & ~wasMoved) << 3) & freeKingPassage)  // black big rochade
                 | (((king & FIELD_E8 & ~wasMoved) >> 2) & ((rooks & FIELD_H8 & ~wasMoved) >> 2) & freeKingPassage); // black small rochade
 
+            // TODO: cache draws to save computation
+
             return draws;
         }
 
@@ -689,8 +693,6 @@ namespace Chess.Lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getRookDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte pieceOffset = 2)
         {
-            // TODO: test this logic!!!
-
             ulong draws = 0uL;
             
             // get the bitboard
@@ -728,6 +730,8 @@ namespace Chess.Lib
                 tRooks ^= ((tRooks << (i * 8)) & enemyPieces) >> (i * 8); // top
             }
 
+            // TODO: implement hyperbola quintessence
+
             return draws;
         }
 
@@ -738,8 +742,6 @@ namespace Chess.Lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getBishopDrawBitboards(ulong[] bitboards, ChessColor side, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL, byte pieceOffset = 3)
         {
-            // TODO: test this logic!!!
-
             ulong draws = 0uL;
 
             // get the bitboard
@@ -777,6 +779,8 @@ namespace Chess.Lib
                 tlBishops ^= ((tlBishops << (i * 7)) & enemyPieces) >> (i * 7); // top left
             }
 
+            // TODO: implement hyperbola quintessence
+
             return draws;
         }
 
@@ -804,6 +808,8 @@ namespace Chess.Lib
                 | ((bitboard >> 17) & ~(ROW_8 | COL_H | ROW_7 | alliedPieces))  // bottom left  (2-1)
                 | ((bitboard >> 15) & ~(ROW_8 | COL_A | ROW_7 | alliedPieces)); // bottom right (2-1)
 
+            // TODO: cache draws to save computation
+
             return draws;
         }
 
@@ -814,8 +820,6 @@ namespace Chess.Lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getPeasantDrawBitboards(ulong[] bitboards, ChessColor side, ChessDraw? lastDraw = null, ulong drawingPiecesFilter = 0xFFFFFFFFFFFFFFFFuL)
         {
-            // TODO: test this logic!!!
-
             ulong draws = 0x0uL;
 
             // get peasants bitboard
@@ -1001,6 +1005,11 @@ namespace Chess.Lib
         }
 
         #endregion Clone
+
+        public override string ToString()
+        {
+            return ToBoard().ToString();
+        }
 
         #endregion Methods
     }
