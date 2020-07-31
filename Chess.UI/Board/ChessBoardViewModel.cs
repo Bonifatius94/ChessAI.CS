@@ -20,7 +20,7 @@ namespace Chess.UI.Board
 
         #region Members
 
-        private ChessBoard _board;
+        private IChessBoard _board;
 
         public bool IsEnabled { get; private set; } = false;
 
@@ -126,7 +126,7 @@ namespace Chess.UI.Board
             return fields;
         }
 
-        public void UpdatePieces(ChessBoard board)
+        public void UpdatePieces(IChessBoard board)
         {
             for (byte pos = 0; pos < 64; pos++)
             {
@@ -134,7 +134,7 @@ namespace Chess.UI.Board
                 field.UpdatePiece(board.IsCapturedAt(pos) ? (ChessPiece?)board.GetPieceAt(pos) : null);
             }
 
-            _board = (ChessBoard)board.Clone();
+            _board = (IChessBoard)((ICloneable)board).Clone();
         }
 
         public void UpdateIsEnabled(bool isActive)

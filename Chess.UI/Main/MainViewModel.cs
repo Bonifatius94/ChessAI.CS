@@ -157,7 +157,7 @@ namespace Chess.UI.Main
             }
         }
 
-        private void boardChanged(ChessBoard newBoard)
+        private void boardChanged(IChessBoard newBoard)
         {
             // apply the draw to the UI
             Board.UpdatePieces(newBoard);

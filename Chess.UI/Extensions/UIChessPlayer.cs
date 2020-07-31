@@ -41,7 +41,7 @@ namespace Chess.UI.Extensions
 
         public ChessColor Side { get; private set; }
 
-        public delegate void OpponentDrawMadeHandler(ChessBoard board, ChessDraw? opponentDraw);
+        public delegate void OpponentDrawMadeHandler(IChessBoard board, ChessDraw? opponentDraw);
         public event OpponentDrawMadeHandler OpponentDrawMade;
 
         #endregion Members
@@ -71,7 +71,7 @@ namespace Chess.UI.Extensions
         /// <param name="board">The board representing the current chess situation.</param>
         /// <param name="previousDraw">The previous draw made by the opponent (may be null if the drawing player is making the first draw with white pieces)</param>
         /// <returns>The chess draw made by the chess player</returns>
-        public ChessDraw GetNextDraw(ChessBoard board, ChessDraw? previousDraw)
+        public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? previousDraw)
         {
             // wait until mutex is ready
             while (!_canGetNextDraw) { Thread.Sleep(10); }

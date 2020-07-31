@@ -47,7 +47,7 @@ namespace Chess.GameLib.Session
         /// <summary>
         /// The chess board representing the current chess position of the game.
         /// </summary>
-        public ChessBoard Board { get { return Game.Board; } }
+        public IChessBoard Board { get { return Game.Board; } }
 
         #endregion Members
 
@@ -57,7 +57,7 @@ namespace Chess.GameLib.Session
         /// A delegate for implementations of board changed handlers.
         /// </summary>
         /// <param name="newBoard">The new chess board.</param>
-        public delegate void BoardChangedHandler(ChessBoard newBoard);
+        public delegate void BoardChangedHandler(IChessBoard newBoard);
 
         /// <summary>
         /// An event that is signaled when the chess board changed (due to a player making a draw).
