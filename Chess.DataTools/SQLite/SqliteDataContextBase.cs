@@ -14,6 +14,10 @@ namespace Chess.DataTools.SQLite
     {
         #region Constructor
 
+        /// <summary>
+        /// Initialize a new SQLite context of the given database file.
+        /// </summary>
+        /// <param name="dbFilePath">The path to the database file.</param>
         public SqliteDataContextBase(string dbFilePath)
         {
             _dbFilePath = dbFilePath;
@@ -29,6 +33,10 @@ namespace Chess.DataTools.SQLite
 
         #region Methods
 
+        /// <summary>
+        /// Create a new connection to the database file of this instance.
+        /// </summary>
+        /// <returns>a new connection instance</returns>
         protected SqliteConnection createConnection()
         {
             return new SqliteConnection($"DataSource={ _dbFilePath };");
@@ -110,6 +118,7 @@ namespace Chess.DataTools.SQLite
         /// Run a SQL query and retrieve a specific column from a single data record.
         /// </summary>
         /// <param name="sql">The SQL statement to be queried.</param>
+        /// <param name="columnName">The explicit column to be selected.</param>
         /// <returns>A specific column from a single data record returned by the SQLite data source.</returns>
         protected object queryItem(string sql, string columnName)
         {

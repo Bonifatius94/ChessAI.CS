@@ -5,6 +5,8 @@ using System.Windows.Input;
 
 namespace Chess.UI
 {
+    #pragma warning disable CS0067
+
     /// <summary>
     /// An implementation of ICommand for binding onto user input events.
     /// </summary>

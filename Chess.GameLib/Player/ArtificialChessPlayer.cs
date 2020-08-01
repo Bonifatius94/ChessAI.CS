@@ -51,7 +51,6 @@ namespace Chess.GameLib.Player
         /// <returns>the next chess draw</returns>
         public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? previousDraw)
         {
-            // TODO: implement difficulty to search depth translation logic
             return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, (int)_level);
         }
 

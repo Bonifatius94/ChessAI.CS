@@ -4,15 +4,12 @@ using Chess.GameLib.Session;
 using Chess.Lib;
 using Chess.UI.Board;
 using Chess.UI.Extensions;
-using Chess.UI.Field;
 using Chess.UI.Menu;
 using Chess.UI.NewGame;
-using System;
+using Chess.UI.Status;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -27,6 +24,7 @@ namespace Chess.UI.Main
             // init the chess board
             Board = new ChessBoardViewModel(onChessFieldClicked);
             Menu = new MenuViewModel(this);
+            Status = new StatusBarViewModel();
 
             // try to restore the last game
             ReloadLastGame();
@@ -38,6 +36,7 @@ namespace Chess.UI.Main
 
         public ChessBoardViewModel Board { get; private set; }
         public MenuViewModel Menu { get; private set; }
+        public StatusBarViewModel Status { get; private set; }
 
         #region GameSession
 
@@ -79,8 +78,6 @@ namespace Chess.UI.Main
 
         public void NewGame()
         {
-            // TODO: check why new game dialog opens when the main window closes
-
             // delete cache of last game
             if (File.Exists(SESSION_CACHE_FILE)) { File.Delete(SESSION_CACHE_FILE); }
 
@@ -105,9 +102,24 @@ namespace Chess.UI.Main
                 {
                     MessageBox.Show($"You draw the { dlgContext.DrawingSide.ToString() } pieces!", "Random Side Selection", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
-                
+
+                // update status bar
+                Status.InitNewGame();
+
                 // start the game session in a background thread (async)
-                Task.Run(() => _session.ExecuteGame());
+                Task.Run(() => {
+
+                    // play game (until one player loses)
+                    var final = _session.ExecuteGame();
+
+                    // update status bar
+                    var finalStatus = ChessDrawSimulator.Instance.GetCheckGameStatus(_session.Board, _session.Game.LastDraw);
+                    Status.FinishGame(finalStatus);
+
+                    // reset game session
+                    _session = null;
+                    updateIsBoardActive();
+                });
             }
 
             // make the chess board inactive unless a game session is active
@@ -164,6 +176,9 @@ namespace Chess.UI.Main
 
             // reset highlightings
             foreach (var field in Board.Fields) { field.UpdateHighlight(false); }
+
+            // update status bar
+            Status.UpdateGameLog(_session.Game.LastDrawOrDefault);
         }
 
         #endregion DrawInput

@@ -86,7 +86,7 @@ namespace Chess.UI.NewGame
                 }
             );
 
-        private ChessDifficultyLevel _difficulty = ChessDifficultyLevel.Easy;
+        private ChessDifficultyLevel _difficulty = ChessDifficultyLevel.Hard;
         public ChessDifficultyLevel Difficulty
         {
             get { return _difficulty; }

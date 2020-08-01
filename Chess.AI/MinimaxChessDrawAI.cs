@@ -200,7 +200,7 @@ namespace Chess.AI
             double expectation = valueXProbTuples.Expectation();
 
             // init loop variables
-            double deviationFactor = 0.2;
+            double deviationFactor = 0.3;
             ChessDrawScore[] window;
 
             do
@@ -318,25 +318,83 @@ namespace Chess.AI
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ChessDraw[] getPreorderedDrawsByPossibleGain(IChessBoard board, IList<ChessDraw> draws, ChessColor drawingSide)
         {
-            // compute the score
+            // initialize score array
             var drawsXScoreTuples = new ChessDrawScore[draws.Count()];
 
+            // loop through all draws
             for (int i = 0; i < draws.Count(); i++)
             {
-                // simulate draw
+                // simulate the draw
                 var simDraw = draws[i];
                 var simBoard = board.ApplyDraw(simDraw);
 
-                // compute the new score of the resulting position
+                // compute the score of the resulting position (= score of the draw)
                 double score = _estimator.GetScore(simBoard, drawingSide);
 
                 // add the (draw, score) tuple to the list
                 drawsXScoreTuples[i] = new ChessDrawScore() { Draw = simDraw, Score = score };
             }
 
-            // TODO: check if this can be implemented more efficiently, e.g. with radix-sort
-            return drawsXScoreTuples.OrderByDescending(x => x.Score).Select(x => x.Draw).ToArray();
+            return sortByScoreDesc(drawsXScoreTuples);
         }
+
+        #region SortHelper
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ChessDraw[] sortByScoreDesc(ChessDrawScore[] ratedDraws)
+        {
+            // TODO: check if this performs well
+
+            // use in-place insertion sort (this has a bad performance of O(n^2), 
+            // but can be cached well for small arrays with ~50 items)
+            // never use this sort algorithm for bigger data sets!!!
+
+            // init result set of the same size as input
+            var result = new ChessDraw[ratedDraws.Length];
+
+            // loop through all elements
+            for (int i = 0; i < ratedDraws.Length; i++)
+            {
+                // determine the max. item from the unsorted partition
+                int maxIndex = indexOfMax(ratedDraws, i);
+
+                // copy the item to the sorted partition
+                result[i] = ratedDraws[maxIndex].Draw;
+
+                // keep the unsorted element at offset index inside of the 
+                // unsorted partition, so it eventually gets sorted in
+                ratedDraws[maxIndex] = ratedDraws[i];
+            }
+
+            return result;
+        }
+
+        private int indexOfMax(ChessDrawScore[] ratedDraws, int offset)
+        {
+            // return -1 if the list does not contain a single item
+            if (ratedDraws?.Length <= 0) { return -1; }
+
+            // initialize max item cache with first item
+            int maxIndex = offset;
+            ChessDrawScore temp = ratedDraws[offset];
+
+            // loop through all remaining items to compare
+            for (int i = offset + 1; i < ratedDraws.Length; i++)
+            {
+                // compare score to temporary max score
+                if (temp.Score < ratedDraws[i].Score)
+                {
+                    // update max score / index of max item if a greater score was found
+                    temp = ratedDraws[i];
+                    maxIndex = i;
+                }
+            }
+
+            // return the index of the max. item onto the array subset
+            return maxIndex;
+        }
+
+        #endregion SortHelper
 
         ///// <summary>
         ///// An implementation of the minimax game tree algorithm. Returns the best score to be expected for the maximizing player.

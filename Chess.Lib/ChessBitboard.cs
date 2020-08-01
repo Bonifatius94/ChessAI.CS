@@ -44,20 +44,20 @@ namespace Chess.Lib
         private const ulong START_POSITIONS = 0xFFFF00000000FFFFul;
 
         // position masks for kings and rooks on the start formation
-        private const ulong FIELD_A1 = 0x0000000000000001uL;
-        private const ulong FIELD_C1 = FIELD_A1 << 2;
-        private const ulong FIELD_D1 = FIELD_A1 << 3;
-        private const ulong FIELD_E1 = FIELD_A1 << 4;
-        private const ulong FIELD_F1 = FIELD_A1 << 5;
-        private const ulong FIELD_G1 = FIELD_A1 << 6;
-        private const ulong FIELD_H1 = FIELD_A1 << 7;
-        private const ulong FIELD_A8 = FIELD_A1 << 56;
-        private const ulong FIELD_C8 = FIELD_A1 << 58;
-        private const ulong FIELD_D8 = FIELD_A1 << 59;
-        private const ulong FIELD_E8 = FIELD_A1 << 60;
-        private const ulong FIELD_F8 = FIELD_A1 << 61;
-        private const ulong FIELD_G8 = FIELD_A1 << 62;
-        private const ulong FIELD_H8 = FIELD_A1 << 63;
+        private const ulong FIELD_A1 = ROW_1 & COL_A;
+        private const ulong FIELD_C1 = ROW_1 & COL_C;
+        private const ulong FIELD_D1 = ROW_1 & COL_D;
+        private const ulong FIELD_E1 = ROW_1 & COL_E;
+        private const ulong FIELD_F1 = ROW_1 & COL_F;
+        private const ulong FIELD_G1 = ROW_1 & COL_G;
+        private const ulong FIELD_H1 = ROW_1 & COL_H;
+        private const ulong FIELD_A8 = ROW_8 & COL_A;
+        private const ulong FIELD_C8 = ROW_8 & COL_C;
+        private const ulong FIELD_D8 = ROW_8 & COL_D;
+        private const ulong FIELD_E8 = ROW_8 & COL_E;
+        private const ulong FIELD_F8 = ROW_8 & COL_F;
+        private const ulong FIELD_G8 = ROW_8 & COL_G;
+        private const ulong FIELD_H8 = ROW_8 & COL_H;
 
         #endregion Constants
 
@@ -67,7 +67,7 @@ namespace Chess.Lib
         /// Create a new chess board instance from the given human-readable chess board.
         /// </summary>
         /// <param name="board">The human-readable chess board containing the board data.</param>
-        public ChessBitboard(ChessBoard board)
+        public ChessBitboard(IChessBoard board)
         {
             // initialize bitboards
             _bitboards = new ulong[13];
@@ -390,6 +390,10 @@ namespace Chess.Lib
 
         #region Convert
 
+        /// <summary>
+        /// Convert the bitboard instance into the equal ChessBoard representation.
+        /// </summary>
+        /// <returns>an equal representation of the board as ChessBoard type</returns>
         // TODO: think maybe of a better method signature
         public ChessBoard ToBoard()
         {
@@ -423,8 +427,12 @@ namespace Chess.Lib
             return new ChessBoard(pieces);
         }
 
+        /// <summary>
+        /// Apply the given chess board data to this instance.
+        /// </summary>
+        /// <param name="board">The board data to be applied.</param>
         // TODO: think maybe of a better method signature
-        public void FromBoard(ChessBoard board)
+        public void FromBoard(IChessBoard board)
         {
             // loop through all bitboards
             for (byte i = 0; i < 12; i++)
@@ -864,19 +872,6 @@ namespace Chess.Lib
 
         #region Helpers
 
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private ulong unionBitboards(ulong[] bitboards)
-        //{
-        //    ulong result = 0x0uL;
-
-        //    for (byte i = 0; i < bitboards.Length; i++)
-        //    {
-        //        result |= bitboards[i];
-        //    }
-
-        //    return result;
-        //}
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ulong getCapturedFields(ulong[] bitboards, ChessColor side)
         {
@@ -930,36 +925,6 @@ namespace Chess.Lib
             return (bitboard & mask) > 0;
         }
 
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private ulong setBitAt(ulong bitboard, byte pos)
-        //{
-        //    ulong mask = 0x1uL << pos;
-        //    return bitboard | mask;
-        //}
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private ChessPieceAtPos[] getPieces(ChessPieceType type, ChessColor color)
-        //{
-        //    // determine the bitboard by piece type and color
-        //    byte index = (byte)(((int)type - 1) + ((int)color * 6));
-        //    ulong bitboard = _bitboards[index];
-
-        //    // get all positions containing pieces from the bitboard (max. 8 pieces)
-        //    var posCache = new CachedChessPositions(bitboard);
-        //    var positions = posCache.Positions;
-
-        //    var piecesAtPos = new ChessPieceAtPos[8];
-
-        //    for (byte i = 0; i < positions.Length; i++)
-        //    {
-        //        var pos = positions[i];
-        //        var piece = new ChessPiece(type, color, isSetAt(_bitboards[12], (byte)pos.GetHashCode()));
-        //        piecesAtPos[i] = new ChessPieceAtPos(pos, piece);
-        //    }
-
-        //    return piecesAtPos.SubArray(0, positions.Length);
-        //}
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ChessPieceAtPos[] getPieces(byte boardIndex)
         {
@@ -1006,6 +971,10 @@ namespace Chess.Lib
 
         #endregion Clone
 
+        /// <summary>
+        /// Get a textual representation of the chess board that can be printed to console, etc.
+        /// </summary>
+        /// <returns>the chess board as text</returns>
         public override string ToString()
         {
             return ToBoard().ToString();
@@ -1083,41 +1052,4 @@ namespace Chess.Lib
 
         #endregion Methods
     }
-
-    //public static class MathEx
-    //{
-    //    #region ulongLog2
-
-    //    // snippet source: https://stackoverflow.com/questions/11376288/fast-computing-of-log2-for-64-bit-integers
-
-    //    // a magic cache table of log2-powers
-    //    private static readonly byte[] tab64 = new byte[] {
-    //        63,  0, 58,  1, 59, 47, 53,  2,
-    //        60, 39, 48, 27, 54, 33, 42,  3,
-    //        61, 51, 37, 40, 49, 18, 28, 20,
-    //        55, 30, 34, 11, 43, 14, 22,  4,
-    //        62, 57, 46, 52, 38, 26, 32, 41,
-    //        50, 36, 17, 19, 29, 10, 13, 21,
-    //        56, 45, 25, 31, 35, 16,  9, 12,
-    //        44, 24, 15,  8, 23,  7,  6,  5
-    //    };
-
-    //    /// <summary>
-    //    /// Compute the log2(x) function for the given ulong value. The result is rounded to floor if more than one bit is set.
-    //    /// </summary>
-    //    /// <param name="value">The value to be evaluated.</param>
-    //    /// <returns>log2(value), rounded to the floor.</returns>
-    //    public static byte Log2(ulong value)
-    //    {
-    //        value |= value >> 1;
-    //        value |= value >> 2;
-    //        value |= value >> 4;
-    //        value |= value >> 8;
-    //        value |= value >> 16;
-    //        value |= value >> 32;
-    //        return tab64[(value - (value >> 1)) * 0x07EDD5E59A4E28C2 >> 58];
-    //    }
-
-    //    #endregion ulongLog2
-    //}
 }

@@ -15,6 +15,10 @@ namespace Chess.Lib
     {
         #region Constructor
 
+        /// <summary>
+        /// Create a new instance of cached chess positions using the given positions.
+        /// </summary>
+        /// <param name="positions">The positions to be applied to this instance.</param>
         public CachedChessPositions(ChessPosition[] positions)
         {
             // make sure that the overloaded array does not contain more than 10 positions 
@@ -25,6 +29,10 @@ namespace Chess.Lib
             _hash = deserializeFromArray(positions);
         }
 
+        /// <summary>
+        /// Create a new instance of cached chess positions using all positions of bits that are set the given bitboard.
+        /// </summary>
+        /// <param name="bitboard">The bitboard containing the positions to be applied to this instance.</param>
         public CachedChessPositions(ulong bitboard)
         {
             _hash = 0;
@@ -43,6 +51,9 @@ namespace Chess.Lib
         /// </summary>
         private readonly ulong _hash;
 
+        /// <summary>
+        /// The chess positions of this instance (computed operation).
+        /// </summary>
         public ChessPosition[] Positions => serialize();
 
         #endregion Members

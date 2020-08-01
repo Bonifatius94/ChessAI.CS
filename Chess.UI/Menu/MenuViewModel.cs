@@ -1,7 +1,5 @@
 ﻿using Chess.UI.Main;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace Chess.UI.Menu
@@ -34,12 +32,20 @@ namespace Chess.UI.Menu
 
         private void showRules()
         {
-            // TODO: implement logic
+            // open wikipedia article on chess rules
+            openWebsite(@"https://en.wikipedia.org/wiki/Rules_of_chess");
         }
 
         private void showAbout()
         {
+            // open GitHub project home
+            openWebsite(@"https://github.com/Bonifatius94/ChessAI.CS#readme");
+        }
 
+        private void openWebsite(string url)
+        {
+            // set Verb property (required for .NET Core)
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" });
         }
 
         #endregion Methods

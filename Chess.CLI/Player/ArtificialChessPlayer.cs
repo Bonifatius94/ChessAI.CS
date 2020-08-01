@@ -44,6 +44,7 @@ namespace Chess.CLI.Player
         /// <returns>the next chess draw</returns>
         public ChessDraw GetNextDraw(IChessBoard board, ChessDraw? previousDraw)
         {
+            //return MinimaxChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
             return CachedChessDrawAI.Instance.GetNextDraw(board, previousDraw, _level);
         }
 
