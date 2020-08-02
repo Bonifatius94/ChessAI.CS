@@ -1,4 +1,29 @@
-﻿using Chess.Lib;
+﻿/*
+ * MIT License
+ *
+ * Copyright(c) 2020 Marco Tröster
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+using Chess.GameLib.Player;
+using Chess.Lib;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,8 +40,8 @@ namespace Chess.CLI.Player
         /// <summary>
         /// Initialize a new human chess player instance drawing the chess pieces of the given color.
         /// </summary>
-        /// <param name="side"></param>
-        public HumanChessPlayer(ChessColor side) { _side = side; }
+        /// <param name="side">The side that the player draws.</param>
+        public HumanChessPlayer(ChessColor side) { Side = side; }
 
         #endregion Constructor
 
@@ -25,7 +50,7 @@ namespace Chess.CLI.Player
         /// <summary>
         /// The drawing side.
         /// </summary>
-        private ChessColor _side;
+        public ChessColor Side { get; private set; }
 
         #endregion Members
 
@@ -64,7 +89,7 @@ namespace Chess.CLI.Player
                         newPosition = new ChessPosition(newPosString);
 
                         // make sure that the player possesses the the chess piece he is moving (simple validation)
-                        if (board.IsCapturedAt(oldPosition) && board.GetPieceAt(oldPosition).Color == _side) { break; }
+                        if (board.IsCapturedAt(oldPosition) && board.GetPieceAt(oldPosition).Color == Side) { break; }
                         else { Console.Write("There is no chess piece to be moved onto the field you put! "); }
                     }
                 }
@@ -76,8 +101,8 @@ namespace Chess.CLI.Player
             while (true);
 
             // handle peasant promotion
-            if (board.IsCapturedAt(oldPosition) && board.GetPieceAt(oldPosition).Type == ChessPieceType.Peasant 
-                && (_side == ChessColor.White && newPosition.Row == 7) || (_side == ChessColor.Black && newPosition.Row == 0))
+            if (board.IsCapturedAt(oldPosition) && board.GetPieceAt(oldPosition).Type == ChessPieceType.Peasant
+                && (Side == ChessColor.White && newPosition.Row == 7) || (Side == ChessColor.Black && newPosition.Row == 0))
             {
                 do
                 {
@@ -91,8 +116,8 @@ namespace Chess.CLI.Player
                         {
                             case 'b': promotionPieceType = ChessPieceType.Bishop; break;
                             case 'n': promotionPieceType = ChessPieceType.Knight; break;
-                            case 'r': promotionPieceType = ChessPieceType.Rook;   break;
-                            case 'q': promotionPieceType = ChessPieceType.Queen;  break;
+                            case 'r': promotionPieceType = ChessPieceType.Rook; break;
+                            case 'q': promotionPieceType = ChessPieceType.Queen; break;
                         }
 
                         if (promotionPieceType == null) { Console.Write("Your input needs to be a letter like in the example! "); }

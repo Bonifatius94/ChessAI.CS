@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Marco Tröster</Authors>
     <Company>Marco Tröster Softwareentwicklung</Company>
     <Copyright>Marco Tröster © 2020</Copyright>
@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chess.AI\Chess.AI.csproj" />
+    <ProjectReference Include="..\Chess.GameLib\Chess.GameLib.csproj" />
     <ProjectReference Include="..\Chess.Lib\Chess.Lib.csproj" />
   </ItemGroup>
 
