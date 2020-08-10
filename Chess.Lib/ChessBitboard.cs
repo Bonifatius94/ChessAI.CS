@@ -106,8 +106,7 @@ namespace Chess.Lib
         /// <param name="bitboards">The bitboards containing the board data.</param>
         /// <param name="ownsBitboard">Indicates whether the given bitboards copy is exclusively used by this instance. 
         /// If so, the copy operation can be saved by directly using the bitboards handed in.</param>
-        // TODO: think about flagging this constructor private, so it cannot be used in the wrong way
-        public ChessBitboard(ulong[] bitboards, bool ownsBitboard = false)
+        private ChessBitboard(ulong[] bitboards, bool ownsBitboard = false)
         {
             if (ownsBitboard)
             {
@@ -291,8 +290,6 @@ namespace Chess.Lib
                 var pieces = getPieces(boardIndex);
                 pieces.CopyTo(piecesAtPos, count);
 
-                // TODO: check out why array copy encounters out-of-bounds error
-
                 // update the content count
                 count += (byte)pieces.Length;
             }
@@ -345,7 +342,6 @@ namespace Chess.Lib
         /// <param name="draw">The draw to be applied (or reverted).</param>
         private void applyDraw(ulong[] bitboards, ChessDraw draw)
         {
-            // TODO: check if this works
             // TODO: try to make this even faster by removing the if/else-branching
 
             // determine bitboard masks of the drawing piece's old and new position
@@ -418,7 +414,6 @@ namespace Chess.Lib
         /// Convert the bitboard instance into the equal ChessBoard representation.
         /// </summary>
         /// <returns>an equal representation of the board as ChessBoard type</returns>
-        // TODO: think maybe of a better method signature
         public ChessBoard ToBoard()
         {
             // TODO: test if this works
@@ -455,7 +450,6 @@ namespace Chess.Lib
         /// Apply the given chess board data to this instance.
         /// </summary>
         /// <param name="board">The board data to be applied.</param>
-        // TODO: think maybe of a better method signature
         public void FromBoard(IChessBoard board)
         {
             // loop through all bitboards

@@ -353,8 +353,11 @@ namespace Chess.Lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ChessColor Opponent(this ChessColor color)
         {
-            // TODO: implement this bitwise for better performance
-            return (color == ChessColor.White) ? ChessColor.Black : ChessColor.White;
+            // TODO: check if the bitwise implementation is faster
+            return (ChessColor)((((int)color) - 1) & 0x1);
+
+            // old implementation using branching
+            //return (color == ChessColor.White) ? ChessColor.Black : ChessColor.White;
         }
     }
 }

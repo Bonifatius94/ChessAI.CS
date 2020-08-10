@@ -30,6 +30,8 @@ using System.Text;
 
 namespace Chess.Lib.Extensions
 {
+    // TODO: replace this by BigInteger struct
+
     /// <summary>
     /// Provide bitwise operations for a concatenation of data bits.
     /// </summary>
@@ -96,8 +98,6 @@ namespace Chess.Lib.Extensions
         /// <returns>a boolean indicating whether the bit is set.</returns>
         public bool IsBitSetAt(int index)
         {
-            // TODO: test logic
-
             // make sure the index is within range
             if (index < 0 || index >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -120,8 +120,6 @@ namespace Chess.Lib.Extensions
         /// <returns>a byte containing the bits (starting with higher value bits)</returns>
         public byte GetBitsAt(int index, int length = 8)
         {
-            // TODO: test logic
-
             // make sure the index is within range
             if (index < 0 || index + length > Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -156,8 +154,6 @@ namespace Chess.Lib.Extensions
         /// <param name="bit">Indicates whether the bit should be set.</param>
         public void SetBitAt(int index, bool bit)
         {
-            // TODO: test logic
-
             // make sure the index is within range
             if (index < 0 || index >= Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -180,8 +176,6 @@ namespace Chess.Lib.Extensions
         /// <param name="length">The length of the data to write.</param>
         public void SetBitsAt(int index, byte newData, int length = 8)
         {
-            // TODO: test logic
-
             // make sure the index is within range
             if (index < 0 || index + length > Length) { throw new ArgumentException("index out of bitboard range"); }
 
@@ -235,7 +229,6 @@ namespace Chess.Lib.Extensions
             return GetEnumerator();
         }
 
-        // TODO: test logic
         private class BitboardEnumerator : IEnumerator<bool>
         {
             #region Constructor

@@ -145,12 +145,6 @@ namespace Chess.Lib
         /// </summary>
         private readonly ChessPiece[] _pieces;
 
-        //private readonly ChessPosition _whiteKingPos;
-        //private readonly ChessPosition _blackKingPos;
-
-        // TODO: add aggressive inlining option to each computed getter
-        // [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-
         /// <summary>
         /// Retrieve a new chess board instance with start formation.
         /// </summary>

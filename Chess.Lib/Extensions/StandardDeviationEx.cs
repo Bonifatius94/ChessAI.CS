@@ -37,6 +37,19 @@ namespace Chess.Lib.Extensions
         #region Methods
 
         /// <summary>
+        /// Determine the median of the given comparable values.
+        /// </summary>
+        /// <typeparam name="T">The value type, needs to be comparable.</typeparam>
+        /// <param name="values">The values used to retrieve the median from.</param>
+        /// <returns>The median of the given values.</returns>
+        public static T Median<T>(this IEnumerable<T> values)
+            where T : IComparable
+        {
+            var orderedValues = values.OrderBy(x => x);
+            return orderedValues.ElementAt(values.Count() / 2);
+        }
+
+        /// <summary>
         /// Compute the expectation of the given (value, probability) tuples.
         /// </summary>
         /// <param name="values">The list of (value, probability) tuples to be evaluated</param>

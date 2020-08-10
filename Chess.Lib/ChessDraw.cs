@@ -153,8 +153,6 @@ namespace Chess.Lib
         /// </summary>
         private readonly int _hashCode;
 
-        // TODO: add one bit indicating whether the moving piece was already drawn before (this is required for reverting a draw properly)
-
         /// <summary>
         /// A flag indicating whether the chess piece is moving for the first time.
         /// </summary>

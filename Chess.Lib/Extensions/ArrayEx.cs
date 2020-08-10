@@ -46,8 +46,6 @@ namespace Chess.Lib.Extensions
         /// <returns>a new array with concatenated array contents of the two given arrays.</returns>
         public static T[] ArrayConcat<T>(this T[] first, T[] second)
         {
-            // TODO: check if empty arrays are concatenated correctly
-
             var ret = new T[first.Length + second.Length];
             first.CopyTo(ret, 0);
             second.CopyTo(ret, first.Length);
