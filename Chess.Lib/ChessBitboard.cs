@@ -217,7 +217,7 @@ namespace Chess.Lib
         {
             ChessPiece piece = ChessPiece.NULL;
 
-            // only create a chess piece the board is captured at the given position
+            // only create a chess piece if the board is captured at the given position
             if (IsCapturedAt(position))
             {
                 ChessPieceType type = ChessPieceType.Invalid;
@@ -549,7 +549,7 @@ namespace Chess.Lib
                         | getKnightDrawBitboards(simBitboards, opponent)
                         | getPeasantDrawBitboards(simBitboards, opponent);
 
-                    // revert the simulated draw (flip the bits back, this actually works LOL!!!)
+                    // revert the simulated draw (flip the bits back)
                     applyDraw(simBitboards, draws[i]);
                     // TODO: test if cloning the board is actually faster than reverting the draw (use the better option)
 
