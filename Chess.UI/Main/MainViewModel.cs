@@ -39,6 +39,8 @@ using System.Windows;
 
 namespace Chess.UI.Main
 {
+    // TODO: add XML Doc comments
+
     public class MainViewModel
     {
         #region Constructor
@@ -120,7 +122,8 @@ namespace Chess.UI.Main
                 _session = dlgContext.DrawingSide == ChessColor.White ? new ChessGameSession(humanPlayer, artificialPlayer) : new ChessGameSession(artificialPlayer, humanPlayer);
                 _player = humanPlayer;
                 _session.BoardChanged += boardChanged;
-                
+                Board.UpdatePieces(ChessBitboard.StartFormation);
+
                 // tell the player which side he draws if he choose random side
                 if (dlgContext.SelectedDrawingSideMode == DrawingSideMode.Random)
                 {
@@ -141,8 +144,7 @@ namespace Chess.UI.Main
                     Status.FinishGame(finalStatus);
 
                     // reset game session
-                    _session = null;
-                    updateIsBoardActive();
+                    Board.UpdateIsEnabled(false);
                 });
             }
 

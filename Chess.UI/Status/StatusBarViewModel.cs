@@ -40,7 +40,7 @@ namespace Chess.UI.Status
         private CancellationTokenSource _clockToken;
         private DateTime _drawStart;
         private int _drawIndex = 0;
-        private ChessBitboard _tempBoard = ChessBitboard.StartFormation;
+        //private ChessBitboard _tempBoard = ChessBitboard.StartFormation;
 
         public string StatusText { get; private set; }
         public string GameLog { get; private set; } = string.Empty;
@@ -65,7 +65,7 @@ namespace Chess.UI.Status
             // write final game status to game log
             if (status == ChessGameStatus.Checkmate)
             {
-                GameLog = $"checkmate, { _lastDraw?.DrawingSide.Opponent() } player won!\r\n{ GameLog }";
+                GameLog = $"checkmate, { _lastDraw.Value.DrawingSide } player wins!\r\n{ GameLog }";
             }
             else if (status == ChessGameStatus.Stalemate)
             {
@@ -73,14 +73,14 @@ namespace Chess.UI.Status
             }
             else if (status == ChessGameStatus.Tie || status == ChessGameStatus.UnsufficientPieces)
             {
-                GameLog = $"unsifficient pieces, { _lastDraw?.DrawingSide.Opponent() } player cannot win anymore!\r\n{ GameLog }";
+                GameLog = $"unsifficient pieces, { _lastDraw.Value.DrawingSide.Opponent() } player cannot win anymore!\r\n{ GameLog }";
             }
 
             // reset local game cache variables
             _drawIndex = 0;
             _drawStart = DateTime.Now;
             _lastDraw = null;
-            _tempBoard = ChessBitboard.StartFormation;
+            //_tempBoard = ChessBitboard.StartFormation;
             _clockToken.Cancel();
 
             // update view
